@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames}
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with OptionValues with BeforeAndAfterEach {
+abstract class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with OptionValues with BeforeAndAfterEach {
 
   override def beforeEach(): Unit =
     MDC.clear()
@@ -179,13 +179,5 @@ class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with O
         )
       }
     }
-  }
-
-  "a microservice" must {
-    behave like anApplicationWithMDCLogging("microservice.test.conf")
-  }
-
-  "a frontend" must {
-    behave like anApplicationWithMDCLogging("frontend.test.conf")
   }
 }
