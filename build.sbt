@@ -14,13 +14,9 @@ lazy val commonSettings = Seq(
   resolvers := Seq(
                  Resolver.bintrayRepo("hmrc", "releases"),
                  Resolver.typesafeRepo("releases")
-               )
+               ),
+  scalacOptions ++= Seq("-deprecation")
 )
-/*.settings(
-    fork in Test := true,
-    scalacOptions ++= Seq("-deprecation"),
-  )
-*/
 
 lazy val library = (project in file("."))
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
@@ -44,21 +40,12 @@ lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("boots
     commonSettings,
     libraryDependencies ++= AppDependencies.compileCommonPlay26 ++ AppDependencies.testCommonPlay26
   )
-  // .settings(
-  //   publishArtifact in Test := true,
-  //   mappings in (Test, packageBin) ~= { ms: Seq[(File, String)] =>
-  //     ms filter {
-  //       case (_, toPath) =>
-  //         toPath startsWith "uk.gov.hmrc.play.bootstrap.tools".replace(".", java.io.File.separator)
-  //     }
-  //   }
-  // )
 
 lazy val bootstrapTestPlay26 = Project("bootstrap-test-play-26", file("bootstrap-test-play-26"))
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    libraryDependencies ++= AppDependencies.testCommonPlay26
+    libraryDependencies ++= AppDependencies.compileTestPlay26 ++ AppDependencies.testCommonPlay26
   ).dependsOn(bootstrapCommonPlay26)
 
 lazy val bootstrapBackendPlay26 = Project("bootstrap-backend-play-26", file("bootstrap-backend-play-26"))

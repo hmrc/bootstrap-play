@@ -11,6 +11,9 @@ object AppDependencies {
   val testCommonPlay26: Seq[ModuleID] = testCommon(play26Version)
   val testCommonPlay27: Seq[ModuleID] = testCommon(play27Version)
 
+  val compileTestPlay26: Seq[ModuleID] = compileTest(play26Version)
+  val compileTestPlay27: Seq[ModuleID] = compileTest(play27Version)
+
   private def compileCommon(playVersion: String, playSuffix: String) = Seq(
     "ch.qos.logback"        % "logback-core"                % "1.1.7",
     "com.kenshoo"           %% "metrics-play"               % "2.6.6_0.6.2",
@@ -30,10 +33,14 @@ object AppDependencies {
 
   private def testCommon(playVersion: String) = Seq(
     "com.github.tomakehurst" % "wiremock-jre8"       % "2.21.0",
-    "com.typesafe.play"      %% "play-test"          % play26Version,
+    "com.typesafe.play"      %% "play-test"          % playVersion,
     "org.mockito"            % "mockito-all"         % "1.9.5",
     "org.pegdown"            % "pegdown"             % "1.5.0",
     "org.scalacheck"         %% "scalacheck"         % "1.14.0",
     "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2"
   ).map(_ % Test)
+
+  private def compileTest(playVersion: String) = Seq(
+    "com.typesafe.play"      %% "play-test"          % playVersion
+  )
 }
