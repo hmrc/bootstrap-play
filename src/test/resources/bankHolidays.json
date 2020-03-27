@@ -1,0 +1,28 @@
+{
+  "events": [
+    {
+      "title": "New Year's Day"
+    },
+    {
+      "title": "Good Friday"
+    },
+    {
+      "title": "Easter Monday"
+    },
+    {
+      "title": "Early May bank holiday"
+    },
+    {
+      "title": "Spring bank holiday"
+    },
+    {
+      "title": "Summer bank holiday"
+    },
+    {
+      "title": "Christmas Day"
+    },
+    {
+      "title": "Boxing Day"
+    }
+  ]
+}
