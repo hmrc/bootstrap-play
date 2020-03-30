@@ -1,7 +1,7 @@
 
-# bootstrap-play-26
+# bootstrap-play
 
-[![Build Status](https://travis-ci.org/hmrc/bootstrap-play-26.svg?branch=master)](https://travis-ci.org/hmrc/bootstrap-play-26) [ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play-26/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play-26/_latestVersion)
+[![Build Status](https://travis-ci.org/hmrc/bootstrap-play.svg?branch=master)](https://travis-ci.org/hmrc/bootstrap-play) [ ![Download](https://api.bintray.com/packages/hmrc/releases/bootstrap-play/images/download.svg) ](https://bintray.com/hmrc/releases/bootstrap-play/_latestVersion)
 
 This library implements basic functionality required by the platform frontend/microservices.
 
@@ -13,7 +13,11 @@ In your SBT build add:
 ```scala
 resolvers += Resolver.bintrayRepo("hmrc", "releases")
 
-libraryDependencies += "uk.gov.hmrc" %% "bootstrap-play-26" % "x.x.x"
+// for frontends:
+libraryDependencies += "uk.gov.hmrc" %% "bootstrap-frontend-play-26" % "x.x.x"
+
+// for backends:
+libraryDependencies += "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "x.x.x"
 ```
 
 ## Configure as a frontend microservice
@@ -76,7 +80,7 @@ play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters"
 ## Default HTTP client
 
 A default http client with pre-configured auditing hook can be injected into any connector. The http client uses http-verbs
-For more http-verbs examples see https://github.com/hmrc/http-verbs-example 
+For more http-verbs examples see https://github.com/hmrc/http-verbs-example
 
 
 Make sure you have the following modules in your application.conf file:
@@ -92,7 +96,7 @@ import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import javax.inject.Inject
 
 class SomeConnector @Inject() (client: HttpClient) {
-  
+
   client.GET[Option[MyCaseClass]]("http://localhost/my-api")
 }
 ```
@@ -112,11 +116,11 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuthModule"
 Your controller will look like this:
 ```scala
 class MyController @Inject() (val authConnector: AuthConnector) extends BaseController with AuthorisedFunctions {
-   
+
    def getSomething(): Action[AnyContent] = Action.async { implicit request ⇒
        authorised() {
          // your protected logic
-       } 
+       }
    }
  }
 ```
@@ -153,10 +157,8 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 play-auditing was bump in major version - changes in [`HttpAuditing#auditFromPlayFrontend`](https://github.com/hmrc/play-auditing/blob/be52847234b113eab713faaeb6b40d00bf4a3bcd/src/main/scala/uk/gov/hmrc/play/audit/http/HttpAuditing.scala#L52) signature  were made.
 Now method require implicit execution context in scope.
 
-Implicit execution context should be available in most usage places, but this change break API and may require developer attention.  
+Implicit execution context should be available in most usage places, but this change break API and may require developer attention.
 
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
-    
-    
