@@ -25,31 +25,18 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 
-class HeaderCarrierProviderSpec extends WordSpec with TableDrivenPropertyChecks {
-
-  private val backendHeaderCarrierProvider = new BackendHeaderCarrierProvider with (RequestHeader => HeaderCarrier) {
-    def apply(request: RequestHeader): HeaderCarrier = hc(request)
-  }
+class FrontendHeaderCarrierProviderSpec extends WordSpec with TableDrivenPropertyChecks {
 
   private val frontendHeaderCarrierProvider = new FrontendHeaderCarrierProvider with (RequestHeader => HeaderCarrier) {
     def apply(request: RequestHeader): HeaderCarrier = hc(request)
   }
 
-  private val scenarios = Table(
-    "provider name"                        -> "provider",
-    classOf[BackendHeaderCarrierProvider]  -> backendHeaderCarrierProvider,
-    classOf[FrontendHeaderCarrierProvider] -> frontendHeaderCarrierProvider
-  )
-
-  forAll(scenarios) { (providerClass, headerCarrierProvider) =>
-    providerClass.getSimpleName should {
-      "create HeaderCarrier with path added to tags" in {
-        val request       = FakeRequest(GET, "/the/request/path")
-        val headerCarrier = headerCarrierProvider(request)
-        val tags          = new AuditExtensions.AuditHeaderCarrier(headerCarrier).toAuditTags()
-
-        tags.get("path") shouldBe Some("/the/request/path")
-      }
+  classOf[FrontendHeaderCarrierProvider].getSimpleName should {
+    "create HeaderCarrier with path added to tags" in {
+      val request       = FakeRequest(GET, "/the/request/path")
+      val headerCarrier = frontendHeaderCarrierProvider(request)
+      val tags          = new AuditExtensions.AuditHeaderCarrier(headerCarrier).toAuditTags()
+      tags.get("path") shouldBe Some("/the/request/path")
     }
   }
 }
