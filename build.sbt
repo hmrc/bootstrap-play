@@ -63,7 +63,7 @@ lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("b
     bootstrapTestPlay26 % "test->test"
   )
 
-lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
+/*lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
@@ -96,3 +96,4 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
     Compile / scalaSource := (bootstrapFrontendPlay26 / Compile / scalaSource).value,
     Test    / scalaSource := (bootstrapFrontendPlay26 / Test    / scalaSource).value
   ).dependsOn(bootstrapCommonPlay27)
+*/
