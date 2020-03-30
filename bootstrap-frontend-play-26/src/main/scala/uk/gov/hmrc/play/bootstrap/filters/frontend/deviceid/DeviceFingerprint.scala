@@ -17,7 +17,6 @@
 package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
 import com.google.common.io.BaseEncoding
-import org.apache.commons.codec.binary.Base64
 import play.api.Logger
 import play.api.mvc.RequestHeader
 

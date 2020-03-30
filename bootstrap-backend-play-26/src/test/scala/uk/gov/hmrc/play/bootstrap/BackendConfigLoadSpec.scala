@@ -23,7 +23,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api._
 import play.api.http.HttpConfiguration
-import play.api.i18n.{Langs, MessagesApi}
+import play.api.i18n.MessagesApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.{ApplicationLifecycle, ConfigurationProvider}
 import play.api.libs.Files.TemporaryFileCreator

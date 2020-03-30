@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.filters.frontend
 import akka.stream.Materializer
 import javax.inject.Inject
 import org.joda.time.{DateTime, Duration}
-import org.scalatest.{OptionValues, WordSpecLike}
+import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.{MatchResult, Matcher}
 import org.scalatest.matchers.should.Matchers
@@ -39,7 +39,6 @@ import uk.gov.hmrc.http.SessionKeys._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter._
 
 import scala.concurrent.ExecutionContext
-import scala.language.implicitConversions
 
 object SessionTimeoutFilterSpec {
 
@@ -103,9 +102,7 @@ class SessionTimeoutFilterSpec
     )
 
     def app(config: SessionTimeoutFilterConfig = config): Application = {
-
       import play.api.inject._
-
       builder
         .overrides(
           bind[SessionTimeoutFilterConfig].toInstance(config)
