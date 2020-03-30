@@ -18,7 +18,9 @@ package uk.gov.hmrc.play.bootstrap.http
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.{Matchers, TestData, WordSpec}
+import org.scalatest.TestData
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.Application
 import play.api.inject.bind
@@ -31,7 +33,7 @@ import uk.gov.hmrc.play.bootstrap.http.utils._
 import scala.concurrent.ExecutionContext
 
 class DefaultHttpClientSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with ScalaFutures
     with IntegrationPatience
@@ -191,6 +193,5 @@ class DefaultHttpClientSpec
         myHttpClient.POST[User, Option[UserIdentifier]]("http://localhost:20001/create-user", user).futureValue
       userId shouldBe None
     }
-
   }
 }

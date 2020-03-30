@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 
-class ControllerConfigSpec extends WordSpec with MustMatchers {
+class ControllerConfigSpec extends AnyWordSpec with Matchers {
 
   "ControllerConfig.fromConfig" must {
 
@@ -91,7 +92,6 @@ class ControllerConfigSpec extends WordSpec with MustMatchers {
 
       config.auditing mustBe true
       config.logging mustBe true
-
     }
   }
 }

@@ -17,14 +17,15 @@
 package uk.gov.hmrc.play.config
 
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 
 import scala.concurrent.duration._
 
-class ServicesConfigSpec extends WordSpecLike with Matchers with MockitoSugar {
+class ServicesConfigSpec extends AnyWordSpecLike with Matchers with MockitoSugar {
 
   private val servicesConfig = {
     val configuration = Configuration(
@@ -143,5 +144,4 @@ class ServicesConfigSpec extends WordSpecLike with Matchers with MockitoSugar {
       intercept[RuntimeException](getDuration("notInConf")).getMessage shouldBe "Could not find config key 'notInConf'"
     }
   }
-
 }

@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.play.bootstrap.binders
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.concurrent.ScalaFutures
 import play.api.{Environment, Mode}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
@@ -24,10 +25,9 @@ import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures {
+class RedirectUrlBinderSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
 
   "Should allow to get safe binding if all url's are permitted" in {
-
     val policy = UnsafePermitAll
 
     new RedirectUrl("http://www.google.com").get(policy)       shouldBe SafeRedirectUrl("http://www.google.com")
@@ -37,21 +37,17 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
     new RedirectUrl("/test").get(policy)       shouldBe SafeRedirectUrl("/test")
     new RedirectUrl("/test").getEither(policy) shouldBe Right(SafeRedirectUrl("/test"))
     new RedirectUrl("/test").unsafeValue       shouldBe "/test"
-
   }
 
   "Should allow to match if only relative url's are supported" in {
-
     val policy = OnlyRelative
 
     new RedirectUrl("/test").getEither(policy) shouldBe Right(SafeRedirectUrl("/test"))
     new RedirectUrl("http://www.google.com").getEither(policy) shouldBe Left(
       "Provided URL [http://www.google.com] doesn't comply with redirect policy")
-
   }
 
   "Should allow to match absolute url's with hostnames from specified whitelist" in {
-
     val policy = AbsoluteWithHostnameFromWhitelist("www.test1.com")
 
     new RedirectUrl("http://www.test1.com/foo/bar").getEither(policy) shouldBe Right(
@@ -63,7 +59,6 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
   }
 
   "Should allow to match all url's if run mode is Dev" in {
-
     val policyDev = PermitAllOnDev(Environment.simple(mode = Mode.Dev))
 
     new RedirectUrl("http://www.google.com").get(policyDev) shouldBe SafeRedirectUrl("http://www.google.com")
@@ -102,5 +97,4 @@ class RedirectUrlBinderSpec extends WordSpecLike with Matchers with ScalaFutures
       "Provided URL [http://www.test2.com] doesn't comply with redirect policy")
     new RedirectUrl("/test").getEither(policy).futureValue shouldBe Right(SafeRedirectUrl("/test"))
   }
-
 }

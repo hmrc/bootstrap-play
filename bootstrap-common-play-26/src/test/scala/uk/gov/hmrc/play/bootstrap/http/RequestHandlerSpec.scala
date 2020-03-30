@@ -17,17 +17,18 @@
 package uk.gov.hmrc.play.bootstrap.http
 
 import org.mockito.ArgumentCaptor
-import org.mockito.Matchers.any
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.{HttpConfiguration, HttpFilters}
 import play.api.mvc.{Handler, RequestHeader}
 import play.api.routing.Router
 import play.api.test.FakeRequest
 import org.mockito.Mockito.times
 
-class RequestHandlerSpec extends WordSpec with Matchers with MockitoSugar {
+class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   "Routing requests" should {
     "try passing a request with trailing slash removed if handler was not found" in new Setup {
@@ -55,7 +56,6 @@ class RequestHandlerSpec extends WordSpec with Matchers with MockitoSugar {
       verify(mockedRouter).handlerFor(request)
       verifyNoMoreInteractions(mockedRouter)
     }
-
   }
 
   trait Setup {

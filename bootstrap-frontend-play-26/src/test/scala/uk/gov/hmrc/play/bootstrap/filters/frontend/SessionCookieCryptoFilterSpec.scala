@@ -18,9 +18,11 @@ package uk.gov.hmrc.play.bootstrap.filters.frontend
 
 import akka.stream.Materializer
 import org.mockito.Mockito._
+import org.scalatest.LoneElement
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{LoneElement, Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames
 import play.api.mvc.Results._
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
@@ -32,7 +34,7 @@ import concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 class SessionCookieCryptoFilterSpec
-    extends WordSpec
+    extends AnyWordSpec
     with Matchers
     with MockitoSugar
     with ScalaFutures
@@ -59,7 +61,6 @@ class SessionCookieCryptoFilterSpec
         request.session shouldBe decodedSession
         Future(Ok)
       }(request)
-
     }
 
     "not create new cookies if nothing was added to session on a result" in new Setup {
@@ -68,7 +69,7 @@ class SessionCookieCryptoFilterSpec
       result.newSession shouldBe None
       result.newCookies shouldBe Nil
 
-      verifyZeroInteractions(mockedSessionBaker, mockedEncrypter)
+      verifyNoInteractions(mockedSessionBaker, mockedEncrypter)
     }
 
     "ignore non-session cookies on incoming requests" in new Setup {
@@ -83,10 +84,9 @@ class SessionCookieCryptoFilterSpec
         Future(Ok)
       }(requestWithCookies)
 
-      verifyZeroInteractions(mockedDecrypter, mockedEncrypter)
+      verifyNoInteractions(mockedDecrypter, mockedEncrypter)
       verify(mockedSessionBaker).COOKIE_NAME
       verifyNoMoreInteractions(mockedSessionBaker)
-
     }
 
     "not encrypt new non-session cookies on a result" in new Setup {
@@ -99,7 +99,7 @@ class SessionCookieCryptoFilterSpec
       result.newSession shouldBe None
       result.newCookies shouldBe Seq(cookie)
 
-      verifyZeroInteractions(mockedCookieDecoder, mockedEncrypter, mockedDecrypter, mockedSessionBaker)
+      verifyNoInteractions(mockedCookieDecoder, mockedEncrypter, mockedDecrypter, mockedSessionBaker)
     }
 
     "set SET_COOKIE header with encrypted session cookie when session was modified" in new Setup {
@@ -121,7 +121,6 @@ class SessionCookieCryptoFilterSpec
 
       result.newSession             shouldBe None
       result.newCookies.loneElement shouldBe Cookie(cookieName, encryptedCookieValue)
-
     }
 
     "not change the request if session cookie was not available on it" in new Setup {
@@ -132,9 +131,8 @@ class SessionCookieCryptoFilterSpec
         Future(Ok)
       }(incomingRequest)
 
-      verifyZeroInteractions(mockedDecrypter, mockedEncrypter, mockedSessionBaker)
+      verifyNoInteractions(mockedDecrypter, mockedEncrypter, mockedSessionBaker)
     }
-
   }
 
   private trait Setup {
@@ -154,7 +152,5 @@ class SessionCookieCryptoFilterSpec
 
     val cookieName = "n/a"
     when(mockedSessionBaker.COOKIE_NAME).thenReturn(cookieName)
-
   }
-
 }

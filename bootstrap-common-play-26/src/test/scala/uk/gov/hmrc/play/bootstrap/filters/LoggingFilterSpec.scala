@@ -22,9 +22,11 @@ import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
 import org.joda.time.DateTimeUtils
 import org.mockito.Mockito.when
+import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, Matchers, OptionValues, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
 import play.api.mvc.{RequestHeader, Results}
@@ -37,7 +39,7 @@ import uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorService
 import scala.concurrent.{ExecutionContext, Future}
 
 class LoggingFilterSpec
-    extends WordSpecLike
+    extends AnyWordSpecLike
     with MockitoSugar
     with Matchers
     with OptionValues

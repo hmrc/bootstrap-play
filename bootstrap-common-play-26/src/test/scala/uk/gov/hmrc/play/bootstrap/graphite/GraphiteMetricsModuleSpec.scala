@@ -18,17 +18,19 @@ package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.codahale.metrics.{MetricFilter, SharedMetricRegistries}
 import com.kenshoo.play.metrics._
-import org.scalatest._
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.Configuration
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 
 class GraphiteMetricsModuleSpec
-    extends FreeSpec
-    with MustMatchers
+    extends AnyFreeSpec
+    with Matchers
     with BeforeAndAfterEach
-    with PropertyChecks
+    with ScalaCheckDrivenPropertyChecks
     with GivenWhenThen {
 
   def app: GuiceApplicationBuilder =
@@ -54,7 +56,6 @@ class GraphiteMetricsModuleSpec
 
     Then("kenshoo metrics are disabled")
     injector.instanceOf[MetricsFilter] mustBe a[DisabledMetricsFilter]
-
   }
 
   for (prefix <- Seq("", "Test.")) {
@@ -70,7 +71,6 @@ class GraphiteMetricsModuleSpec
 
       Then("graphite reporting in disabled")
       injector.instanceOf[GraphiteReporting] mustBe a[DisabledGraphiteReporting]
-
     }
 
     s"property testing with prefix [$prefix]" in {
@@ -120,10 +120,7 @@ class GraphiteMetricsModuleSpec
           //there is a disabled graphite reporter
           injector.instanceOf[GraphiteReporting] mustBe a[DisabledGraphiteReporting]
         }
-
       }
     }
-
   }
-
 }

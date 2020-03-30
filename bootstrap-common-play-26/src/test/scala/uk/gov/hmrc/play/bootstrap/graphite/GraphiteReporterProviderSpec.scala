@@ -19,10 +19,11 @@ package uk.gov.hmrc.play.bootstrap.graphite
 import java.util.concurrent.TimeUnit
 
 import com.typesafe.config.ConfigException
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 
-class GraphiteReporterProviderSpec extends WordSpec with MustMatchers {
+class GraphiteReporterProviderSpec extends AnyWordSpec with Matchers {
 
   "GraphiteReporterProviderConfig.fromConfig" must {
 

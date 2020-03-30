@@ -18,7 +18,9 @@ package uk.gov.hmrc.play.bootstrap.logging
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, OptionValues, WordSpec}
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.MDC
 import play.api.{Configuration, Logger}
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -31,7 +33,7 @@ import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames}
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-abstract class MDCLoggingSpec extends WordSpec with MustMatchers with ScalaFutures with OptionValues with BeforeAndAfterEach {
+abstract class MDCLoggingSpec extends AnyWordSpec with Matchers with ScalaFutures with OptionValues with BeforeAndAfterEach {
 
   override def beforeEach(): Unit =
     MDC.clear()

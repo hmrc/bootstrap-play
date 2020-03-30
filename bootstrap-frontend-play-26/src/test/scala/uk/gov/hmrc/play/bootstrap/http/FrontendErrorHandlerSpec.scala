@@ -17,7 +17,8 @@
 package uk.gov.hmrc.play.bootstrap.http
 
 import akka.stream.Materializer
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import play.api.http.HttpEntity
 import play.api.i18n.MessagesApi
@@ -26,13 +27,13 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.twirl.api.Html
 
-class FrontendErrorHandlerSpec extends WordSpecLike with Matchers with GuiceOneAppPerTest {
+class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerTest {
 
   implicit lazy val materializer: Materializer = app.materializer
 
   object TestFrontendErrorHandler extends FrontendErrorHandler {
-    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(
-      implicit rh: Request[_]): Html      = Html("error")
+    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: Request[_]): Html =
+       Html("error")
     override def messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
   }
 

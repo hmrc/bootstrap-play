@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.play.bootstrap.controller
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.ContentTypes
 
-class Utf8MimeTypesSpec extends WordSpecLike with Matchers {
+class Utf8MimeTypesSpec extends AnyWordSpecLike with Matchers {
 
   "Controller minetypes" should {
 
