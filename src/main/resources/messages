@@ -1,0 +1,9 @@
+global.error.badRequest400.title=Bad request - 400
+global.error.badRequest400.heading=Bad request
+global.error.badRequest400.message=Please check that you have entered the correct web address.
+global.error.pageNotFound404.title=Page not found - 404
+global.error.pageNotFound404.heading=This page can’t be found
+global.error.pageNotFound404.message=Please check that you have entered the correct web address.
+global.error.InternalServerError500.title=Sorry, we are experiencing technical difficulties - 500
+global.error.InternalServerError500.heading=Sorry, we’re experiencing technical difficulties
+global.error.InternalServerError500.message=Please try again in a few minutes.
