@@ -23,10 +23,7 @@ lazy val library = (project in file("."))
   .settings(
     commonSettings,
     publish := {},
-    publishAndDistribute := {},
-    // by default this is Seq(scalaVersion) which doesn't play well and causes sbt
-    // to try an invalid cross-build for playAuditingPlay25
-    crossScalaVersions := Seq.empty
+    publishAndDistribute := {}
   )
   .aggregate(
     bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26/*,
