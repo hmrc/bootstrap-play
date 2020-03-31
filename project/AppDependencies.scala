@@ -28,7 +28,8 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "play-health"                % s"3.14.0-$playSuffix",
     // the following are not used by bootstrap - but transitively added for clients
     "com.typesafe.play"     %% "filters-helpers"            % playVersion,
-    "uk.gov.hmrc"           %% "logback-json-logger"        % "4.8.0"
+    "uk.gov.hmrc"           %% "logback-json-logger"        % "4.8.0",
+    "uk.gov.hmrc"           %% s"cookie-banner-$playSuffix" % "0.6.0"
   )
 
   private def testCommon(playVersion: String) = Seq(
