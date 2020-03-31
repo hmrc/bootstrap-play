@@ -1,0 +1,3 @@
+# Routes
+# ~~~~
+GET     /ping/ping       uk.gov.hmrc.play.health.HealthController.ping

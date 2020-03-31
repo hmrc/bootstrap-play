@@ -25,7 +25,6 @@ object AppDependencies {
     "uk.gov.hmrc"           %% "crypto"                     % "5.6.0",
     "uk.gov.hmrc"           %% "http-verbs"                 % s"10.7.0-$playSuffix",
     "uk.gov.hmrc"           %% s"play-auditing-$playSuffix" % s"5.2.0",
-    "uk.gov.hmrc"           %% "play-health"                % s"3.14.0-$playSuffix",
     // the following are not used by bootstrap - but transitively added for clients
     "com.typesafe.play"     %% "filters-helpers"            % playVersion,
     "uk.gov.hmrc"           %% "logback-json-logger"        % "4.8.0",
@@ -39,7 +38,9 @@ object AppDependencies {
     "com.vladsch.flexmark"   %  "flexmark-all"             % "0.35.10",
     "org.scalacheck"         %% "scalacheck"               % "1.14.3",
     "org.scalatestplus"      %% "scalatestplus-mockito"    % "1.0.0-M2",
-    "org.scalatestplus.play" %% "scalatestplus-play"       % "3.1.2",
+    "org.scalatestplus.play" %% "scalatestplus-play"       % (if (playVersion == play26Version) "3.1.3"
+                                                              else "4.0.3"
+                                                             ),
     "org.scalatestplus"      %% "scalatestplus-scalacheck" % "3.1.0.0-RC2"
   ).map(_ % Test)
 

@@ -1,6 +1,7 @@
 
 import sbt.Keys._
 import sbt._
+import play.sbt.PlayScala
 
 val scala2_11 = "2.11.12"
 val scala2_12 = "2.12.10"
@@ -28,8 +29,8 @@ lazy val library = (project in file("."))
     publishAndDistribute := {}
   )
   .aggregate(
-    bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26/*,
-    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27*/ // `play-health`, `auth-client` don't support play-27 yet
+    bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26, bootstrapHealthPlay26/*,
+    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27*/ // `auth-client` doesn't support play-27 yet
   )
 
 
@@ -56,7 +57,8 @@ lazy val bootstrapBackendPlay26 = Project("bootstrap-backend-play-26", file("boo
     crossScalaVersions := crossScalaVersionsPlay26
   ).dependsOn(
     bootstrapCommonPlay26,
-    bootstrapTestPlay26 % "test->test"
+    bootstrapTestPlay26 % "test->test",
+    bootstrapHealthPlay26 // dependency just to add to classpath
   )
 
 lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("bootstrap-frontend-play-26"))
@@ -66,7 +68,17 @@ lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("b
     crossScalaVersions := crossScalaVersionsPlay26
   ).dependsOn(
     bootstrapCommonPlay26,
-    bootstrapTestPlay26 % "test->test"
+    bootstrapTestPlay26 % "test->test",
+    bootstrapHealthPlay26 // dependency just to add to classpath
+  )
+
+lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("bootstrap-health-play-26"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory, PlayScala)
+  .disablePlugins(PlayLayoutPlugin)
+  .settings(
+    commonSettings,
+    crossScalaVersions := crossScalaVersionsPlay26,
+    libraryDependencies ++= AppDependencies.compileCommonPlay26 ++ AppDependencies.testCommonPlay26
   )
 
 /*lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
@@ -96,7 +108,11 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
     crossScalaVersions := crossScalaVersionsPlay27,
     Compile / scalaSource := (bootstrapBackendPlay26 / Compile / scalaSource).value,
     Test    / scalaSource := (bootstrapBackendPlay26 / Test    / scalaSource).value
-  ).dependsOn(bootstrapCommonPlay27)
+  ).dependsOn(
+    bootstrapCommonPlay27,
+    bootstrapTestPlay27 % "test->test",
+    bootstrapHealthPlay27 // dependency just to add to classpath
+  )
 
 lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("bootstrap-frontend-play-27"))
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
@@ -105,5 +121,19 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
     crossScalaVersions := crossScalaVersionsPlay27,
     Compile / scalaSource := (bootstrapFrontendPlay26 / Compile / scalaSource).value,
     Test    / scalaSource := (bootstrapFrontendPlay26 / Test    / scalaSource).value
-  ).dependsOn(bootstrapCommonPlay27)
+  ).dependsOn(
+    bootstrapCommonPlay27,
+    bootstrapTestPlay27 % "test->test",
+    bootstrapHealthPlay27 // dependency just to add to classpath
+  )
+
+lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("bootstrap-health-play-27"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory, PlayScala)
+  .disablePlugins(PlayLayoutPlugin)
+  .settings(
+    commonSettings,
+    crossScalaVersions := crossScalaVersionsPlay27,
+    Compile / scalaSource := (bootstrapHealthPlay26 / Compile / scalaSource).value,
+    Test    / scalaSource := (bootstrapHealthPlay26 / Test    / scalaSource).value
+  )
 */
