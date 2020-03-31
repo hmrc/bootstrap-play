@@ -19,12 +19,13 @@ package uk.gov.hmrc.play.bootstrap.http
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import org.mockito.Matchers.{any, eq => is}
+import org.mockito.ArgumentMatchers.{any, eq => is}
 import org.mockito.Mockito._
-import org.scalatest.Matchers._
+import org.scalatest.LoneElement
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{LoneElement, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.{Configuration, Logger, LoggerLike}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -39,7 +40,7 @@ import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
-class JsonErrorHandlerSpec extends WordSpec with ScalaFutures with MockitoSugar with LoneElement with Eventually {
+class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar with LoneElement with Eventually {
 
   import ExecutionContext.Implicits.global
 

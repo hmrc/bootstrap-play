@@ -19,11 +19,13 @@ package uk.gov.hmrc.play.bootstrap.filters.microservice
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.mockito.ArgumentCaptor
-import org.mockito.Matchers._
+import org.scalatest.matchers.should.Matchers
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.Results.NotFound
 import play.api.mvc.{Action, AnyContent}
 import play.api.test.FakeRequest
@@ -37,7 +39,7 @@ import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class MicroserviceAuditFilterSpec extends WordSpec with Matchers with Eventually with ScalaFutures with MockitoSugar {
+class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventually with ScalaFutures with MockitoSugar {
 
   "AuditFilter" should {
     val applicationName = "app-name"

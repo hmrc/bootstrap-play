@@ -18,13 +18,15 @@ package uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import org.mockito.Matchers._
+import org.scalatest.matchers.should.Matchers
 import org.mockito.Mockito.{times, _}
 import org.mockito.{ArgumentCaptor, Mockito}
+import org.mockito.ArgumentMatchers.any
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest._
+import org.scalatest.{BeforeAndAfterEach, Inspectors, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc._
 import play.api.mvc.request.RequestAttrKey
@@ -35,7 +37,7 @@ import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 import scala.concurrent.{ExecutionContext, Future}
 
 class DeviceIdFilterSpec
-    extends WordSpecLike
+    extends AnyWordSpecLike
     with Matchers
     with GuiceOneAppPerSuite
     with ScalaFutures
@@ -233,7 +235,5 @@ class DeviceIdFilterSpec
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
     }
-
   }
-
 }

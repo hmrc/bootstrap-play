@@ -17,7 +17,8 @@
 package uk.gov.hmrc.play.bootstrap.filters
 
 import javax.inject.Inject
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.Module
@@ -28,7 +29,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, Configuration, Environment}
 
-class CacheControlFilterSpec extends WordSpec with MustMatchers with GuiceOneAppPerSuite {
+class CacheControlFilterSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
   import CacheControlFilterSpec._
 
@@ -105,7 +106,6 @@ class CacheControlFilterSpec extends WordSpec with MustMatchers with GuiceOneApp
       )
       .build()
   }
-
 }
 
 object CacheControlFilterSpec {

@@ -18,8 +18,10 @@ package uk.gov.hmrc.play.bootstrap.filters.frontend
 
 import javax.inject.Inject
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{LoneElement, Matchers, OptionValues, WordSpec}
+import org.scalatest.{LoneElement, OptionValues}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.http.{DefaultHttpFilters, HttpFilters}
@@ -36,7 +38,7 @@ import uk.gov.hmrc.play.bootstrap.filters.frontend.crypto._
 import scala.reflect.ClassTag
 
 class DefaultSessionCookieCryptoFilterSpec
-    extends WordSpec
+    extends AnyWordSpec
     with GuiceOneServerPerSuite
     with Matchers
     with OptionValues
@@ -72,7 +74,6 @@ class DefaultSessionCookieCryptoFilterSpec
       val session              = sessionBaker.decode(decryptedSession)
 
       session shouldBe existingSessionData ++ newSessionData
-
     }
   }
 
@@ -102,11 +103,9 @@ class DefaultSessionCookieCryptoFilterSpec
 
   private def instanceOf[T](implicit ct: ClassTag[T]): T =
     app.injector.instanceOf(ct.runtimeClass.asInstanceOf[Class[T]])
-
 }
 
 object DefaultSessionCookieCryptoFilterSpec {
 
   class Filters @Inject()(cryptoFilter: SessionCookieCryptoFilter) extends DefaultHttpFilters(cryptoFilter)
-
 }

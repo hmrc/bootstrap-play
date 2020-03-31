@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.play.bootstrap.controller
 
-import org.scalatest.Matchers._
-import org.scalatest.WordSpec
-import org.scalatest.prop.TableDrivenPropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.mvc.RequestHeader
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 
-class FrontendHeaderCarrierProviderSpec extends WordSpec with TableDrivenPropertyChecks {
+class FrontendHeaderCarrierProviderSpec extends AnyWordSpec with Matchers {
 
   private val frontendHeaderCarrierProvider = new FrontendHeaderCarrierProvider with (RequestHeader => HeaderCarrier) {
     def apply(request: RequestHeader): HeaderCarrier = hc(request)

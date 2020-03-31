@@ -17,12 +17,13 @@
 package uk.gov.hmrc.play.bootstrap.config
 
 import org.mockito.Mockito.when
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
 
-class AuditingConfigProviderSpec extends WordSpec with Matchers with MockitoSugar {
+class AuditingConfigProviderSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   private val appName       = "app-name"
   private val mockedRunMode = mock[RunMode]

@@ -23,13 +23,14 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import controllers.Assets
 import org.mockito.ArgumentCaptor
-import org.mockito.Matchers.{any, anyString}
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
-import org.scalatest.Matchers._
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.{BeforeAndAfterEach, Tag, TestData}
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -50,8 +51,9 @@ import uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint
 import scala.concurrent.{ExecutionContext, Future}
 
 class FrontendAuditFilterSpec
-    extends WordSpec
+    extends AnyWordSpec
     with FrontendAuditFilterInstance
+    with Matchers
     with Eventually
     with ScalaFutures
     with MockitoSugar
@@ -158,7 +160,7 @@ class FrontendAuditFilterSpec
           val event = verifyAndRetrieveEvent
           event.auditType shouldBe "RequestReceived"
           event.detail    should contain("requestBody" -> "csrfToken=acb&userId=113244018119&password=#########&key1=")
-        }(fiveSecondsPatience, implicitly)
+        }(fiveSecondsPatience, implicitly, implicitly)
     }
 
     "generate audit events with the device finger print when it is supplied in a request cookie" when {
@@ -467,8 +469,9 @@ class FrontendAuditFilterSpec
 }
 
 class FrontendAuditFilterServerSpec
-    extends WordSpec
+    extends AnyWordSpec
     with FrontendAuditFilterInstance
+    with Matchers
     with Eventually
     with MockitoSugar
     with GuiceOneServerPerTest

@@ -17,27 +17,9 @@
 package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import akka.stream._
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.stage._
 import akka.util.ByteString
-import javax.inject.Inject
 import play.api.Logger
-import play.api.http.HttpEntity
-import play.api.http.HttpEntity.Streamed
-import play.api.libs.streams.Accumulator
-import play.api.mvc.{Result, _}
-import play.api.routing.Router.Attrs
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.audit.EventKeys._
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
-import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
-
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
-
 
 protected[filters] class RequestBodyCaptor(
   val loggingContext: String,

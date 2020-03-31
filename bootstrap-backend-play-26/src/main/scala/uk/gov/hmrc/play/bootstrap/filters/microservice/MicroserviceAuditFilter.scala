@@ -18,7 +18,6 @@ package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.stage._
 import akka.util.ByteString
 import javax.inject.Inject
 import play.api.Logger

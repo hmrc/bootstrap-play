@@ -18,10 +18,11 @@ package uk.gov.hmrc.play.bootstrap.config
 
 import com.typesafe.config.ConfigException
 import org.apache.commons.codec.binary.Base64
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 
-trait Base64ConfigDecoderTests extends WordSpec with MustMatchers {
+trait Base64ConfigDecoderTests extends AnyWordSpec with Matchers {
 
   def decode(config: (String, Any)*): Configuration
 

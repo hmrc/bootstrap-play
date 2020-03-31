@@ -17,12 +17,13 @@
 package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.typesafe.config.ConfigException
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 
-class GraphiteProviderSpec extends WordSpec with MustMatchers {
+class GraphiteProviderSpec extends AnyWordSpec with Matchers {
 
   "GraphiteProviderConfigSpec.fromConfig" must {
 

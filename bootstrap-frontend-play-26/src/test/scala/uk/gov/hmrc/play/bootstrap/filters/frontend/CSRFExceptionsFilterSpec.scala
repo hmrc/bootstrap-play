@@ -20,8 +20,9 @@ import akka.stream.Materializer
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.http.HttpVerbs._
@@ -29,7 +30,7 @@ import play.api.mvc.{AnyContentAsEmpty, RequestHeader}
 import play.api.test.{FakeHeaders, FakeRequest}
 
 class CSRFExceptionsFilterSpec
-    extends WordSpecLike
+    extends AnyWordSpecLike
     with Matchers
     with ScalaFutures
     with MockitoSugar

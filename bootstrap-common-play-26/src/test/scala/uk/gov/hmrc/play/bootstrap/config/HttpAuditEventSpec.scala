@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import org.scalatest.{LoneElement, Matchers, WordSpecLike}
+import org.scalatest.LoneElement
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor
 
-class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement with GuiceOneAppPerSuite {
+class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with LoneElement with GuiceOneAppPerSuite {
 
   "The optional audit fields code" should {
 
@@ -52,7 +54,6 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement wit
       val optionalFields = HeaderFieldsExtractor.optionalAuditFields(Map("Foo" -> "Bar", "Ehh" -> "Meh"))
       optionalFields shouldBe empty
     }
-
   }
 
   "The code to generate an audit event" should {
@@ -73,6 +74,5 @@ class HttpAuditEventSpec extends WordSpecLike with Matchers with LoneElement wit
       val event = HttpAuditEventForTest.dataEvent("foo", "bar", r)
       event.detail.get("surrogate") shouldBe None
     }
-
   }
 }

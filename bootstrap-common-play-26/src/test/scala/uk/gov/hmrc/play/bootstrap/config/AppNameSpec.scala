@@ -17,10 +17,11 @@
 package uk.gov.hmrc.play.bootstrap.config
 
 import com.typesafe.config.ConfigException
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 
-class AppNameSpec extends WordSpec with Matchers {
+class AppNameSpec extends AnyWordSpec with Matchers {
 
   "AppName" should {
     "return the name of the application" in {
@@ -31,5 +32,4 @@ class AppNameSpec extends WordSpec with Matchers {
       intercept[ConfigException.Missing](AppName.fromConfiguration(Configuration.empty))
     }
   }
-
 }

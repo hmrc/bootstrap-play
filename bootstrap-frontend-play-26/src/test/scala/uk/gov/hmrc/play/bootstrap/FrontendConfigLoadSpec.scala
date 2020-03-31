@@ -18,8 +18,9 @@ package uk.gov.hmrc.play.bootstrap
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{Matchers, WordSpecLike}
+import com.typesafe.config.ConfigFactory
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api._
 import play.api.http.HttpConfiguration
 import play.api.i18n.{Langs, MessagesApi}
@@ -31,7 +32,7 @@ import play.api.routing.Router
 
 import scala.concurrent.ExecutionContext
 
-class FrontendConfigLoadSpec extends WordSpecLike with Matchers {
+class FrontendConfigLoadSpec extends AnyWordSpecLike with Matchers {
   "config loading" should {
     "load config correctly" in {
       val app = new GuiceApplicationBuilder()

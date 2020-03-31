@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.{Configuration, Mode}
 
-class RunModeSpec extends WordSpecLike with Matchers {
+class RunModeSpec extends AnyWordSpecLike with Matchers {
 
   "env" should {
-
     "return 'Test' if Play mode is set to Test" in {
       new RunMode(Configuration(), Mode.Test).env shouldBe "Test"
     }
@@ -35,13 +35,10 @@ class RunModeSpec extends WordSpecLike with Matchers {
       new RunMode(Configuration(), Mode.Prod).env shouldBe "Dev"
       new RunMode(Configuration(), Mode.Dev).env  shouldBe "Dev"
     }
-
   }
 
   "envPath" should {
-
     "return the `other` env path" in {
-
       val runMode = new RunMode(Configuration(), Mode.Dev)
       import runMode.envPath
 
@@ -52,11 +49,9 @@ class RunModeSpec extends WordSpecLike with Matchers {
       envPath("somePath")(other   = "http://localhost/") shouldBe "http://localhost/somePath"
       envPath("somePath/")(other  = "http://localhost/") shouldBe "http://localhost/somePath"
       envPath()(other             = "http://localhost")  shouldBe "http://localhost"
-
     }
 
     "return the `prod` env path" in {
-
       val runMode = new RunMode(Configuration("run.mode" -> "Prod"), Mode.Prod)
       import runMode.envPath
 
@@ -70,7 +65,5 @@ class RunModeSpec extends WordSpecLike with Matchers {
       envPath("somePath/")(prod  = "prod")    shouldBe "/prod/somePath"
       envPath()(prod             = "prod")    shouldBe "/prod"
     }
-
   }
-
 }

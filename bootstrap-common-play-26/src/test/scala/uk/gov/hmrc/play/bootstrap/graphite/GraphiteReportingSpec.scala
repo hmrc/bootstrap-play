@@ -20,13 +20,15 @@ import java.util.concurrent.TimeUnit
 
 import com.codahale.metrics.graphite.GraphiteReporter
 import org.mockito.Mockito
-import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
+import org.mockito.Mockito.verify
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers
 
-class GraphiteReportingSpec extends WordSpec with MustMatchers with MockitoSugar with BeforeAndAfterEach {
+class GraphiteReportingSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterEach {
 
   val graphite: GraphiteReporter = mock[GraphiteReporter]
 

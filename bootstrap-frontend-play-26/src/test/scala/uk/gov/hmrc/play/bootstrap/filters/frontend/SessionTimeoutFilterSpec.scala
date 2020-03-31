@@ -19,10 +19,12 @@ package uk.gov.hmrc.play.bootstrap.filters.frontend
 import akka.stream.Materializer
 import javax.inject.Inject
 import org.joda.time.{DateTime, Duration}
+import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.{MatchResult, Matcher}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, OptionValues, WordSpecLike}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -37,7 +39,6 @@ import uk.gov.hmrc.http.SessionKeys._
 import uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter._
 
 import scala.concurrent.ExecutionContext
-import scala.language.implicitConversions
 
 object SessionTimeoutFilterSpec {
 
@@ -47,18 +48,16 @@ object SessionTimeoutFilterSpec {
 
   class StaticDateSessionTimeoutFilter @Inject()(
     config: SessionTimeoutFilterConfig
-  )(
-    implicit
+  )(implicit
     ec: ExecutionContext,
-    mat: Materializer)
-      extends SessionTimeoutFilter(config)(ec, mat) {
-
+    mat: Materializer
+  ) extends SessionTimeoutFilter(config)(ec, mat) {
     override val clock: DateTime = now
   }
 }
 
 class SessionTimeoutFilterSpec
-    extends WordSpecLike
+    extends AnyWordSpecLike
     with Matchers
     with ScalaFutures
     with OptionValues
@@ -103,9 +102,7 @@ class SessionTimeoutFilterSpec
     )
 
     def app(config: SessionTimeoutFilterConfig = config): Application = {
-
       import play.api.inject._
-
       builder
         .overrides(
           bind[SessionTimeoutFilterConfig].toInstance(config)

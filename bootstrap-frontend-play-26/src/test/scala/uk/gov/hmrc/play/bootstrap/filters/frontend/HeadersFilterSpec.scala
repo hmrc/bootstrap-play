@@ -17,7 +17,8 @@
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
 import javax.inject.Inject
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.{DefaultHttpFilters, HttpFilters}
@@ -33,7 +34,7 @@ object HeadersFilterSpec {
   class Filters @Inject()(headersFilter: HeadersFilter) extends DefaultHttpFilters(headersFilter)
 }
 
-class HeadersFilterSpec extends WordSpec with MustMatchers with GuiceOneAppPerSuite {
+class HeadersFilterSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
   import HeadersFilterSpec._
 
