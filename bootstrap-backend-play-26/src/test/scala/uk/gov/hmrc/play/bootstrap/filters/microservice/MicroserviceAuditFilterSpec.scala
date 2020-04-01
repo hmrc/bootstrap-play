@@ -19,7 +19,6 @@ package uk.gov.hmrc.play.bootstrap.filters.microservice
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.mockito.ArgumentCaptor
-import org.scalatest.matchers.should.Matchers
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.{Eventually, ScalaFutures}

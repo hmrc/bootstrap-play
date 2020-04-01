@@ -15,6 +15,7 @@
  */
 
 package uk.gov.hmrc.play.bootstrap.logging
+
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
