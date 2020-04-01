@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.dispatchers
 
-
 import java.util.concurrent.{ExecutorService, ThreadFactory}
 
 import akka.dispatch._
