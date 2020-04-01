@@ -29,36 +29,36 @@ object LibDependencies {
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"      %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"            %% "logback-json-logger"        % "4.8.0",
-      "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.6.0"
-    ) ++ Seq(
-      "com.github.tomakehurst" %  "wiremock-jre8"              % "2.26.3",
-      "com.typesafe.play"      %% "play-test"                  % playVersion,
-      "org.mockito"            %  "mockito-core"               % "3.3.3",
-      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10",
-      "org.scalacheck"         %% "scalacheck"                 % "1.14.3",
-      "org.scalatestplus"      %% "scalatestplus-mockito"      % "1.0.0-M2",
+      "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.6.0",
+      // test dependencies
+      "com.github.tomakehurst" %  "wiremock-jre8"              % "2.26.3"                % Test,
+      "com.typesafe.play"      %% "play-test"                  % playVersion             % Test,
+      "org.mockito"            %  "mockito-core"               % "3.3.3"                 % Test,
+      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10"               % Test,
+      "org.scalacheck"         %% "scalacheck"                 % "1.14.3"                % Test,
+      "org.scalatestplus"      %% "scalatestplus-mockito"      % "1.0.0-M2"              % Test,
       "org.scalatestplus.play" %% "scalatestplus-play"         % (if (playVersion == play26Version) "3.1.3"
                                                                   else "4.0.3"
-                                                                 ),
-      "org.scalatestplus"      %% "scalatestplus-scalacheck"   % "3.1.0.0-RC2"
-    ).map(_ % Test)
+                                                                 )                       % Test,
+      "org.scalatestplus"      %% "scalatestplus-scalacheck"   % "3.1.0.0-RC2"           % Test
+    )
 
   private def test(playVersion: String) =
     Seq(
-      "com.typesafe.play"      %% "play-test"                  % playVersion
-    ) ++ Seq(
-      "org.scalatest"          %% "scalatest"                  % "3.1.1",
-      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10",
-    ).map(_ % Test)
+      "com.typesafe.play"      %% "play-test"                  % playVersion,
+      // test dependencies
+      "org.scalatest"          %% "scalatest"                  % "3.1.1"                 % Test,
+      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10"               % Test,
+    )
 
   private def health(playVersion: String, playSuffix: String) =
     Seq(
       "com.typesafe.play"      %% "play"                       % playVersion,
-    ) ++ Seq(
-      "org.scalatest"          %% "scalatest"                  % "3.1.1",
-      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10",
+      // test dependencies
+      "org.scalatest"          %% "scalatest"                  % "3.1.1"                 % Test,
+      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10"               % Test,
       "org.scalatestplus.play" %% "scalatestplus-play"         % (if (playVersion == play26Version) "3.1.3"
                                                                   else "4.0.3"
-                                                                 )
-    ).map(_ % Test)
+                                                                 )                       % Test
+    )
 }
