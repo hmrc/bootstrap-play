@@ -1,7 +1,6 @@
 
 import sbt.Keys._
 import sbt._
-import play.sbt.PlayScala
 
 val scala2_11 = "2.11.12"
 val scala2_12 = "2.12.10"
@@ -73,12 +72,11 @@ lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("b
   )
 
 lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("bootstrap-health-play-26"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory, PlayScala)
-  .disablePlugins(PlayLayoutPlugin)
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay26,
-    libraryDependencies ++= AppDependencies.compileCommonPlay26 ++ AppDependencies.testCommonPlay26
+    libraryDependencies ++= AppDependencies.compileCommonPlay26 ++ AppDependencies.testCommonPlay26 // TODO we only need a subset of these dependencies
   )
 
 /*lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
@@ -128,11 +126,11 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
   )
 
 lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("bootstrap-health-play-27"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory, PlayScala)
-  .disablePlugins(PlayLayoutPlugin)
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
+    addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.7.3"),
     Compile / scalaSource := (bootstrapHealthPlay26 / Compile / scalaSource).value,
     Test    / scalaSource := (bootstrapHealthPlay26 / Test    / scalaSource).value
   )

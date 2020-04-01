@@ -26,7 +26,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import play.api.test._
 
-class HealthControllerSpec
+class HealthRoutesSpec
   extends AnyWordSpec
   with Matchers
   with WsScalaTestClient

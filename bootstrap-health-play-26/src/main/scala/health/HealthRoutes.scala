@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.health
+package health
 
 import javax.inject.Inject
 
-import play.api.mvc.{BaseController, ControllerComponents}
+import play.api.mvc.{Action, Results}
+import play.api.routing.{Router, SimpleRouter}
+import play.api.routing.sird._
 
-class HealthController @Inject()(
-  override val controllerComponents: ControllerComponents
-) extends BaseController {
-
-  def ping = Action {
-    Ok
+class Routes @Inject()() extends SimpleRouter {
+  override def routes: Router.Routes = {
+    case GET(p"/ping/ping") =>
+      Action {
+        Results.Ok("")
+      }
   }
 }
