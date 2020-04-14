@@ -33,6 +33,7 @@ abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
       case play.mvc.Http.Status.BAD_REQUEST => Future.successful(BadRequest(badRequestTemplate(request)))
       case play.mvc.Http.Status.NOT_FOUND   => Future.successful(NotFound(notFoundTemplate(request)))
       case _                                =>
+        implicit val _request: RequestHeader = request // Play27 needs this, as views.html.defaultpages.badRequest now takes an implicit too
         // This is copied from GlobalSettingsHttpErrorHandler for backward compatibility
         Future.successful(
           Results.Status(statusCode)(views.html.defaultpages.badRequest(request.method, request.uri, message)))

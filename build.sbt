@@ -8,6 +8,8 @@ val scala2_12 = "2.12.10"
 val crossScalaVersionsPlay26 = Seq(scala2_11, scala2_12)
 val crossScalaVersionsPlay27 = Seq(scala2_12) // metrix not available for scala2_11
 
+parallelExecution in Global := false // todo - refactor to re-enable this.
+
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
   majorVersion := 2,
@@ -28,8 +30,8 @@ lazy val library = (project in file("."))
     publishAndDistribute := {}
   )
   .aggregate(
-    bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26, bootstrapHealthPlay26/*,
-    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27*/ // `auth-client` doesn't support play-27 yet
+    bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26, bootstrapHealthPlay26,
+    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27
   )
 
 
@@ -81,14 +83,15 @@ lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("boots
     libraryDependencies ++= LibDependencies.healthPlay26
   )
 
-/*lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
+lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.commonPlay27,
     Compile / scalaSource := (bootstrapCommonPlay26 / Compile / scalaSource).value,
-    Test    / scalaSource := (bootstrapCommonPlay26 / Test    / scalaSource).value
+    Test    / scalaSource := (bootstrapCommonPlay26 / Test    / scalaSource).value,
+    Test    / resources   := (bootstrapCommonPlay26 / Test    / resources).value
   )
 
 lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap-test-play-27"))
@@ -106,8 +109,11 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
+    libraryDependencies := LibDependencies.commonPlay27,
     Compile / scalaSource := (bootstrapBackendPlay26 / Compile / scalaSource).value,
-    Test    / scalaSource := (bootstrapBackendPlay26 / Test    / scalaSource).value
+    Compile / resources   := (bootstrapBackendPlay26 / Compile / resources).value,
+    Test    / scalaSource := (bootstrapBackendPlay26 / Test    / scalaSource).value,
+    Test    / resources   := (bootstrapBackendPlay26 / Test    / resources).value
   ).dependsOn(
     bootstrapCommonPlay27,
     bootstrapTestPlay27 % "test->test",
@@ -119,8 +125,11 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
+    libraryDependencies := LibDependencies.commonPlay27,
     Compile / scalaSource := (bootstrapFrontendPlay26 / Compile / scalaSource).value,
-    Test    / scalaSource := (bootstrapFrontendPlay26 / Test    / scalaSource).value
+    Compile / resources   := (bootstrapFrontendPlay26 / Compile    / resources).value,
+    Test    / scalaSource := (bootstrapFrontendPlay26 / Test    / scalaSource).value,
+    Test    / resources   := (bootstrapFrontendPlay26 / Test    / resources).value
   ).dependsOn(
     bootstrapCommonPlay27,
     bootstrapTestPlay27 % "test->test",
@@ -132,8 +141,7 @@ lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("boots
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
-    libraryDependencies ++= LibDependencies.healthPlay27
+    libraryDependencies ++= LibDependencies.healthPlay27,
     Compile / scalaSource := (bootstrapHealthPlay26 / Compile / scalaSource).value,
     Test    / scalaSource := (bootstrapHealthPlay26 / Test    / scalaSource).value
   )
-*/
