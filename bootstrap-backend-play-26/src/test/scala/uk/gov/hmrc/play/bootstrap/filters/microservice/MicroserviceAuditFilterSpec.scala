@@ -21,6 +21,7 @@ import akka.stream.ActorMaterializer
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -38,7 +39,14 @@ import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventually with ScalaFutures with MockitoSugar {
+class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventually with ScalaFutures with MockitoSugar with BeforeAndAfterAll {
+
+  implicit val system       = ActorSystem("MicroserviceAuditFilterSpec")
+  implicit val materializer = ActorMaterializer()
+
+  override def afterAll(): Unit = {
+    system.terminate()
+  }
 
   "AuditFilter" should {
     val applicationName = "app-name"
@@ -48,9 +56,6 @@ class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventua
     val xSessionId       = "A_SESSION_ID"
     val deviceID         = "A_DEVICE_ID"
     val akamaiReputation = "AN_AKAMAI_REPUTATION"
-
-    implicit val system       = ActorSystem()
-    implicit val materializer = ActorMaterializer()
 
     val request = FakeRequest().withHeaders(
       "X-Request-ID"      -> xRequestId,

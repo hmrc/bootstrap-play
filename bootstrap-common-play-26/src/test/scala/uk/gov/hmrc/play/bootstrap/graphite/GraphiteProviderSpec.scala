@@ -22,6 +22,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers
 
 class GraphiteProviderSpec extends AnyWordSpec with Matchers {
 
@@ -33,29 +34,29 @@ class GraphiteProviderSpec extends AnyWordSpec with Matchers {
     )
 
     "return a valid `GraphiteProviderConfig`" in {
-
-      val injector: Injector = new GuiceApplicationBuilder()
+      val app = new GuiceApplicationBuilder()
         .configure(configuration)
         .build()
-        .injector
 
-      val config: GraphiteProviderConfig =
-        GraphiteProviderConfig.fromConfig(injector.instanceOf[Configuration])
+      Helpers.running(app) {
+        val config: GraphiteProviderConfig =
+          GraphiteProviderConfig.fromConfig(app.injector.instanceOf[Configuration])
 
-      config.host mustEqual "localhost"
-      config.port mustEqual 9999
+        config.host mustEqual "localhost"
+        config.port mustEqual 9999
+      }
     }
-
     configuration.keys.foreach { key =>
       s"throw a configuration exception when config key: $key, is missing" in {
 
-        val injector = new GuiceApplicationBuilder()
+        val app = new GuiceApplicationBuilder()
           .configure(configuration - key)
           .build()
-          .injector
 
-        intercept[ConfigException.Missing] {
-          GraphiteProviderConfig.fromConfig(injector.instanceOf[Configuration])
+        Helpers.running(app) {
+          intercept[ConfigException.Missing] {
+            GraphiteProviderConfig.fromConfig(app.injector.instanceOf[Configuration])
+          }
         }
       }
     }

@@ -8,8 +8,6 @@ val scala2_12 = "2.12.10"
 val crossScalaVersionsPlay26 = Seq(scala2_11, scala2_12)
 val crossScalaVersionsPlay27 = Seq(scala2_12) // metrix not available for scala2_11
 
-parallelExecution in Global := false // todo - refactor to re-enable this.
-
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
   majorVersion := 2,
