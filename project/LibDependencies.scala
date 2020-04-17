@@ -22,7 +22,7 @@ object LibDependencies {
                                                                 ),
       "com.typesafe.play"      %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"  %  "metrics-graphite"           % "4.1.5",
-      "uk.gov.hmrc"            %% "auth-client"                % s"2.35.0-$playSuffix",
+      "uk.gov.hmrc"            %% "auth-client"                % s"3.0.0-$playSuffix",
       "uk.gov.hmrc"            %% "crypto"                     % "5.6.0",
       "uk.gov.hmrc"            %% "http-verbs"                 % s"10.7.0-$playSuffix",
       "uk.gov.hmrc"            %% s"play-auditing-$playSuffix" % s"5.2.0",
@@ -48,7 +48,7 @@ object LibDependencies {
       "com.typesafe.play"      %% "play-test"                  % playVersion,
       // test dependencies
       "org.scalatest"          %% "scalatest"                  % "3.1.1"                 % Test,
-      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10"               % Test,
+      "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10"               % Test
     )
 
   private def health(playVersion: String, playSuffix: String) =

@@ -23,7 +23,7 @@ import org.mockito.Mockito.{times, _}
 import org.mockito.{ArgumentCaptor, Mockito}
 import org.mockito.ArgumentMatchers.any
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.{BeforeAndAfterEach, Inspectors, OptionValues}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Inspectors, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
@@ -39,15 +39,17 @@ import scala.concurrent.{ExecutionContext, Future}
 class DeviceIdFilterSpec
     extends AnyWordSpecLike
     with Matchers
-    with GuiceOneAppPerSuite
     with ScalaFutures
     with MockitoSugar
-    with BeforeAndAfterEach
-    with TypeCheckedTripleEquals
-    with Inspectors
+    with BeforeAndAfterAll
     with OptionValues {
 
   lazy val timestamp = System.currentTimeMillis()
+  implicit val system = ActorSystem("DeviceIdFilterSpec")
+
+  override def afterAll(): Unit = {
+    system.terminate()
+  }
 
   private trait Setup extends Results {
     val normalCookie = Cookie("AnotherCookie1", "normalValue1")
@@ -62,7 +64,6 @@ class DeviceIdFilterSpec
     }
 
     lazy val filter = new DeviceIdFilter {
-      implicit val system            = ActorSystem("test")
       implicit val mat: Materializer = ActorMaterializer()
 
       lazy val mdtpCookie = super.buildNewDeviceIdCookie()

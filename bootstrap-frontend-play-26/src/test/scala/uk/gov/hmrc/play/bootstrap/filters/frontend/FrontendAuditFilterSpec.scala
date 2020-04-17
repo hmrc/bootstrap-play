@@ -26,7 +26,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.{BeforeAndAfterEach, Tag, TestData}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TestData}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -59,9 +59,6 @@ class FrontendAuditFilterSpec
     with MockitoSugar
     with GuiceOneAppPerTest
     with BeforeAndAfterEach {
-
-  implicit val system       = ActorSystem("test")
-  implicit val materializer = ActorMaterializer()
 
   private val Action = stubControllerComponents().actionBuilder
 
@@ -475,22 +472,25 @@ class FrontendAuditFilterServerSpec
     with Eventually
     with MockitoSugar
     with GuiceOneServerPerTest
-    with BeforeAndAfterEach {
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll {
 
   override def beforeEach() {
     reset(auditConnector)
   }
 
-  implicit val system: ActorSystem        = ActorSystem("test")
-  implicit def materializer: Materializer = ActorMaterializer()
+  val client: WSClient = AhcWSClient()
+
+  override def afterAll(): Unit = {
+    client.close()
+    super.afterAll()
+  }
 
   val random                  = new scala.util.Random
   val largeContent: String    = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize * 3)
   val standardContent: String = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize - 1)
 
   val pc = PatienceConfig(Span(5, Seconds), Span(15, Millis))
-
-  val client: WSClient = AhcWSClient()
 
   // Generate a random string of length n from the given alphabet
   def randomString(alphabet: String)(n: Int): String =
@@ -563,11 +563,13 @@ class FrontendAuditFilterServerSpec
   }
 }
 
-trait FrontendAuditFilterInstance {
+trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
+  this: Suite =>
+
   import MockitoSugar._
 
-  private implicit val system               = ActorSystem("test")
-  private implicit val mat: Materializer    = ActorMaterializer()
+  private implicit val system               = ActorSystem("FrontendAuditFilterInstance")
+  protected implicit val mat: Materializer  = ActorMaterializer()
   private implicit val ec: ExecutionContext = system.dispatcher
   val auditConnector                        = mock[AuditConnector]
   val controllerConfigs                     = mock[ControllerConfigs]
@@ -585,5 +587,9 @@ trait FrontendAuditFilterInstance {
     val captor = ArgumentCaptor.forClass(classOf[DataEvent])
     verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
     captor.getValue
+  }
+
+  override def afterAll(): Unit = {
+    system.terminate()
   }
 }

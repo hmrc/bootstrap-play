@@ -16,20 +16,40 @@
 
 package uk.gov.hmrc.play.bootstrap.http.utils
 
+import java.net.ServerSocket
+
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.wordspec.AnyWordSpec
 
+import scala.util.{Random, Try}
+
 trait WiremockTestServer extends AnyWordSpec with BeforeAndAfterAll {
 
-  val wireMockServer = new WireMockServer(20001)
+  val wireMockPort   = PortTester.findPort()
+  val wireMockServer = new WireMockServer(wireMockPort)
 
   override protected def beforeAll(): Unit = {
     wireMockServer.start()
-    WireMock.configureFor("localhost", 20001)
+    WireMock.configureFor("localhost", wireMockPort)
   }
 
   override protected def afterAll(): Unit =
     wireMockServer.stop()
+}
+
+private object PortTester {
+
+  def findPort(excluded: Int*): Int =
+    Random.shuffle((20001 to 20100).toVector).find(port => !excluded.contains(port) && isFree(port)).getOrElse(throw new Exception("No free port"))
+
+  private def isFree(port: Int): Boolean = {
+    val triedSocket = Try {
+      val serverSocket = new ServerSocket(port)
+      Try(serverSocket.close())
+      serverSocket
+    }
+    triedSocket.isSuccess
+  }
 }
