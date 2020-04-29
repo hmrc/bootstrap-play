@@ -66,7 +66,7 @@ lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("b
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay26,
-    libraryDependencies ++= LibDependencies.commonPlay26
+    libraryDependencies ++= LibDependencies.frontendCommonPlay26
   ).dependsOn(
     bootstrapCommonPlay26,
     bootstrapTestPlay26 % "test->test",
@@ -123,7 +123,7 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
-    libraryDependencies := LibDependencies.commonPlay27,
+    libraryDependencies := LibDependencies.frontendCommonPlay27,
     Compile / scalaSource := (bootstrapFrontendPlay26 / Compile / scalaSource).value,
     Compile / resources   := (bootstrapFrontendPlay26 / Compile    / resources).value,
     Test    / scalaSource := (bootstrapFrontendPlay26 / Test    / scalaSource).value,
