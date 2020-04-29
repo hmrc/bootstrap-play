@@ -6,7 +6,9 @@ object LibDependencies {
   private val play27Version  = "2.7.4"
 
   val commonPlay26: Seq[ModuleID] = common(play26Version, "play-26")
+  val frontendCommonPlay26: Seq[ModuleID] = frontendCommon(play26Version, "play-26")
   val commonPlay27: Seq[ModuleID] = common(play27Version, "play-27")
+  val frontendCommonPlay27: Seq[ModuleID] = frontendCommon(play27Version, "play-27")
 
   val testPlay26: Seq[ModuleID] = test(play26Version)
   val testPlay27: Seq[ModuleID] = test(play27Version)
@@ -29,7 +31,6 @@ object LibDependencies {
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"      %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"            %% "logback-json-logger"        % "4.8.0",
-      "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.6.0",
       // test dependencies
       "com.github.tomakehurst" %  "wiremock-jre8"              % "2.26.3"                % Test,
       "com.typesafe.play"      %% "play-test"                  % playVersion             % Test,
@@ -41,6 +42,12 @@ object LibDependencies {
                                                                   else "4.0.3"
                                                                  )                       % Test,
       "org.scalatestplus"      %% "scalatestplus-scalacheck"   % "3.1.0.0-RC2"           % Test
+    )
+
+  private def frontendCommon(playVersion: String, playSuffix: String) = common(playVersion, playSuffix) ++
+    Seq(
+      // the following are not used by bootstrap - but transitively added for clients
+      "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.7.0"
     )
 
   private def test(playVersion: String) =
