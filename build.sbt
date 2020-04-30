@@ -32,7 +32,6 @@ lazy val library = (project in file("."))
     bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27
   )
 
-
 lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("bootstrap-common-play-26"))
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
@@ -81,15 +80,20 @@ lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("boots
     libraryDependencies ++= LibDependencies.healthPlay26
   )
 
+  def copySources(module: Project) = Seq(
+    Compile / scalaSource := (module / Compile / scalaSource).value,
+    Compile / resources   := (module / Compile / resources).value,
+    Test    / scalaSource := (module / Test    / scalaSource).value,
+    Test    / resources   := (module / Test    / resources).value
+  )
+
 lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.commonPlay27,
-    Compile / scalaSource := (bootstrapCommonPlay26 / Compile / scalaSource).value,
-    Test    / scalaSource := (bootstrapCommonPlay26 / Test    / scalaSource).value,
-    Test    / resources   := (bootstrapCommonPlay26 / Test    / resources).value
+    copySources(bootstrapCommonPlay26)
   )
 
 lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap-test-play-27"))
@@ -98,8 +102,7 @@ lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.testPlay27,
-    Compile / scalaSource := (bootstrapTestPlay26 / Compile / scalaSource).value,
-    Test    / scalaSource := (bootstrapTestPlay26 / Test    / scalaSource).value
+    copySources(bootstrapTestPlay26)
   ).dependsOn(bootstrapCommonPlay27)
 
 lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("bootstrap-backend-play-27"))
@@ -108,10 +111,7 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies := LibDependencies.commonPlay27,
-    Compile / scalaSource := (bootstrapBackendPlay26 / Compile / scalaSource).value,
-    Compile / resources   := (bootstrapBackendPlay26 / Compile / resources).value,
-    Test    / scalaSource := (bootstrapBackendPlay26 / Test    / scalaSource).value,
-    Test    / resources   := (bootstrapBackendPlay26 / Test    / resources).value
+    copySources(bootstrapBackendPlay26)
   ).dependsOn(
     bootstrapCommonPlay27,
     bootstrapTestPlay27 % "test->test",
@@ -124,10 +124,7 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies := LibDependencies.frontendCommonPlay27,
-    Compile / scalaSource := (bootstrapFrontendPlay26 / Compile / scalaSource).value,
-    Compile / resources   := (bootstrapFrontendPlay26 / Compile    / resources).value,
-    Test    / scalaSource := (bootstrapFrontendPlay26 / Test    / scalaSource).value,
-    Test    / resources   := (bootstrapFrontendPlay26 / Test    / resources).value
+    copySources(bootstrapFrontendPlay26)
   ).dependsOn(
     bootstrapCommonPlay27,
     bootstrapTestPlay27 % "test->test",
@@ -140,6 +137,5 @@ lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("boots
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.healthPlay27,
-    Compile / scalaSource := (bootstrapHealthPlay26 / Compile / scalaSource).value,
-    Test    / scalaSource := (bootstrapHealthPlay26 / Test    / scalaSource).value
+    copySources(bootstrapHealthPlay26)
   )

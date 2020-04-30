@@ -18,15 +18,40 @@ package health
 
 import javax.inject.Inject
 
-import play.api.mvc.{Action, Results}
-import play.api.routing.{Router, SimpleRouter}
+import play.api.routing.{HandlerDef, Router}
 import play.api.routing.sird._
+import play.core.routing.GeneratedRouter
+import uk.gov.hmrc.play.health.HealthController
 
-class Routes @Inject()() extends SimpleRouter {
+class Routes @Inject()(
+  val errorHandler: play.api.http.HttpErrorHandler,
+  healthController: HealthController,
+  prefix: String
+) extends GeneratedRouter {
+
+  override def documentation: Seq[(String, String, String)] =
+    Seq.empty
+
+  override def withPrefix(addPrefix: String): Router =
+    new Routes(errorHandler, healthController, prefix + addPrefix)
+
   override def routes: Router.Routes = {
     case GET(p"/ping/ping") =>
-      Action {
-        Results.Ok("")
-      }
+      // Audit/Auth/Logging filters rely on HandlerDef configuration (controller)
+      // in order to attach it to the request, we must extend GeneratedRouter and use the invoker tricks..
+      createInvoker(
+        fakeCall   = healthController.ping,
+        handlerDef = HandlerDef(
+          classLoader    = this.getClass.getClassLoader,
+          routerPackage  = "app",
+          controller     = "uk.gov.hmrc.play.health.HealthController",
+          method         = "ping",
+          parameterTypes = Nil,
+          verb           = "GET",
+          path           = this.prefix + "ping/ping",
+          comments       = "",
+          modifiers      = Seq()
+        )
+      ).call(healthController.ping)
   }
 }
