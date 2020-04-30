@@ -125,7 +125,7 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies := LibDependencies.frontendCommonPlay27,
     Compile / scalaSource := (bootstrapFrontendPlay26 / Compile / scalaSource).value,
-    Compile / resources   := (bootstrapFrontendPlay26 / Compile    / resources).value,
+    Compile / resources   := (bootstrapFrontendPlay26 / Compile / resources).value,
     Test    / scalaSource := (bootstrapFrontendPlay26 / Test    / scalaSource).value,
     Test    / resources   := (bootstrapFrontendPlay26 / Test    / resources).value
   ).dependsOn(
@@ -141,5 +141,6 @@ lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("boots
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.healthPlay27,
     Compile / scalaSource := (bootstrapHealthPlay26 / Compile / scalaSource).value,
+    Compile / resources   := (bootstrapHealthPlay26 / Compile / resources).value,
     Test    / scalaSource := (bootstrapHealthPlay26 / Test    / scalaSource).value
   )
