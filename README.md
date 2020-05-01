@@ -151,13 +151,23 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Migrations
 
-### Version 0.37.0
+### From bootstrap-play-26
 
-#### Play auditing
-play-auditing was bump in major version - changes in [`HttpAuditing#auditFromPlayFrontend`](https://github.com/hmrc/play-auditing/blob/be52847234b113eab713faaeb6b40d00bf4a3bcd/src/main/scala/uk/gov/hmrc/play/audit/http/HttpAuditing.scala#L52) signature  were made.
-Now method require implicit execution context in scope.
+#### RunMode was removed
 
-Implicit execution context should be available in most usage places, but this change break API and may require developer attention.
+`run.mode` configuration will now have no effect.
+
+Bootstrap configuration which previously supported a `RunMode` prefix now should be specified without the prefix. These are:
+
+| Invalid Prod/Dev/Test prefix | Should now be |
+|--- | --- | --- | --- |
+| Prod.microservice.services | microservice.services |
+| Prod.microservice.metrics  | microservice.metrics  |
+| Prod.auditing              | auditing              |
+
+This applies to application.conf and any configuration overrides
+
+Note: `Environment.Mode` still works as before, and some libraries may still use that as a prefix in their keys.
 
 ## License
 

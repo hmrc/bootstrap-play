@@ -22,14 +22,12 @@ import uk.gov.hmrc.play.audit.http.config.{AuditingConfig, BaseUri, Consumer}
 
 class AuditingConfigProvider @Inject()(
   configuration: Configuration,
-  runMode: RunMode,
-  @Named("appName") appName: String)
-    extends Provider[AuditingConfig] {
+  @Named("appName") appName: String
+) extends Provider[AuditingConfig] {
 
   def get(): AuditingConfig = {
     configuration
-      .getOptional[Configuration](s"${runMode.env}.auditing")
-      .orElse(configuration.getOptional[Configuration]("auditing"))
+      .getOptional[Configuration]("auditing")
       .map { c =>
         val enabled = c.getOptional[Boolean]("enabled").getOrElse(true)
 
@@ -63,7 +61,6 @@ class AuditingConfigProvider @Inject()(
         } else {
           AuditingConfig(consumer = None, enabled = false, auditSource = "auditing disabled")
         }
-
       }
   }.getOrElse(throw new Exception("Missing auditing configuration"))
 }

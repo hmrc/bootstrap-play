@@ -21,7 +21,6 @@ import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
 import com.kenshoo.play.metrics._
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.bootstrap.config.RunMode
 
 class GraphiteMetricsModule extends Module {
 
@@ -32,16 +31,15 @@ class GraphiteMetricsModule extends Module {
     )
 
     val kenshooBindings: Seq[Binding[_]] =
-      if (kenshooMetricsEnabled(configuration)) {
+      if (kenshooMetricsEnabled(configuration))
         Seq(bind[MetricsFilter].to[MetricsFilterImpl].eagerly, bind[Metrics].to[MetricsImpl].eagerly)
-      } else {
+      else
         Seq(bind[MetricsFilter].to[DisabledMetricsFilter].eagerly, bind[Metrics].to[DisabledMetrics].eagerly)
-      }
 
-    val graphiteConfiguration = extractGraphiteConfiguration(environment, configuration)
+    val graphiteConfiguration = extractGraphiteConfiguration(configuration)
 
     val graphiteBindings: Seq[Binding[_]] =
-      if (kenshooMetricsEnabled(configuration) && graphitePublisherEnabled(graphiteConfiguration)) {
+      if (kenshooMetricsEnabled(configuration) && graphitePublisherEnabled(graphiteConfiguration))
         Seq(
           bind[GraphiteProviderConfig].toInstance(GraphiteProviderConfig.fromConfig(graphiteConfiguration)),
           bind[GraphiteReporterProviderConfig].toInstance(
@@ -50,11 +48,10 @@ class GraphiteMetricsModule extends Module {
           bind[GraphiteReporter].toProvider[GraphiteReporterProvider],
           bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly
         )
-      } else {
+      else
         Seq(
           bind[GraphiteReporting].to[DisabledGraphiteReporting].eagerly
         )
-      }
 
     defaultBindings ++ graphiteBindings ++ kenshooBindings
   }
@@ -65,11 +62,8 @@ class GraphiteMetricsModule extends Module {
   private def graphitePublisherEnabled(graphiteConfiguration: Configuration) =
     graphiteConfiguration.getOptional[Boolean]("enabled").getOrElse(false)
 
-  private def extractGraphiteConfiguration(environment: Environment, configuration: Configuration): Configuration = {
-    val env = new RunMode(configuration, environment.mode).env
+  private def extractGraphiteConfiguration(configuration: Configuration): Configuration =
     configuration
-      .getOptional[Configuration](s"$env.microservice.metrics.graphite")
-      .orElse(configuration.getOptional[Configuration]("microservice.metrics.graphite"))
+      .getOptional[Configuration]("microservice.metrics.graphite")
       .getOrElse(Configuration())
-  }
 }

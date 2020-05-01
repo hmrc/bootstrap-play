@@ -21,69 +21,60 @@ import play.api.Configuration
 
 import scala.concurrent.duration.Duration
 
-class ServicesConfig @Inject()(configuration: Configuration, runMode: RunMode) {
+class ServicesConfig @Inject()(configuration: Configuration) {
 
   protected lazy val rootServices = "microservice.services"
-  protected lazy val services     = s"${runMode.env}.microservice.services"
 
   protected lazy val defaultProtocol: String =
     configuration
       .getOptional[String](s"$rootServices.protocol")
-      .orElse(configuration.getOptional[String](s"$services.protocol"))
       .getOrElse("http")
 
   protected def config(serviceName: String) =
     configuration
       .getOptional[Configuration](s"$rootServices.$serviceName")
-      .orElse(configuration.getOptional[Configuration](s"$services.$serviceName"))
       .getOrElse(throw new IllegalArgumentException(s"Configuration for service $serviceName not found"))
 
   def baseUrl(serviceName: String) = {
     val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
-    val host =
-      getConfString(s"$serviceName.host", throw new RuntimeException(s"Could not find config $serviceName.host"))
-    val port = getConfInt(s"$serviceName.port", throw new RuntimeException(s"Could not find config $serviceName.port"))
+    val host     = getConfString(s"$serviceName.host", throwConfigNotFoundError(s"$serviceName.host"))
+    val port     = getConfInt(s"$serviceName.port", throwConfigNotFoundError(s"$serviceName.port"))
     s"$protocol://$host:$port"
   }
 
   def getConfString(confKey: String, defString: => String) =
     configuration
       .getOptional[String](s"$rootServices.$confKey")
-      .orElse(configuration.getOptional[String](s"$services.$confKey"))
       .getOrElse(defString)
 
   def getConfInt(confKey: String, defInt: => Int) =
     configuration
       .getOptional[Int](s"$rootServices.$confKey")
-      .orElse(configuration.getOptional[Int](s"$services.$confKey"))
       .getOrElse(defInt)
 
   def getConfBool(confKey: String, defBool: => Boolean) =
     configuration
       .getOptional[Boolean](s"$rootServices.$confKey")
-      .orElse(configuration.getOptional[Boolean](s"$services.$confKey"))
       .getOrElse(defBool)
 
   def getConfDuration(confKey: String, defDur: => Duration) =
     configuration
       .getOptional[String](s"$rootServices.$confKey")
-      .orElse(configuration.getOptional[String](s"$services.$confKey"))
       .map(Duration.create)
       .getOrElse(defDur)
 
   def getInt(key: String) =
-    configuration.getOptional[Int](key).getOrElse(configNotFoundError(key))
+    configuration.getOptional[Int](key).getOrElse(throwConfigNotFoundError(key))
 
   def getString(key: String) =
-    configuration.getOptional[String](key).getOrElse(configNotFoundError(key))
+    configuration.getOptional[String](key).getOrElse(throwConfigNotFoundError(key))
 
   def getBoolean(key: String) =
-    configuration.getOptional[Boolean](key).getOrElse(configNotFoundError(key))
+    configuration.getOptional[Boolean](key).getOrElse(throwConfigNotFoundError(key))
 
   def getDuration(key: String) =
-    configuration.getOptional[String](key).map(Duration.create).getOrElse(configNotFoundError(key))
+    configuration.getOptional[String](key).map(Duration.create).getOrElse(throwConfigNotFoundError(key))
 
-  private def configNotFoundError(key: String) =
+  private def throwConfigNotFoundError(key: String) =
     throw new RuntimeException(s"Could not find config key '$key'")
-
 }

@@ -64,7 +64,8 @@ class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventua
       "Akamai-Reputation" -> akamaiReputation)
 
     val controllerConfigs = mock[ControllerConfigs]
-    when(controllerConfigs.controllerNeedsAuditing(anyString())).thenReturn(true)
+    when(controllerConfigs.controllerNeedsAuditing(anyString()))
+      .thenReturn(true)
 
     val httpAuditEvent = new HttpAuditEvent { override def appName = applicationName }
 
@@ -75,14 +76,12 @@ class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventua
       val mockAuditConnector = mock[AuditConnector]
       val auditFilter        = createAuditFilter(mockAuditConnector)
 
-      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future {
-        Success
-      })
+      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(Success))
 
       val result = await(auditFilter.apply(nextAction)(request).run)
 
-      await(result.body.dataStream.runForeach({ i =>
-        }))
+      await(result.body.dataStream.runForeach { i => })
 
       eventually {
         val captor = ArgumentCaptor.forClass(classOf[DataEvent])
@@ -104,9 +103,8 @@ class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventua
       val mockAuditConnector = mock[AuditConnector]
       val auditFilter        = createAuditFilter(mockAuditConnector)
 
-      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future {
-        Success
-      })
+      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(Success))
 
       a[RuntimeException] should be thrownBy await(auditFilter.apply(exceptionThrowingAction)(request).run)
 
@@ -135,5 +133,4 @@ class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventua
   private val exceptionThrowingAction = Action.async { _ =>
     throw new RuntimeException("Something went wrong")
   }
-
 }
