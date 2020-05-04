@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.controller
+package uk.gov.hmrc.play.bootstrap.backend.controller
 
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 trait BackendBaseController
@@ -27,9 +28,6 @@ trait BackendBaseController
     with BackendHeaderCarrierProvider
 
 abstract class BackendController(override val controllerComponents: ControllerComponents) extends BackendBaseController
-
-@deprecated("Use BackendController instead", "0.4.0")
-abstract class BaseController(cc: ControllerComponents) extends BackendController(cc)
 
 trait BackendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
