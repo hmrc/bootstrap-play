@@ -19,6 +19,7 @@ package uk.gov.hmrc.play
 import akka.stream.Materializer
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
+import play.api.Configuration
 import play.api.http.DefaultHttpFilters
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
@@ -28,13 +29,16 @@ import scala.concurrent.ExecutionContext
 
 package bootstrap {
 
+  @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.BackendModule", "2.6.0")
+  class MicroserviceModule extends uk.gov.hmrc.play.bootstrap.backend.BackendModule
+
   package object controller {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.backend.BackendController", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.backend.BackendController instead", "2.6.0")
     type BackendController = uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
   }
 
   package filters {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.MicroserviceFilters", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters instead", "2.6.0")
     @Singleton
     class MicroserviceFilters @Inject()(
       metricsFilter: MetricsFilter,
@@ -42,7 +46,7 @@ package bootstrap {
       loggingFilter: LoggingFilter,
       cacheFilter  : CacheControlFilter,
       mdcFilter    : MDCFilter
-    ) extends DefaultHttpFilters(
+    ) extends uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters(
       metricsFilter,
       auditFilter,
       loggingFilter,
@@ -51,24 +55,43 @@ package bootstrap {
     )
 
     package object microservice {
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.MicroserviceAuditFilter", "2.6.0")
-      type MicroserviceAuditFilter = uk.gov.hmrc.play.bootstrap.backend.filters.MicroserviceAuditFilter
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.BackendAuditFilter", "2.6.0")
+      type MicroserviceAuditFilter = uk.gov.hmrc.play.bootstrap.backend.filters.BackendAuditFilter
     }
 
     package microservice {
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.DefaultMicroserviceAuditFilter instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter instead", "2.6.0")
       class DefaultMicroserviceAuditFilter @Inject()(
         controllerConfigs: ControllerConfigs,
         auditConnector   : AuditConnector,
         httpAuditEvent   : HttpAuditEvent,
         mat              : Materializer
       )(implicit ec: ExecutionContext
-      ) extends uk.gov.hmrc.play.bootstrap.backend.filters.DefaultMicroserviceAuditFilter(
+      ) extends uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter(
         controllerConfigs,
         auditConnector,
         httpAuditEvent,
         mat
       )
     }
+  }
+
+  package object http {
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse instead", "2.6.0")
+    type ErrorResponse = uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+  }
+
+  package http {
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.http.JsonErrorHandler instead", "2.6.0")
+    class JsonErrorHandler @Inject()(
+      auditConnector: AuditConnector,
+      httpAuditEvent: HttpAuditEvent,
+      configuration : Configuration
+    )(implicit ec: ExecutionContext
+    ) extends uk.gov.hmrc.play.bootstrap.backend.http.JsonErrorHandler(
+      auditConnector: AuditConnector,
+      httpAuditEvent: HttpAuditEvent,
+      configuration : Configuration
+    )
   }
 }

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.http
+package uk.gov.hmrc.play.bootstrap.backend
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.inject.Binding
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.bootstrap.BootstrapModule
+import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
+import uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter
 
-case class ErrorResponse(
-  statusCode: Int,
-  message: String,
-  xStatusCode: Option[String] = None,
-  requested: Option[String]   = None
-)
-
-object ErrorResponse {
-  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
+class BackendModule extends BootstrapModule {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+    super.bindings(environment, configuration) ++ Seq(
+      bind[AuditFilter].to[DefaultBackendAuditFilter]
+    )
 }

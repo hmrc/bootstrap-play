@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.http
+package uk.gov.hmrc.play.bootstrap.backend.http
 
 import javax.inject.Inject
 import play.api.{Configuration, Logger}
@@ -33,12 +33,12 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvide
 import scala.concurrent.{ExecutionContext, Future}
 
 class JsonErrorHandler @Inject()(
-                                  auditConnector: AuditConnector,
-                                  httpAuditEvent: HttpAuditEvent,
-                                  configuration: Configuration
-                                )(implicit ec: ExecutionContext)
-    extends HttpErrorHandler
-    with BackendHeaderCarrierProvider {
+  auditConnector: AuditConnector,
+  httpAuditEvent: HttpAuditEvent,
+  configuration : Configuration
+)(implicit ec: ExecutionContext
+) extends HttpErrorHandler
+     with BackendHeaderCarrierProvider {
 
   import httpAuditEvent.dataEvent
 
@@ -129,10 +129,9 @@ class JsonErrorHandler @Inject()(
     Future.successful(new Status(errorResponse.statusCode)(Json.toJson(errorResponse)))
   }
 
-  private def logException(exception: Exception, responseCode: Int): Unit = {
-    if(upstreamWarnStatuses contains responseCode)
+  private def logException(exception: Exception, responseCode: Int): Unit =
+    if (upstreamWarnStatuses contains responseCode)
       Logger.warn(exception.getMessage, exception)
     else
       Logger.error(exception.getMessage, exception)
-  }
 }

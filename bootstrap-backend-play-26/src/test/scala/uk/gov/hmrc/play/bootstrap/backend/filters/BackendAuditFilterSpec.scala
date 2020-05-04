@@ -39,9 +39,15 @@ import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventually with ScalaFutures with MockitoSugar with BeforeAndAfterAll {
+class BackendAuditFilterSpec
+  extends AnyWordSpec
+     with Matchers
+     with Eventually
+     with ScalaFutures
+     with MockitoSugar
+     with BeforeAndAfterAll {
 
-  implicit val system       = ActorSystem("MicroserviceAuditFilterSpec")
+  implicit val system       = ActorSystem("BackendAuditFilterSpec")
   implicit val materializer = ActorMaterializer()
 
   override def afterAll(): Unit = {
@@ -70,7 +76,7 @@ class MicroserviceAuditFilterSpec extends AnyWordSpec with Matchers with Eventua
     val httpAuditEvent = new HttpAuditEvent { override def appName = applicationName }
 
     def createAuditFilter(connector: AuditConnector) =
-      new DefaultMicroserviceAuditFilter(controllerConfigs, connector, httpAuditEvent, materializer)
+      new DefaultBackendAuditFilter(controllerConfigs, connector, httpAuditEvent, materializer)
 
     "audit a request and response with header information" in {
       val mockAuditConnector = mock[AuditConnector]

@@ -38,7 +38,7 @@ import uk.gov.hmrc.play.bootstrap.filters.microservice.{RequestBodyCaptor, Respo
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-trait MicroserviceAuditFilter extends AuditFilter {
+trait BackendAuditFilter extends AuditFilter {
 
   protected implicit def ec: ExecutionContext
   def auditConnector: AuditConnector
@@ -154,12 +154,12 @@ trait MicroserviceAuditFilter extends AuditFilter {
   }
 }
 
-class DefaultMicroserviceAuditFilter @Inject()(
+class DefaultBackendAuditFilter @Inject()(
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
   override val mat: Materializer
-)(implicit protected val ec: ExecutionContext) extends MicroserviceAuditFilter {
+)(implicit protected val ec: ExecutionContext) extends BackendAuditFilter {
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)
@@ -168,6 +168,7 @@ class DefaultMicroserviceAuditFilter @Inject()(
     eventType: String,
     transactionName: String,
     request: RequestHeader,
-    detail: Map[String, String])(implicit hc: HeaderCarrier): DataEvent =
+    detail: Map[String, String]
+  )(implicit hc: HeaderCarrier): DataEvent =
     httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
 }

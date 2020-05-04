@@ -14,16 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap
+package uk.gov.hmrc.play.bootstrap.backend.filters
 
-import play.api.inject.Binding
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
-import uk.gov.hmrc.play.bootstrap.filters.microservice.DefaultMicroserviceAuditFilter
+import com.kenshoo.play.metrics.MetricsFilter
+import javax.inject.{Inject, Singleton}
+import play.api.http.DefaultHttpFilters
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
 
-class MicroserviceModule extends BootstrapModule {
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
-    super.bindings(environment, configuration) ++ Seq(
-      bind[AuditFilter].to[DefaultMicroserviceAuditFilter]
-    )
-}
+@Singleton
+class BackendFilters @Inject()(
+  metricsFilter: MetricsFilter,
+  auditFilter  : AuditFilter,
+  loggingFilter: LoggingFilter,
+  cacheFilter  : CacheControlFilter,
+  mdcFilter    : MDCFilter
+) extends DefaultHttpFilters(
+  metricsFilter,
+  auditFilter,
+  loggingFilter,
+  cacheFilter,
+  mdcFilter
+)

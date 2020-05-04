@@ -14,24 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.backend.filters
+package uk.gov.hmrc.play.bootstrap.backend.http
 
-import com.kenshoo.play.metrics.MetricsFilter
-import javax.inject.{Inject, Singleton}
-import play.api.http.DefaultHttpFilters
-import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
+import play.api.libs.json.{Json, OFormat}
 
-@Singleton
-class MicroserviceFilters @Inject()(
-  metricsFilter: MetricsFilter,
-  auditFilter  : AuditFilter,
-  loggingFilter: LoggingFilter,
-  cacheFilter  : CacheControlFilter,
-  mdcFilter    : MDCFilter
-) extends DefaultHttpFilters(
-  metricsFilter,
-  auditFilter,
-  loggingFilter,
-  cacheFilter,
-  mdcFilter
+case class ErrorResponse(
+  statusCode: Int,
+  message: String,
+  xStatusCode: Option[String] = None,
+  requested: Option[String]   = None
 )
+
+object ErrorResponse {
+  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
+}
