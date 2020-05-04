@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+// TODO move out of microservice package - is used by frontend too
 package uk.gov.hmrc.play.bootstrap.filters.microservice
 
 import akka.stream._

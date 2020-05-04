@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters.microservice
+package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer

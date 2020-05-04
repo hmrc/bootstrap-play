@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.filters
-
-import javax.inject.{Inject, Singleton}
+package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import com.kenshoo.play.metrics.MetricsFilter
+import javax.inject.{Inject, Singleton}
 import play.api.http.DefaultHttpFilters
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
 
 @Singleton
 class MicroserviceFilters @Inject()(
   metricsFilter: MetricsFilter,
-  auditFilter: AuditFilter,
+  auditFilter  : AuditFilter,
   loggingFilter: LoggingFilter,
-  cacheFilter: CacheControlFilter,
-  mdcFilter: MDCFilter
-) extends DefaultHttpFilters(metricsFilter, auditFilter, loggingFilter, cacheFilter, mdcFilter)
+  cacheFilter  : CacheControlFilter,
+  mdcFilter    : MDCFilter
+) extends DefaultHttpFilters(
+  metricsFilter,
+  auditFilter,
+  loggingFilter,
+  cacheFilter,
+  mdcFilter
+)
