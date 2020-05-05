@@ -14,48 +14,34 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.config
+package uk.gov.hmrc.play.bootstrap.config
 
-import org.mockito.Mockito.when
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.{RunMode, ServicesConfig}
 
 import scala.concurrent.duration._
 
 class ServicesConfigSpec extends AnyWordSpecLike with Matchers with MockitoSugar {
 
-  private val servicesConfig = {
-    val configuration = Configuration(
-      "microservice.services.testString"         -> "hello world",
-      "Test.microservice.services.devTestString" -> "hello test",
-      "microservice.services.testInt"            -> "1",
-      "Test.microservice.services.devTestInt"    -> "1",
-      "microservice.services.testBool"           -> "true",
-      "Test.microservice.services.devTestBool"   -> "true",
-      "microservice.services.testDur"            -> "60seconds",
-      "Test.microservice.services.devTestDur"    -> "60seconds",
-      "anotherInt"                               -> "1",
-      "anotherString"                            -> "hello other test",
-      "anotherBool"                              -> "false",
-      "anotherDur"                               -> "60seconds"
-    )
-    val mockedRunMode = mock[RunMode]
-    when(mockedRunMode.env).thenReturn("Test")
-    new ServicesConfig(configuration, mockedRunMode)
-  }
+  private val servicesConfig =
+    new ServicesConfig(Configuration(
+      "microservice.services.testString" -> "hello world",
+      "microservice.services.testInt"    -> "1",
+      "microservice.services.testBool"   -> "true",
+      "microservice.services.testDur"    -> "60seconds",
+      "anotherInt"                       -> "1",
+      "anotherString"                    -> "hello other test",
+      "anotherBool"                      -> "false",
+      "anotherDur"                       -> "60seconds"
+    ))
 
   import servicesConfig._
 
   "getConfString" should {
-    "return a string from config under rootServices" in {
+    "return a string from config under microservice.services" in {
       getConfString("testString", "") shouldBe "hello world"
-    }
-
-    "return a string from config under Dev services" in {
-      getConfString("devTestString", "") shouldBe "hello test"
     }
 
     "return a default string if the config can't be found" in {
@@ -64,12 +50,8 @@ class ServicesConfigSpec extends AnyWordSpecLike with Matchers with MockitoSugar
   }
 
   "getConfInt" should {
-    "return an int from config under rootServices" in {
+    "return an int from config under microservice.services" in {
       getConfInt("testInt", 0) shouldBe 1
-    }
-
-    "return an int from config under Dev services" in {
-      getConfInt("devTestInt", 0) shouldBe 1
     }
 
     "return a default int if the config can't be found" in {
@@ -78,12 +60,8 @@ class ServicesConfigSpec extends AnyWordSpecLike with Matchers with MockitoSugar
   }
 
   "getConfBool" should {
-    "return a boolean from config under rootServices" in {
+    "return a boolean from config under microservice.services" in {
       getConfBool("testBool", defBool = false) shouldBe true
-    }
-
-    "return a boolean from config under Dev services" in {
-      getConfBool("devTestBool", defBool = false) shouldBe true
     }
 
     "return a default boolean if the config can't be found" in {
@@ -92,12 +70,8 @@ class ServicesConfigSpec extends AnyWordSpecLike with Matchers with MockitoSugar
   }
 
   "getConfDuration" should {
-    "return a Duration from config under rootServices" in {
+    "return a Duration from config under microservice.services" in {
       getConfDuration("testDur", 60.minutes) shouldBe 60.seconds
-    }
-
-    "return a Duration from config under Dev services" in {
-      getConfDuration("devTestDur", 60.minutes) shouldBe 60.seconds
     }
 
     "return a default Duration if the config can't be found" in {
