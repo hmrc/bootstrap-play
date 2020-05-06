@@ -27,7 +27,7 @@ object LibDependencies {
       "uk.gov.hmrc"            %% "auth-client"                % s"3.0.0-$playSuffix",
       "uk.gov.hmrc"            %% "crypto"                     % "5.6.0",
       "uk.gov.hmrc"            %% s"http-verbs-$playSuffix"    % s"10.14.0",
-      "uk.gov.hmrc"            %% s"play-auditing-$playSuffix" % s"5.2.0",
+      "uk.gov.hmrc"            %% s"play-auditing-$playSuffix" % s"5.3.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"      %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"            %% "logback-json-logger"        % "4.8.0",
@@ -47,7 +47,7 @@ object LibDependencies {
   private def frontendCommon(playVersion: String, playSuffix: String) = common(playVersion, playSuffix) ++
     Seq(
       // the following are not used by bootstrap - but transitively added for clients
-      "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.7.0"
+      "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.8.0"
     )
 
   private def test(playVersion: String) =
