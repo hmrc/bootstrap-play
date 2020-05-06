@@ -169,6 +169,12 @@ This applies to application.conf and any configuration overrides
 
 Note: `Environment.Mode` still works as before, and some libraries may still use that as a prefix in their keys.
 
+#### CSRFExceptionsFilter was removed
+
+It was deprecated in 2017, and the original use-cases no longer appear valid.
+
+If you still need the functionality offered by this filter, please copy the code from bootstrap-play-26 into your own codebase (including the tests) and take ownership of it.
+
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
