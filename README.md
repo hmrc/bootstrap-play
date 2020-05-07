@@ -160,7 +160,7 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 Bootstrap configuration which previously supported a `RunMode` prefix now should be specified without the prefix. These are:
 
 | Invalid Prod/Dev/Test prefix | Should now be |
-|--- | --- | --- | --- |
+| --- | --- |
 | Prod.microservice.services | microservice.services |
 | Prod.microservice.metrics  | microservice.metrics  |
 | Prod.auditing              | auditing              |
@@ -168,6 +168,12 @@ Bootstrap configuration which previously supported a `RunMode` prefix now should
 This applies to application.conf and any configuration overrides
 
 Note: `Environment.Mode` still works as before, and some libraries may still use that as a prefix in their keys.
+
+#### CSRFExceptionsFilter was removed
+
+It was deprecated in 2017, and the original use-cases no longer appear valid.
+
+If you still need the functionality offered by this filter, please copy the code from bootstrap-play-26 into your own codebase (including the tests) and take ownership of it.
 
 ## License
 
