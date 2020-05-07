@@ -160,7 +160,7 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 Bootstrap configuration which previously supported a `RunMode` prefix now should be specified without the prefix. These are:
 
 | Invalid Prod/Dev/Test prefix | Should now be |
-|--- | --- | --- | --- |
+| --- | --- |
 | Prod.microservice.services | microservice.services |
 | Prod.microservice.metrics  | microservice.metrics  |
 | Prod.auditing              | auditing              |
