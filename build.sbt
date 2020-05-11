@@ -8,6 +8,8 @@ val scala2_12 = "2.12.10"
 val crossScalaVersionsPlay26 = Seq(scala2_11, scala2_12)
 val crossScalaVersionsPlay27 = Seq(scala2_12) // metrix not available for scala2_11
 
+val silencerVersion = "1.4.4"
+
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
   majorVersion := 2,
@@ -17,7 +19,11 @@ lazy val commonSettings = Seq(
                  Resolver.bintrayRepo("hmrc", "releases"),
                  Resolver.typesafeRepo("releases")
                ),
-  scalacOptions ++= Seq("-deprecation")
+  scalacOptions ++= Seq("-deprecation", "-feature"),
+  libraryDependencies ++= Seq(
+    compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
+    "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+  )
 )
 
 lazy val library = (project in file("."))
@@ -110,7 +116,7 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
-    libraryDependencies := LibDependencies.commonPlay27,
+    libraryDependencies ++= LibDependencies.commonPlay27,
     copySources(bootstrapBackendPlay26)
   ).dependsOn(
     bootstrapCommonPlay27,
@@ -123,7 +129,7 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
   .settings(
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
-    libraryDependencies := LibDependencies.frontendCommonPlay27,
+    libraryDependencies ++= LibDependencies.frontendCommonPlay27,
     copySources(bootstrapFrontendPlay26)
   ).dependsOn(
     bootstrapCommonPlay27,

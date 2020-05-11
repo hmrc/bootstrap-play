@@ -16,24 +16,20 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend
 
-import akka.actor.ActorSystem
 import akka.stream.Materializer
+import com.github.ghik.silencer.silent
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
-import play.api._
-import play.api.http.HttpConfiguration
+import play.api.Configuration
 import play.api.i18n.MessagesApi
-import play.api.libs.crypto._
-import play.api.libs.json.OFormat
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
-import play.api.routing.Router
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.DataEvent
 
-
 import scala.concurrent.ExecutionContext
 
+@silent("deprecated")
 class BackwardCompatibilitySpec
   extends AnyWordSpecLike
      with Matchers
