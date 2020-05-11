@@ -18,29 +18,31 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
 import javax.inject.Inject
-import org.joda.time.{DateTime, DateTimeZone, Duration} // TODO switch to java.time?
+import java.time.{Duration, Instant}
+import java.time.temporal.ChronoUnit
 import play.api.Configuration
-import play.api.mvc._
+import play.api.mvc.{Filter, RequestHeader, Result, Session}
 import play.api.mvc.request.{AssignedCell, RequestAttrKey}
 import uk.gov.hmrc.http.SessionKeys._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SessionTimeoutFilterConfig(
-  timeoutDuration: Duration,
+  timeoutDuration      : Duration,
   additionalSessionKeys: Set[String] = Set.empty,
-  onlyWipeAuthToken: Boolean         = false
+  onlyWipeAuthToken    : Boolean     = false
 )
 
 object SessionTimeoutFilterConfig {
 
   def fromConfig(configuration: Configuration): SessionTimeoutFilterConfig = {
 
-    val defaultTimeout = Duration.standardMinutes(15)
+    val defaultTimeout = Duration.of(15, ChronoUnit.MINUTES)
 
+    // TODO provide a session.timeout=2.minutes i.e. Duration config? (Can fallback to session.timeoutSeconds)
     val timeoutDuration = configuration
       .getOptional[Long]("session.timeoutSeconds")
-      .map(Duration.standardSeconds)
+      .map(Duration.ofSeconds)
       .getOrElse(defaultTimeout)
 
     val wipeIdleSession = configuration
@@ -82,7 +84,7 @@ class SessionTimeoutFilter @Inject()(
   override val mat: Materializer
 ) extends Filter {
 
-  def clock(): DateTime = DateTime.now(DateTimeZone.UTC)
+  def clock(): Instant = Instant.now()
 
   val authRelatedKeys = Seq(authToken, token, userId)
 
@@ -91,7 +93,7 @@ class SessionTimeoutFilter @Inject()(
   override def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
 
     val updateTimestamp: (Result) => Result =
-      result => result.addingToSession(lastRequestTimestamp -> clock().getMillis.toString)(rh)
+      result => result.addingToSession(lastRequestTimestamp -> clock().toEpochMilli.toString)(rh)
 
     val wipeAllFromSessionCookie: (Result) => Result =
       result => result.withSession(preservedSessionData(result.session(rh)): _*)
@@ -101,7 +103,7 @@ class SessionTimeoutFilter @Inject()(
 
     val timestamp = rh.session.get(lastRequestTimestamp)
 
-    (timestamp.flatMap(timestampToDatetime) match {
+    (timestamp.flatMap(timestampToInstant) match {
       case Some(ts) if hasExpired(ts) && config.onlyWipeAuthToken =>
         f(wipeAuthRelatedKeys(rh))
           .map(wipeAuthRelatedKeysFromSessionCookie)
@@ -113,16 +115,16 @@ class SessionTimeoutFilter @Inject()(
     }).map(updateTimestamp)
   }
 
-  private def timestampToDatetime(timestamp: String): Option[DateTime] =
+  private def timestampToInstant(timestampMs: String): Option[Instant] =
     try {
-      Some(new DateTime(timestamp.toLong, DateTimeZone.UTC))
+      Some(Instant.ofEpochMilli(timestampMs.toLong))
     } catch {
       case e: NumberFormatException => None
     }
 
-  private def hasExpired(timestamp: DateTime): Boolean = {
-    val timeOfExpiry = timestamp plus config.timeoutDuration
-    clock() isAfter timeOfExpiry
+  private def hasExpired(timestamp: Instant): Boolean = {
+    val timeOfExpiry = timestamp.plus(config.timeoutDuration)
+    clock().isAfter(timeOfExpiry)
   }
 
   private def wipeSession(requestHeader: RequestHeader): RequestHeader = {

@@ -21,7 +21,6 @@ import java.util.Date
 import akka.stream.Materializer
 import javax.inject.Inject
 import org.apache.commons.lang3.time.FastDateFormat
-import org.joda.time.DateTimeUtils
 import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.routing.Router.Attrs
 import play.api.{Logger, LoggerLike}
@@ -40,7 +39,7 @@ trait LoggingFilter extends Filter {
 
   def controllerNeedsLogging(controllerName: String): Boolean
 
-  val now: () => Long = DateTimeUtils.currentTimeMillis
+  val now: () => Long = System.currentTimeMillis
 
   protected def logger: LoggerLike = Logger
 

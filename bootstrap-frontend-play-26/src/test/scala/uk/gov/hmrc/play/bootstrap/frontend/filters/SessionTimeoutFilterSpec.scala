@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
+import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
+import java.time.temporal.ChronoUnit
+
 import akka.stream.Materializer
 import javax.inject.Inject
-import org.joda.time.{DateTime, Duration}
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.{MatchResult, Matcher}
@@ -40,7 +42,7 @@ import uk.gov.hmrc.http.SessionKeys._
 import scala.concurrent.ExecutionContext
 
 object SessionTimeoutFilterSpec {
-  val now = new DateTime(2017, 1, 12, 14, 56)
+  val now = LocalDateTime.of(2017, 1, 12, 14, 56).toInstant(ZoneOffset.UTC)
 
   class Filters @Inject()(timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
 
@@ -50,7 +52,7 @@ object SessionTimeoutFilterSpec {
     ec: ExecutionContext,
     mat: Materializer
   ) extends SessionTimeoutFilter(config)(ec, mat) {
-    override val clock: DateTime = now
+    override val clock: Instant = now
   }
 }
 
@@ -92,10 +94,10 @@ class SessionTimeoutFilterSpec
 
   "SessionTimeoutFilter" should {
 
-    val timestamp = now.minusMinutes(5).getMillis.toString
+    val timestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
     val config = SessionTimeoutFilterConfig(
-      timeoutDuration       = Duration.standardMinutes(1),
+      timeoutDuration       = Duration.of(1, ChronoUnit.MINUTES),
       additionalSessionKeys = Set("whitelisted")
     )
 
@@ -152,7 +154,7 @@ class SessionTimeoutFilterSpec
 
     "pass through all session values if timestamp is recent" in {
 
-      val timestamp = now.minusSeconds(5).getMillis.toString
+      val timestamp = now.minusSeconds(5).toEpochMilli.toString
 
       running(app()) {
 
@@ -194,14 +196,14 @@ class SessionTimeoutFilterSpec
         rhSession.get("custom").value       shouldEqual "custom"
         rhSession.get(lastRequestTimestamp) shouldBe None
 
-        session(result).get(lastRequestTimestamp) shouldBe Some(now.getMillis.toString)
+        session(result).get(lastRequestTimestamp) shouldBe Some(now.toEpochMilli.toString)
       }
     }
 
     "strip only auth-related keys if timestamp is old, and onlyWipeAuthToken == true" in {
 
       val altConfig    = config.copy(onlyWipeAuthToken = true)
-      val oldTimestamp = now.minusMinutes(5).getMillis.toString
+      val oldTimestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
       running(app(altConfig)) {
 
@@ -235,9 +237,9 @@ class SessionTimeoutFilterSpec
         val Some(result) = route(
           app(),
           FakeRequest(GET, "/test").withSession(
-            lastRequestTimestamp -> now.minusDays(1).getMillis.toString
+            lastRequestTimestamp -> now.minus(1, ChronoUnit.DAYS).toEpochMilli.toString
           ))
-        session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
+        session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
       }
     }
 
@@ -247,9 +249,9 @@ class SessionTimeoutFilterSpec
         val Some(result) = route(
           app(),
           FakeRequest(GET, "/test").withSession(
-            lastRequestTimestamp -> now.minusSeconds(1).getMillis.toString
+            lastRequestTimestamp -> now.minusSeconds(1).toEpochMilli.toString
           ))
-        session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
+        session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
       }
     }
 
@@ -274,13 +276,13 @@ class SessionTimeoutFilterSpec
         session(result).get(token).value                shouldEqual "another-token"
         session(result).get(loginOrigin).value          shouldEqual "gg"
         session(result).get("custom").value             shouldEqual "custom"
-        session(result).get(lastRequestTimestamp).value shouldEqual now.getMillis.toString
+        session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
       }
     }
 
     "ensure non-session cookies are passed through to the action untouched" in {
 
-      val timestamp = now.minusMinutes(5).getMillis.toString
+      val timestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
       running(app()) {
 
@@ -308,31 +310,31 @@ class SessionTimeoutFilterSpec
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be('empty)
       result.onlyWipeAuthToken     shouldBe false
-      result.timeoutDuration       shouldEqual Duration.standardMinutes(15)
+      result.timeoutDuration       shouldEqual Duration.of(15, ChronoUnit.MINUTES)
     }
 
     "return defaults when config is set to the defaults" in {
       val config = Configuration(
-        "session.timeoutSeconds"              -> Duration.standardMinutes(15).getStandardSeconds,
+        "session.timeoutSeconds"              -> 900,
         "session.wipeIdleSession"             -> true,
         "session.additionalSessionKeysToKeep" -> Set.empty
       )
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be('empty)
       result.onlyWipeAuthToken     shouldBe false
-      result.timeoutDuration       shouldEqual Duration.standardMinutes(15)
+      result.timeoutDuration       shouldEqual Duration.of(15, ChronoUnit.MINUTES)
     }
 
     "return custom settings" in {
       val config = Configuration(
-        "session.timeoutSeconds"              -> Duration.standardMinutes(5).getStandardSeconds,
+        "session.timeoutSeconds"              -> 300,
         "session.wipeIdleSession"             -> false,
         "session.additionalSessionKeysToKeep" -> Set("foo")
       )
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should contain("foo")
       result.onlyWipeAuthToken     shouldBe true
-      result.timeoutDuration       shouldEqual Duration.standardMinutes(5)
+      result.timeoutDuration       shouldEqual Duration.of(5, ChronoUnit.MINUTES)
     }
   }
 

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// TODO move out of microservice package - is used by frontend too
-package uk.gov.hmrc.play.bootstrap.filters.microservice
+package uk.gov.hmrc.play.bootstrap.filters
 
 import akka.stream._
 import akka.stream.stage._
@@ -25,8 +24,8 @@ import play.api.Logger
 protected[filters] class RequestBodyCaptor(
   val loggingContext: String,
   val maxBodyLength: Int,
-  callback: (ByteString) => Unit)
-    extends GraphStage[FlowShape[ByteString, ByteString]] {
+  callback: (ByteString) => Unit
+) extends GraphStage[FlowShape[ByteString, ByteString]] {
   val in             = Inlet[ByteString]("ReqBodyCaptor.in")
   val out            = Outlet[ByteString]("ReqBodyCaptor.out")
   override val shape = FlowShape.of(in, out)
@@ -103,7 +102,6 @@ protected[filters] class ResponseBodyCaptor(
           performAudit("")
           super.onUpstreamFailure(ex)
         }
-
       }
     )
   }

@@ -32,9 +32,8 @@ import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
-import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, RequestBodyCaptor, ResponseBodyCaptor}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
-import uk.gov.hmrc.play.bootstrap.filters.microservice.{RequestBodyCaptor, ResponseBodyCaptor}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -91,9 +90,10 @@ trait FrontendAuditFilter extends AuditFilter {
                 Map(FailedRequestMessage -> f.getMessage) ++ buildRequestDetails(requestHeader, requestBody)))
         }
 
-      if (needsAuditing(requestHeader)) {
+      if (needsAuditing(requestHeader))
         onCompleteWithInput(loggingContext, next, performAudit)
-      } else next
+      else
+        next
     }
   }
 
@@ -131,30 +131,27 @@ trait FrontendAuditFilter extends AuditFilter {
 
     wrappedAcc
       .mapFuture { result =>
-        requestBodyFuture flatMap { res =>
-          {
-            val auditedBody = result.body match {
-              case str: Streamed => {
-                val auditFlow = Flow[ByteString].alsoTo(
-                  new ResponseBodyCaptor(loggingContext, maxBodySize, handler(requestBody, Success(result))))
-                str.copy(data = str.data.via(auditFlow))
-              }
-              case h: HttpEntity => {
-                h.consumeData map { rb =>
-                  val auditString = if (rb.size > maxBodySize) {
+        requestBodyFuture.flatMap { res =>
+          val auditedBody = result.body match {
+            case str: Streamed =>
+              val auditFlow = Flow[ByteString].alsoTo(
+                new ResponseBodyCaptor(loggingContext, maxBodySize, handler(requestBody, Success(result))))
+              str.copy(data = str.data.via(auditFlow))
+            case h: HttpEntity =>
+              h.consumeData.map { rb =>
+                val auditString =
+                  if (rb.size > maxBodySize) {
                     Logger.warn(
                       s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength $maxBodySize - do you need to be auditing this payload?")
                     rb.take(maxBodySize).decodeString("UTF-8")
                   } else {
                     rb.decodeString("UTF-8")
                   }
-                  handler(res, Success(result))(auditString)
-                }
-                h
+                handler(res, Success(result))(auditString)
               }
-            }
-            Future(result.copy(body = auditedBody))
+              h
           }
+          Future(result.copy(body = auditedBody))
         }
       }
       .recover[Result] {
@@ -195,7 +192,7 @@ trait FrontendAuditFilter extends AuditFilter {
   private[filters] def getQueryString(queryString: Map[String, Seq[String]]): String =
     cleanQueryStringForDatastream(queryString.foldLeft[String]("") { (stringRepresentation, mapOfArgs) =>
       val spacer = stringRepresentation match {
-        case "" => "";
+        case "" => ""
         case _  => "&"
       }
 

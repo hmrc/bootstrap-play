@@ -187,7 +187,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilterConfig" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilterConfig(
-        timeoutDuration       = org.joda.time.Duration.ZERO,
+        timeoutDuration       = java.time.Duration.ZERO, // Note this has been changed from joda.time.Duration to java.time.Duration, but all clients seem to call SessionTimeoutFilterConfig.fromConfig
         additionalSessionKeys = mock[Set[String]],
         onlyWipeAuthToken     = true
       )
