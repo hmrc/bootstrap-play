@@ -17,9 +17,10 @@
 package uk.gov.hmrc.play.bootstrap.filters.frontend
 
 import java.util.UUID
-import javax.inject.Inject
 
+import javax.inject.Inject
 import akka.stream.Materializer
+import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderNames.{xRequestId, xRequestTimestamp}
 
@@ -27,10 +28,14 @@ import scala.concurrent.Future
 
 class HeadersFilter @Inject()(override val mat: Materializer) extends Filter {
 
+  private val logger = Logger(this.getClass)
+
   override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
 
     val request = rh.session.get(xRequestId) match {
       case Some(_) =>
+        // BDOG-836: safety check monitoring prior to removal of (what we believe is) an unnecessary session lookup
+        logger.warn(s"Not allocating an $xRequestId header as one unexpectedly exists in the session")
         rh
       case None =>
         rh.withHeaders(rh.headers.add(newHeaders: _*))
