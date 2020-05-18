@@ -149,4 +149,33 @@ package bootstrap {
     @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException instead", "2.6.0")
     type ApplicationException = uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException
   }
+
+  package object frontend {
+    val deprecatedClasses: Map[String, String] =
+      Map(
+        classOf[uk.gov.hmrc.play.bootstrap.FrontendModule].getName                                           -> classOf[uk.gov.hmrc.play.bootstrap.frontend.FrontendModule].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.controller.FrontendBaseController].getName                        -> classOf[uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.controller.FrontendController].getName                            -> classOf[uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.controller.FrontendHeaderCarrierProvider].getName                 -> classOf[uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.FrontendFilters].getName                                  -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.ApplicationCryptoProvider].getName        -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCryptoProvider].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCrypto].getName              -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoProvider].getName      -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoProvider].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.CryptoImplicits].getName                  -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.CryptoImplicits].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter].getName        -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.DefaultSessionCookieCryptoFilter].getName -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.DefaultSessionCookieCryptoFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DefaultDeviceIdFilter].getName          -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DefaultDeviceIdFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceFingerprint].getName              -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceId].getName                       -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdCookie].getName                 -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdCookie].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter].getName                 -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.FrontendAuditFilter].getName                     -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendAuditFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter].getName              -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.DefaultFrontendAuditFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter].getName                           -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.HeadersFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilterConfig].getName              -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilterConfig].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter].getName                    -> classOf[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.http.FrontendErrorHandler].getName                                -> classOf[uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.http.ApplicationException].getName                                -> classOf[uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException].getName
+      )
+  }
 }

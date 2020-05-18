@@ -35,9 +35,14 @@ class BackwardCompatibilitySpec
      with Matchers
      with MockitoSugar {
 
+  val environment = play.api.Environment.simple()
+
   "package" should {
     "preserve uk.gov.hmrc.play.bootstrap.MicroserviceModule" in {
-       new uk.gov.hmrc.play.bootstrap.MicroserviceModule
+      new uk.gov.hmrc.play.bootstrap.MicroserviceModule
+
+      // and can load from config
+      environment.classLoader.loadClass("uk.gov.hmrc.play.bootstrap.MicroserviceModule")
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.controller.BackendBaseController" in {
@@ -64,6 +69,9 @@ class BackwardCompatibilitySpec
         cacheFilter   = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
         mdcFilter     = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
       )
+
+      // and can load from config
+      environment.classLoader.loadClass("uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters")
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.microservice.MicroserviceAuditFilter" in {
@@ -78,7 +86,6 @@ class BackwardCompatibilitySpec
           request        : RequestHeader,
           detail         : Map[String,String]
         )(implicit hc: HeaderCarrier): DataEvent = mock[DataEvent]
-
       }
     }
 
@@ -97,6 +104,9 @@ class BackwardCompatibilitySpec
         httpAuditEvent = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],
         configuration  = Configuration()
       )(ec             = mock[ExecutionContext])
+
+      // and can load from config
+      environment.classLoader.loadClass("uk.gov.hmrc.play.bootstrap.http.JsonErrorHandler")
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.http.ErrorResponse" in {

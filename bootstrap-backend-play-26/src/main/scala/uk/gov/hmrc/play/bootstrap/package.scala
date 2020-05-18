@@ -100,4 +100,19 @@ package bootstrap {
       configuration : Configuration
     )
   }
+
+  package object backend {
+    val deprecatedClasses: Map[String, String] =
+      Map(
+        classOf[uk.gov.hmrc.play.bootstrap.MicroserviceModule].getName                                  -> classOf[uk.gov.hmrc.play.bootstrap.backend.BackendModule].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.controller.BackendBaseController].getName                    -> classOf[uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.controller.BackendController].getName                        -> classOf[uk.gov.hmrc.play.bootstrap.backend.controller.BackendController].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.controller.BackendHeaderCarrierProvider].getName             -> classOf[uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters].getName                         -> classOf[uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.microservice.MicroserviceAuditFilter].getName        -> classOf[uk.gov.hmrc.play.bootstrap.backend.filters.BackendAuditFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.filters.microservice.DefaultMicroserviceAuditFilter].getName -> classOf[uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.http.ErrorResponse].getName                                  -> classOf[uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse].getName,
+        classOf[uk.gov.hmrc.play.bootstrap.http.JsonErrorHandler].getName                               -> classOf[uk.gov.hmrc.play.bootstrap.backend.http.JsonErrorHandler].getName
+      )
+  }
 }

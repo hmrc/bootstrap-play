@@ -35,9 +35,14 @@ class BackwardCompatibilitySpec
      with Matchers
      with MockitoSugar {
 
+  val environment = play.api.Environment.simple()
+
   "pacakge" should {
     "preserve uk.gov.hmrc.play.bootstrap.FrontendModule" in {
-       new uk.gov.hmrc.play.bootstrap.FrontendModule
+      new uk.gov.hmrc.play.bootstrap.FrontendModule
+
+      // and can load from config
+      environment.classLoader.loadClass("uk.gov.hmrc.play.bootstrap.FrontendModule")
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.controller.FrontendBaseController" in {
@@ -71,6 +76,9 @@ class BackwardCompatibilitySpec
         cacheControlFilter        = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
         mdcFilter                 = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
       )
+
+      // and can load from config
+      environment.classLoader.loadClass("uk.gov.hmrc.play.bootstrap.filters.FrontendFilters")
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.ApplicationCryptoProvider" in {

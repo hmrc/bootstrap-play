@@ -19,12 +19,14 @@ package uk.gov.hmrc.play.bootstrap.backend
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.BootstrapModule
+import uk.gov.hmrc.play.bootstrap.config.DeprecatedConfigChecker
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter
 
 class BackendModule extends BootstrapModule {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     super.bindings(environment, configuration) ++ Seq(
-      bind[AuditFilter].to[DefaultBackendAuditFilter]
+      bind[AuditFilter].to[DefaultBackendAuditFilter],
+      bind[DeprecatedConfigChecker].toInstance(new DeprecatedConfigChecker(configuration, deprecatedClasses)).eagerly
     )
 }
