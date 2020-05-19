@@ -28,22 +28,22 @@ import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
 
 package bootstrap {
 
-  @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.FrontendModule", "2.6.0")
+  @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.FrontendModule instead", "2.12.0")
   class FrontendModule extends uk.gov.hmrc.play.bootstrap.frontend.FrontendModule
 
   package object controller {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendBaseController instead", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendBaseController instead", "2.12.0")
     type FrontendBaseController = uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendController instead", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendController instead", "2.12.0")
     type FrontendController = uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendHeaderCarrierProvider instead", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendHeaderCarrierProvider instead", "2.12.0")
     type FrontendHeaderCarrierProvider = uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
   }
 
   package filters {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filter.FrontendFilters instead", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filter.FrontendFilters instead", "2.12.0")
     @Singleton
     class FrontendFilters @Inject()(
       configuration            : Configuration,
@@ -75,78 +75,78 @@ package bootstrap {
 
     package frontend {
       package object crypto {
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCryptoProvider instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCryptoProvider instead", "2.12.0")
         type ApplicationCryptoProvider = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCryptoProvider
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto instead", "2.12.0")
         type SessionCookieCrypto = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCryptoProvider instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCryptoProvider instead", "2.12.0")
         type SessionCookieCryptoProvider = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoProvider
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.CryptoImplicits instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.CryptoImplicits instead", "2.12.0")
         type CryptoImplicits = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.CryptoImplicits
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter instead", "2.12.0")
         type SessionCookieCryptoFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.DefaultSessionCookieCryptoFilter instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.DefaultSessionCookieCryptoFilter instead", "2.12.0")
         type DefaultSessionCookieCryptoFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.DefaultSessionCookieCryptoFilter
       }
 
       package object deviceid {
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DefaultDeviceIdFilter instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DefaultDeviceIdFilter instead", "2.12.0")
         type DefaultDeviceIdFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DefaultDeviceIdFilter
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint instead", "2.12.0")
         type DeviceFingerprint = uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint instead", "2.12.0")
         val DeviceFingerprint = uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId instead", "2.12.0")
         type DeviceId = uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId instead", "2.12.0")
         val DeviceId = uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdCookie instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdCookie instead", "2.12.0")
         type DeviceIdCookie = uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdCookie
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter instead", "2.6.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter instead", "2.12.0")
         type DeviceIdFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
       }
     }
 
     package object frontend {
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendAuditFilter instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendAuditFilter instead", "2.12.0")
       type FrontendAuditFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendAuditFilter
 
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.DefaultFrontendAuditFilter instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.DefaultFrontendAuditFilter instead", "2.12.0")
       type DefaultFrontendAuditFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.DefaultFrontendAuditFilter
 
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.HeadersFilter instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.HeadersFilter instead", "2.12.0")
       type HeadersFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.HeadersFilter
 
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilterConfig instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilterConfig instead", "2.12.0")
       type SessionTimeoutFilterConfig = uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilterConfig
 
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilterConfig instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilterConfig instead", "2.12.0")
       val SessionTimeoutFilterConfig = uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilterConfig
 
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilter instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilter instead", "2.12.0")
       type SessionTimeoutFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilter
 
-      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilter instead", "2.6.0")
+      @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilter instead", "2.12.0")
       val SessionTimeoutFilter = uk.gov.hmrc.play.bootstrap.frontend.filters.SessionTimeoutFilter
     }
   }
 
   package object http {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler instead", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler instead", "2.12.0")
     type FrontendErrorHandler = uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException instead", "2.6.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException instead", "2.12.0")
     type ApplicationException = uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException
   }
 

@@ -45,8 +45,8 @@ class DeprecatedConfigChecker(
     configuration.getOptional[Seq[String]](key).toSeq
       .flatMap(_.flatMap(d => deprecatedValues.get(d).map((key, d, _)).toSeq))
 
-  val deprecations: Seq[(String, String, String)] =
-    stringKeys.flatMap(k => checkForDeprecatedValue(k)) ++
+  def deprecations: Seq[(String, String, String)] =
+    stringKeys.flatMap(checkForDeprecatedValue) ++
     stringArrayKeys.flatMap(checkForDeprecatedValues)
 
   deprecations.map { case (k,d,v) =>
