@@ -20,7 +20,6 @@ import java.util.{Date, TimeZone}
 
 import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
-import org.joda.time.DateTimeUtils
 import org.mockito.Mockito.when
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually
@@ -153,8 +152,8 @@ class LoggingFilterSpec
   class TestLoggingFilter(
     loggerIn: LoggerLike,
     controllerNeedsLogging: Boolean,
-    currentTime: () => Long = DateTimeUtils.currentTimeMillis)
-      extends LoggingFilter {
+    currentTime: () => Long = System.currentTimeMillis
+  ) extends LoggingFilter {
 
     override implicit val mat: Materializer = null
     override implicit val ec                = ExecutionContext.fromExecutorService(

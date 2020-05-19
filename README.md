@@ -71,7 +71,7 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
 # A metric filter must be provided
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule"
 
-# Provides an implementation and configures all filters required by a Platform frontend microservice.
+# Provides an implementation and configures all filters required by a Platform backend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.MicroserviceModule"
 play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters"
 
