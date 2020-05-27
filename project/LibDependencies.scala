@@ -20,14 +20,14 @@ object LibDependencies {
     Seq(
       "ch.qos.logback"         %  "logback-core"               % "1.2.3",
       "com.kenshoo"            %% "metrics-play"               % (if (playVersion == play26Version) "2.6.19_0.7.0"
-                                                                 else "2.7.3_0.8.2" // scala_2_12 only
-                                                                ),
+                                                                  else "2.7.3_0.8.2" // scala_2_12 only
+                                                                 ),
       "com.typesafe.play"      %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"  %  "metrics-graphite"           % "4.1.5",
       "uk.gov.hmrc"            %% "auth-client"                % s"3.0.0-$playSuffix",
       "uk.gov.hmrc"            %% "crypto"                     % "5.6.0",
-      "uk.gov.hmrc"            %% s"http-verbs-$playSuffix"    % s"10.14.0",
-      "uk.gov.hmrc"            %% s"play-auditing-$playSuffix" % s"5.3.0",
+      "uk.gov.hmrc"            %% s"http-verbs-$playSuffix"    % "10.14.0",
+      "uk.gov.hmrc"            %% s"play-auditing-$playSuffix" % "5.4.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"      %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"            %% "logback-json-logger"        % "4.8.0",
