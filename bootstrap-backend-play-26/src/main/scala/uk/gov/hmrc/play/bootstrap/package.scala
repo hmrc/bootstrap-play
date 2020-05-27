@@ -33,13 +33,13 @@ package bootstrap {
   class MicroserviceModule extends uk.gov.hmrc.play.bootstrap.backend.BackendModule
 
   package object controller {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.backend.BackendBaseController instead", "2.12.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController instead", "2.12.0")
     type BackendBaseController = uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.backend.BackendController instead", "2.12.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.controller.BackendController instead", "2.12.0")
     type BackendController = uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.backend.BackendHeaderCarrierProvider instead", "2.12.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider instead", "2.12.0")
     type BackendHeaderCarrierProvider = uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
   }
 

@@ -32,18 +32,18 @@ package bootstrap {
   class FrontendModule extends uk.gov.hmrc.play.bootstrap.frontend.FrontendModule
 
   package object controller {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendBaseController instead", "2.12.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController instead", "2.12.0")
     type FrontendBaseController = uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendController instead", "2.12.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController instead", "2.12.0")
     type FrontendController = uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.controller.frontend.FrontendHeaderCarrierProvider instead", "2.12.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider instead", "2.12.0")
     type FrontendHeaderCarrierProvider = uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
   }
 
   package filters {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filter.FrontendFilters instead", "2.12.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters instead", "2.12.0")
     @Singleton
     class FrontendFilters @Inject()(
       configuration            : Configuration,
@@ -81,7 +81,7 @@ package bootstrap {
         @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto instead", "2.12.0")
         type SessionCookieCrypto = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 
-        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCryptoProvider instead", "2.12.0")
+        @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoProvider instead", "2.12.0")
         type SessionCookieCryptoProvider = uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoProvider
 
         @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.CryptoImplicits instead", "2.12.0")
