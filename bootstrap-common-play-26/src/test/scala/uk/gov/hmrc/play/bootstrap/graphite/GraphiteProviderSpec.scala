@@ -20,7 +20,6 @@ import com.typesafe.config.ConfigException
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers
 

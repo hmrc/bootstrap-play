@@ -52,6 +52,8 @@ trait FrontendAuditFilter extends AuditFilter {
 
   def controllerNeedsAuditing(controllerName: String): Boolean
 
+  private val logger = Logger(getClass)
+
   private val textHtml = ".*(text/html).*".r
 
   val maxBodySize = 32665
@@ -113,7 +115,7 @@ trait FrontendAuditFilter extends AuditFilter {
     var requestBody: String = ""
     def callback(body: ByteString): Unit = {
       requestBody = body.decodeString("UTF-8")
-      requestBodyPromise success requestBody
+      requestBodyPromise.success(requestBody)
     }
 
     //grabbed from plays csrf filter
@@ -125,9 +127,7 @@ trait FrontendAuditFilter extends AuditFilter {
         .map(_._2)
         .concatSubstreams
         .toMat(Sink.head[Source[ByteString, _]])(Keep.right)
-    ).mapFuture { bodySource =>
-      next.run(bodySource)
-    }
+    ).mapFuture(next.run)
 
     wrappedAcc
       .mapFuture { result =>
@@ -141,7 +141,7 @@ trait FrontendAuditFilter extends AuditFilter {
               h.consumeData.map { rb =>
                 val auditString =
                   if (rb.size > maxBodySize) {
-                    Logger.warn(
+                    logger.warn(
                       s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength $maxBodySize - do you need to be auditing this payload?")
                     rb.take(maxBodySize).decodeString("UTF-8")
                   } else {

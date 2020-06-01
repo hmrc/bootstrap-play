@@ -16,16 +16,11 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import java.util.Date
-
 import akka.stream.Materializer
 import javax.inject.Inject
-import org.apache.commons.lang3.time.FastDateFormat
 import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.routing.Router.Attrs
 import play.api.{Logger, LoggerLike}
-import uk.gov.hmrc.http.logging.LoggingDetails
-import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,8 +28,6 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 trait LoggingFilter extends Filter {
-  private val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
-
   implicit val ec: ExecutionContext
 
   def controllerNeedsLogging(controllerName: String): Boolean
@@ -44,7 +37,6 @@ trait LoggingFilter extends Filter {
   protected def logger: LoggerLike = Logger
 
   def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
-    implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
     val startTime   = now()
     val result      = next(rh)
 
@@ -60,10 +52,8 @@ trait LoggingFilter extends Filter {
       controllerNeedsLogging(handlerDef.controller)
     }
 
-  private def log(rh: RequestHeader, resultF: Future[Result], startTime: Long)(
-    implicit ld: LoggingDetails): Future[Result] = {
+  private def log(rh: RequestHeader, resultF: Future[Result], startTime: Long): Future[Result] = {
 
-    val start       = dateFormat.format(new Date(startTime))
     def elapsedTime = now() - startTime
 
     resultF

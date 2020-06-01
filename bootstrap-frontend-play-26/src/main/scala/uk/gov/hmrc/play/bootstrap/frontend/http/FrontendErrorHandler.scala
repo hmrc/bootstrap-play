@@ -25,9 +25,14 @@ import play.api.{Logger, PlayException}
 import play.twirl.api.Html
 
 import scala.concurrent.Future
+import scala.language.implicitConversions
+import com.github.ghik.silencer.silent
 
 abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
 
+  private val logger = Logger(getClass)
+
+  @silent("never used")
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
     statusCode match {
       case play.mvc.Http.Status.BAD_REQUEST => Future.successful(BadRequest(badRequestTemplate(request)))
@@ -68,7 +73,7 @@ abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
     )
 
   private def logError(request: RequestHeader, ex: Throwable): Unit =
-    Logger.error(
+    logger.error(
       """
           |
           |! %sInternal server error, for (%s) [%s] ->

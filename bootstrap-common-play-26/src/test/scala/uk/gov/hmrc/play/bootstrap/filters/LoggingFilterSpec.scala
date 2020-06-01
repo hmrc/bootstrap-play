@@ -36,6 +36,7 @@ import play.api.{LoggerLike, MarkerContext}
 import uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorService
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.reflectiveCalls
 
 class LoggingFilterSpec
     extends AnyWordSpecLike
@@ -87,7 +88,6 @@ class LoggingFilterSpec
       val logger = createLogger()
 
       val timestamp                  = new Date()
-      val requestStartString         = dateFormat.format(timestamp)
       val expectedRequestStartMillis = timestamp.getTime
 
       val expectedRequestDurationInMillis = 5
@@ -108,7 +108,6 @@ class LoggingFilterSpec
       val logger = createLogger()
 
       val timestamp                  = new Date()
-      val requestStartString         = dateFormat.format(timestamp)
       val expectedRequestStartMillis = timestamp.getTime
 
       val expectedRequestDurationInMillis = 5

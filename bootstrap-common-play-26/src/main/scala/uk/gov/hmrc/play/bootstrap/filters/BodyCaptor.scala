@@ -30,6 +30,8 @@ protected[filters] class RequestBodyCaptor(
   val out            = Outlet[ByteString]("ReqBodyCaptor.out")
   override val shape = FlowShape.of(in, out)
 
+  private val logger = Logger(getClass)
+
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new GraphStageLogic(shape) {
     private var buffer: ByteString = ByteString.empty
     private var bodyLength         = 0
@@ -52,7 +54,7 @@ protected[filters] class RequestBodyCaptor(
 
         override def onUpstreamFinish(): Unit = {
           if (bodyLength > maxBodyLength)
-            Logger.warn(
+            logger.warn(
               s"txm play auditing: $loggingContext sanity check request body $bodyLength exceeds maxLength $maxBodyLength - do you need to be auditing this payload?")
           callback(buffer.take(maxBodyLength))
           if (isAvailable(out) && buffer == ByteString.empty)
@@ -71,6 +73,8 @@ protected[filters] class ResponseBodyCaptor(
     extends GraphStage[SinkShape[ByteString]] {
   val in             = Inlet[ByteString]("RespBodyCaptor.in")
   override val shape = SinkShape.of(in)
+
+  private val logger = Logger(getClass)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new GraphStageLogic(shape) {
     private var buffer: ByteString = ByteString.empty
@@ -92,7 +96,7 @@ protected[filters] class ResponseBodyCaptor(
 
         override def onUpstreamFinish(): Unit = {
           if (bodyLength > maxBodyLength)
-            Logger.warn(
+            logger.warn(
               s"txm play auditing: $loggingContext sanity check request body $bodyLength exceeds maxLength $maxBodyLength - do you need to be auditing this payload?")
           performAudit(buffer.take(maxBodyLength).decodeString("UTF-8"))
           completeStage()

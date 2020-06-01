@@ -24,6 +24,8 @@ import scala.util.Try
 
 trait DeviceFingerprint {
 
+  private val logger = Logger(getClass)
+
   val deviceFingerprintCookieName = "mdtpdf"
 
   def deviceFingerprintFrom(request: RequestHeader): String =
@@ -35,7 +37,7 @@ trait DeviceFingerprint {
           BaseEncoding.base64().decode(cookie.value)
         }
         decodeAttempt.failed.foreach { e =>
-          Logger.info(
+          logger.info(
             s"Failed to decode device fingerprint '${cookie.value}' caused by '${e.getClass.getSimpleName}:${e.getMessage}'")
         }
         decodeAttempt

@@ -275,8 +275,6 @@ class FrontendAuditFilterSpec
     }
 
     "add the Location header to the details if available" in {
-      implicit val hc = HeaderCarrier()
-
       val next = Action.async { _ =>
         Future.successful(Results.Ok.withHeaders("Location" -> "some url"))
       }
@@ -407,8 +405,7 @@ class FrontendAuditFilterSpec
 
   "A frontend response" should {
     "not be included in the audit message if it is HTML" in {
-      implicit val hc = HeaderCarrier()
-      val next        = Action(Results.Ok(<h1>Hello, world!</h1>).as(HTML).withHeaders("Content-Type" -> "text/html"))
+      val next = Action(Results.Ok(<h1>Hello, world!</h1>).as(HTML).withHeaders("Content-Type" -> "text/html"))
 
       val result = await(filter.apply(next)(FakeRequest()).run)
       await(enumerateResponseBody(result))
@@ -420,8 +417,7 @@ class FrontendAuditFilterSpec
     }
 
     "not depend on response headers when truncating HTML" in {
-      implicit val hc = HeaderCarrier()
-      val next        = Action(Results.Ok(<h1>Hello, world!</h1>).as(HTML))
+      val next = Action(Results.Ok(<h1>Hello, world!</h1>).as(HTML))
 
       val result = await(filter.apply(next)(FakeRequest()).run)
       await(enumerateResponseBody(result))
@@ -433,7 +429,6 @@ class FrontendAuditFilterSpec
     }
 
     "not be included in the audit message if it is html with utf-8" in {
-      implicit val hc = HeaderCarrier()
       val next = Action.async { _ =>
         Future.successful(
           Results.Ok(<h1>Hello, world!</h1>).as(HTML).withHeaders("Content-Type" -> "text/html; charset=utf-8"))
@@ -449,7 +444,6 @@ class FrontendAuditFilterSpec
     }
 
     "be included if the ContentType is not text/html" in {
-      implicit val hc = HeaderCarrier()
       val next = Action.async { _ =>
         Future.successful(Results.Status(303)("....the response...").withHeaders("Content-Type" -> "application/json"))
       }

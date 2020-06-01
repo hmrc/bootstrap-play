@@ -40,7 +40,13 @@ import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
-class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar with LoneElement with Eventually {
+class JsonErrorHandlerSpec
+  extends AnyWordSpec
+     with Matchers
+     with ScalaFutures
+     with MockitoSugar
+     with LoneElement
+     with Eventually {
 
   import ExecutionContext.Implicits.global
 
@@ -151,31 +157,9 @@ class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures w
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "convert a Upstream4xxResponse to reportAs from the exception and audit the error" in new Setup {
+    "convert an UpstreamErrorResponse to reportAs from the exception and audit the error" in new Setup {
       val reportAs         = Random.nextInt()
-      val exception        = Upstream4xxResponse("error message", Random.nextInt, reportAs)
-      val createdDataEvent = DataEvent("auditSource", "auditType")
-      when(
-        httpAuditEvent.dataEvent(
-          eventType       = is("ServerInternalError"),
-          transactionName = is("Unexpected error"),
-          request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
-
-      val result = jsonErrorHandler.onServerError(requestHeader, exception)
-
-      status(result) shouldEqual reportAs
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> reportAs, "message" -> exception.getMessage)
-
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
-    }
-
-    "convert a Upstream5xxResponse to reportAs from the exception and audit the error" in new Setup {
-      val reportAs         = Random.nextInt()
-      val exception        = Upstream5xxResponse("error message", Random.nextInt, reportAs)
+      val exception        = UpstreamErrorResponse("error message", Random.nextInt, reportAs)
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
@@ -218,8 +202,8 @@ class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures w
       }
 
       "an UpstreamErrorResponse exception occurs" in new WarningSetup(Seq(500)) {
-        withCaptureOfLoggingFrom(Logger) { logEvents =>
-          jsonErrorHandler.onServerError(requestHeader, Upstream5xxResponse("any application exception", 500, 502)).futureValue
+        withCaptureOfLoggingFrom(Logger(classOf[JsonErrorHandler])) { logEvents =>
+          jsonErrorHandler.onServerError(requestHeader, UpstreamErrorResponse("any application exception", 500, 502)).futureValue
 
           eventually {
             val event = logEvents.loneElement
@@ -230,7 +214,7 @@ class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures w
       }
 
       "a HttpException occurs" in new WarningSetup(Seq(400)) {
-        withCaptureOfLoggingFrom(Logger) { logEvents =>
+        withCaptureOfLoggingFrom(Logger(classOf[JsonErrorHandler])) { logEvents =>
           jsonErrorHandler.onServerError(requestHeader, new BadRequestException("any application exception")).futureValue
 
           eventually {

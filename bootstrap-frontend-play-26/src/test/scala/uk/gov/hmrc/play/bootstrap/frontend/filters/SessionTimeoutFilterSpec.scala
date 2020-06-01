@@ -338,7 +338,7 @@ class SessionTimeoutFilterSpec
     }
   }
 
-  private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String] = Set.empty) =
+  private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String]) =
     new Matcher[Map[String, String]] {
       override def apply(data: Map[String, String]): MatchResult =
         MatchResult(

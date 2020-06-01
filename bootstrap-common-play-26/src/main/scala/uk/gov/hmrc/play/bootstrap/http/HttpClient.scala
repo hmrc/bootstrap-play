@@ -14,37 +14,41 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.http
+package uk.gov.hmrc.play.bootstrap
 
 import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import javax.inject.{Inject, Named, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.ws._
 
-trait HttpClient extends HttpGet with HttpPut with HttpPost with HttpDelete with HttpPatch
-
-@Singleton
-class DefaultHttpClient @Inject()(
-  config: Configuration,
-  val httpAuditing: HttpAuditing,
-  override val wsClient: WSClient,
-  override protected val actorSystem: ActorSystem)
-    extends HttpClient
-    with WSHttp {
-
-  override lazy val configuration: Option[Config] = Option(config.underlying)
-
-  override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
-
+package object http {
+  @deprecated("Use uk.gov.hmrc.http.HttpClient instead", "2.15.0")
+  type HttpClient = uk.gov.hmrc.http.HttpClient
 }
 
-class DefaultHttpAuditing @Inject()(
-  val auditConnector: AuditConnector,
-  @Named("appName") val appName: String
-) extends HttpAuditing
+package http {
+
+  @Singleton
+  class DefaultHttpClient @Inject()(
+    config: Configuration,
+    val httpAuditing: HttpAuditing,
+    override val wsClient: WSClient,
+    override protected val actorSystem: ActorSystem
+  ) extends uk.gov.hmrc.http.HttpClient
+       with WSHttp {
+
+    override lazy val configuration: Option[Config] = Option(config.underlying)
+
+    override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
+  }
+
+  class DefaultHttpAuditing @Inject()(
+    val auditConnector: AuditConnector,
+    @Named("appName") val appName: String
+  ) extends HttpAuditing
+}
