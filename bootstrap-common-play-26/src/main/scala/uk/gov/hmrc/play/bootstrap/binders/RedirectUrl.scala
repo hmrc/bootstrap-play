@@ -23,6 +23,7 @@ import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrlPolicy.Id
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.{higherKinds, implicitConversions}
 import scala.util.{Failure, Success, Try}
 
 object RedirectUrlPolicy {

@@ -28,8 +28,8 @@ import scala.concurrent.Future
 trait GraphiteReporting
 
 class DisabledGraphiteReporting @Inject() extends GraphiteReporting {
-
-  Logger.info("Graphite metrics disabled")
+  private val logger = Logger(getClass)
+  logger.info("Graphite metrics disabled")
 }
 
 @Singleton
@@ -39,9 +39,11 @@ class EnabledGraphiteReporting @Inject()(
   lifecycle: ApplicationLifecycle
 ) extends GraphiteReporting {
 
+  private val logger = Logger(getClass)
+
   protected def interval: Long = config.getOptional[Long]("microservice.metrics.graphite.interval").getOrElse(10L)
 
-  Logger.info("Graphite metrics enabled, starting the reporter")
+  logger.info("Graphite metrics enabled, starting the reporter")
 
   // start graphite reporter
   reporter.start(interval, TimeUnit.SECONDS)

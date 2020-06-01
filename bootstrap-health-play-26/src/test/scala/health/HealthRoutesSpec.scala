@@ -26,6 +26,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import play.api.test._
 
+import scala.language.implicitConversions
+
 class HealthRoutesSpec
   extends AnyWordSpec
   with Matchers

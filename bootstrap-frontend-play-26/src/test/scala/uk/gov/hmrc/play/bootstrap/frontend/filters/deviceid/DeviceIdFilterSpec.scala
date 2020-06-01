@@ -22,12 +22,10 @@ import org.scalatest.matchers.should.Matchers
 import org.mockito.Mockito.{times, _}
 import org.mockito.{ArgumentCaptor, Mockito}
 import org.mockito.ArgumentMatchers.any
-import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Inspectors, OptionValues}
+import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc._
 import play.api.mvc.request.RequestAttrKey
 import play.api.test.FakeRequest
@@ -35,6 +33,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.reflectiveCalls
 
 class DeviceIdFilterSpec
     extends AnyWordSpecLike

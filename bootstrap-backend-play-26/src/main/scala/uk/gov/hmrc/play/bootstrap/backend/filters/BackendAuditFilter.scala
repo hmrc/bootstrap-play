@@ -39,6 +39,8 @@ import scala.util.{Failure, Success, Try}
 
 trait BackendAuditFilter extends AuditFilter {
 
+  private val logger = Logger(getClass)
+
   protected implicit def ec: ExecutionContext
   def auditConnector: AuditConnector
 
@@ -130,7 +132,7 @@ trait BackendAuditFilter extends AuditFilter {
               case h: HttpEntity => {
                 h.consumeData map { rb =>
                   val auditString = if (rb.size > maxBodySize) {
-                    Logger.warn(
+                    logger.warn(
                       s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength $maxBodySize - do you need to be auditing this payload?")
                     rb.take(maxBodySize).decodeString("UTF-8")
                   } else {

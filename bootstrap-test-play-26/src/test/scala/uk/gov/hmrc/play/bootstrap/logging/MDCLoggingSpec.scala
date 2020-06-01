@@ -54,7 +54,7 @@ abstract class MDCLoggingSpec extends AnyWordSpec with Matchers with ScalaFuture
       Router.from {
         case GET(p"/") =>
           Action {
-            Logger.warn("bar")
+            Logger(getClass).warn("bar")
             Results.Ok {
               Json.toJson {
                 Option(MDC.getCopyOfContextMap)

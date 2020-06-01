@@ -18,7 +18,6 @@ package uk.gov.hmrc.play.health
 
 import javax.inject.Inject
 
-import play.api.libs.json.Json.toJson
 import play.api.mvc.{BaseController, ControllerComponents}
 import play.api.{Configuration, Environment}
 

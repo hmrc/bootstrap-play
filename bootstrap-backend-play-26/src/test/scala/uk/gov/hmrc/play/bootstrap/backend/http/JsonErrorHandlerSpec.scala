@@ -40,7 +40,13 @@ import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
-class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar with LoneElement with Eventually {
+class JsonErrorHandlerSpec
+  extends AnyWordSpec
+     with Matchers
+     with ScalaFutures
+     with MockitoSugar
+     with LoneElement
+     with Eventually {
 
   import ExecutionContext.Implicits.global
 
@@ -218,7 +224,7 @@ class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures w
       }
 
       "an UpstreamErrorResponse exception occurs" in new WarningSetup(Seq(500)) {
-        withCaptureOfLoggingFrom(Logger) { logEvents =>
+        withCaptureOfLoggingFrom(Logger(classOf[JsonErrorHandler])) { logEvents =>
           jsonErrorHandler.onServerError(requestHeader, Upstream5xxResponse("any application exception", 500, 502)).futureValue
 
           eventually {
@@ -230,7 +236,7 @@ class JsonErrorHandlerSpec extends AnyWordSpec with Matchers with ScalaFutures w
       }
 
       "a HttpException occurs" in new WarningSetup(Seq(400)) {
-        withCaptureOfLoggingFrom(Logger) { logEvents =>
+        withCaptureOfLoggingFrom(Logger(classOf[JsonErrorHandler])) { logEvents =>
           jsonErrorHandler.onServerError(requestHeader, new BadRequestException("any application exception")).futureValue
 
           eventually {

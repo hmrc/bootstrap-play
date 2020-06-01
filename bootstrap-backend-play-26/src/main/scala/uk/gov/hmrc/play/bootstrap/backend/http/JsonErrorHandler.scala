@@ -42,6 +42,8 @@ class JsonErrorHandler @Inject()(
 
   import httpAuditEvent.dataEvent
 
+  private val logger = Logger(getClass)
+
   /**
     * `upstreamWarnStatuses` is used to determine the log level for exceptions
     * relating to a HttpResponse. You can set this value in your config as
@@ -105,16 +107,16 @@ class JsonErrorHandler @Inject()(
 
     val errorResponse = ex match {
       case e: AuthorisationException =>
-        Logger.error(message, e)
+        logger.error(message, e)
         ErrorResponse(401, e.getMessage)
       case e: HttpException =>
         logException(e, e.responseCode)
         ErrorResponse(e.responseCode, e.getMessage)
-      case e: Exception with UpstreamErrorResponse =>
-        logException(e, e.upstreamResponseCode)
+      case e: UpstreamErrorResponse =>
+        logException(e, e.statusCode)
         ErrorResponse(e.reportAs, e.getMessage)
       case e: Throwable =>
-        Logger.error(message, e)
+        logger.error(message, e)
         ErrorResponse(INTERNAL_SERVER_ERROR, e.getMessage)
     }
 
@@ -131,7 +133,7 @@ class JsonErrorHandler @Inject()(
 
   private def logException(exception: Exception, responseCode: Int): Unit =
     if (upstreamWarnStatuses contains responseCode)
-      Logger.warn(exception.getMessage, exception)
+      logger.warn(exception.getMessage, exception)
     else
-      Logger.error(exception.getMessage, exception)
+      logger.error(exception.getMessage, exception)
 }

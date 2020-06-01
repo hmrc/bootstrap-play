@@ -52,6 +52,8 @@ trait SessionCookieCryptoFilter extends Filter with CryptoImplicits {
   protected def sessionBaker: SessionCookieBaker
   protected val decodeCookieHeader: String => Seq[Cookie] = Cookies.decodeCookieHeader
 
+  private val logger = Logger(getClass)
+
   override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] =
     encryptSession(next(decryptSession(rh)))
 
@@ -96,7 +98,7 @@ trait SessionCookieCryptoFilter extends Filter with CryptoImplicits {
     Try(decrypter.decrypt(cookie.value)) match {
       case Success(decryptedValue) => Some(cookie.copy(value = decryptedValue))
       case Failure(ex) =>
-        Logger.warn(s"Could not decrypt cookie ${sessionBaker.COOKIE_NAME} got exception:${ex.getMessage}")
+        logger.warn(s"Could not decrypt cookie ${sessionBaker.COOKIE_NAME} got exception:${ex.getMessage}")
         None
     }
 }
