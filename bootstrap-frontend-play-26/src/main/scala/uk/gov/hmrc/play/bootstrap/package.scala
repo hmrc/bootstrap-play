@@ -148,6 +148,9 @@ package bootstrap {
 
     @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException instead", "2.12.0")
     type ApplicationException = uk.gov.hmrc.play.bootstrap.frontend.http.ApplicationException
+
+    @deprecated("Use uk.gov.hmrc.http.HttpClient instead", "2.15.0")
+    type HttpClient = uk.gov.hmrc.http.HttpClient
   }
 
   package object frontend {

@@ -83,6 +83,9 @@ package bootstrap {
   package object http {
     @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse instead", "2.12.0")
     type ErrorResponse = uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+
+    @deprecated("Use uk.gov.hmrc.http.HttpClient instead", "2.15.0")
+    type HttpClient = uk.gov.hmrc.http.HttpClient
   }
 
   package http {
