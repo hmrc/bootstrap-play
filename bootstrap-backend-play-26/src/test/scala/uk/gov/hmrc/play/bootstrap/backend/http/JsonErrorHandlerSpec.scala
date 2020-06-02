@@ -136,7 +136,7 @@ class JsonErrorHandlerSpec
     }
 
     "convert a HttpException to responseCode from the exception and audit the error" in new Setup {
-      val responseCode     = Random.nextInt()
+      val responseCode     = randomErrorStatusCode()
       val exception        = new HttpException("error message", responseCode)
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
@@ -158,8 +158,8 @@ class JsonErrorHandlerSpec
     }
 
     "convert an UpstreamErrorResponse to reportAs from the exception and audit the error" in new Setup {
-      val reportAs         = Random.nextInt()
-      val exception        = UpstreamErrorResponse("error message", Random.nextInt, reportAs)
+      val reportAs         = randomErrorStatusCode()
+      val exception        = UpstreamErrorResponse("error message", randomErrorStatusCode(), reportAs)
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
@@ -304,5 +304,8 @@ class JsonErrorHandlerSpec
 
     val configuration    = Configuration("appName" -> "myApp")
     lazy val jsonErrorHandler = new JsonErrorHandler(auditConnector, httpAuditEvent, configuration)
+
+    def randomErrorStatusCode(): Int =
+      400 + Random.nextInt(200)
   }
 }
