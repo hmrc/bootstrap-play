@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.play.bootstrap.audit
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
+@Singleton
 class DefaultAuditConnector @Inject()(val auditingConfig: AuditingConfig) extends AuditConnector
