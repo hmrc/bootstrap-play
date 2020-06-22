@@ -16,13 +16,19 @@
 
 package uk.gov.hmrc.play.bootstrap.http.utils
 
+import akka.actor.ActorSystem
+import akka.stream.{ActorMaterializer, Materializer}
+import play.api.inject.{ApplicationLifecycle, DefaultApplicationLifecycle}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 class TestAuditConnector(appName: String) extends AuditConnector {
   override val auditingConfig: AuditingConfig = AuditingConfig(
-    consumer    = None,
-    enabled     = false,
-    auditSource = appName
+    consumer          = None,
+    enabled           = false,
+    auditSource       = appName,
+    auditExtraHeaders = None
   )
+  override def materializer: Materializer = ActorMaterializer()(ActorSystem())
+  override def lifecycle: ApplicationLifecycle = new DefaultApplicationLifecycle()
 }
