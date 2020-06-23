@@ -56,7 +56,8 @@ class AuditingConfigProvider @Inject()(
                 }
                 .getOrElse(throw new Exception("Missing consumer configuration for auditing"))
             ),
-            auditSource = appName
+            auditSource = appName,
+            auditExtraHeaders = c.getOptional[Boolean]("auditExtraHeaders")
           )
         } else {
           AuditingConfig(consumer = None, enabled = false, auditSource = "auditing disabled")
