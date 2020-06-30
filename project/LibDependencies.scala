@@ -34,7 +34,8 @@ object LibDependencies {
       // test dependencies
       "com.github.tomakehurst" %  "wiremock-jre8"              % "2.26.3"                % Test,
       "com.typesafe.play"      %% "play-test"                  % playVersion             % Test,
-      "org.mockito"            %  "mockito-core"               % "3.3.3"                 % Test,
+      "org.mockito"            %% "mockito-scala"              % "1.14.8"                % Test,
+      "org.mockito"            %% "mockito-scala-scalatest"    % "1.14.8"                % Test,
       "com.vladsch.flexmark"   %  "flexmark-all"               % "0.35.10"               % Test,
       "org.scalacheck"         %% "scalacheck"                 % "1.14.3"                % Test,
       "org.scalatestplus"      %% "scalatestplus-mockito"      % "1.0.0-M2"              % Test,
@@ -46,6 +47,7 @@ object LibDependencies {
 
   private def frontendCommon(playVersion: String, playSuffix: String) = common(playVersion, playSuffix) ++
     Seq(
+      "uk.gov.hmrc"            %% "play-whitelist-filter"      % s"3.4.0-$playSuffix",
       // the following are not used by bootstrap - but transitively added for clients
       "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.8.0"
     )
