@@ -21,7 +21,7 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.http.HeaderNames
 import play.api.mvc._
-import play.api.mvc.request.{AssignedCell, RequestAttrKey}
+import play.api.mvc.request.{Cell, RequestAttrKey}
 import uk.gov.hmrc.crypto._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -84,7 +84,7 @@ trait SessionCookieCryptoFilter extends Filter with CryptoImplicits {
     } yield {
       rh.addAttr(
         key   = RequestAttrKey.Session,
-        value = new AssignedCell(sessionBaker.decodeFromCookie(Some(decryptedSessionCookie)))
+        value = Cell(sessionBaker.decodeFromCookie(Some(decryptedSessionCookie)))
       )
     }).getOrElse(rh)
 

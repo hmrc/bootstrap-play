@@ -25,10 +25,12 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.components.OneAppPerSuiteWithComponents
 import play.api.{Application, BuiltInComponents, BuiltInComponentsFromContext, NoHttpFiltersComponents}
+import play.api.Application
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.mvc.SessionCookieBaker
+import play.api.mvc.{Results, SessionCookieBaker}
+import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderNames, SessionKeys}
@@ -49,44 +51,39 @@ object SessionIdFilterSpec {
 
 }
 
-class SessionIdFilterSpec extends AnyWordSpec with Matchers with OptionValues with OneAppPerSuiteWithComponents {
-
+class SessionIdFilterSpec extends AnyWordSpec with Matchers with OptionValues with OneAppPerSuiteWithComponents  {
   import SessionIdFilterSpec._
 
   override def components: BuiltInComponents = new BuiltInComponentsFromContext(context) with NoHttpFiltersComponents {
+    lazy val router: Router = {
+      import play.api.routing.sird._
 
-    import play.api.mvc.Results
-    import play.api.routing.Router
-    import play.api.routing.sird._
-
-    lazy val router: Router = Router.from {
-      case GET(p"/test") => defaultActionBuilder.apply {
-        request =>
-          val fromHeader = request.headers.get(HeaderNames.xSessionId).getOrElse("")
-          val fromSession = request.session.get(SessionKeys.sessionId).getOrElse("")
-          Results.Ok(
-            Json.obj(
-              "fromHeader" -> fromHeader,
-              "fromSession" -> fromSession
+      Router.from {
+        case GET(p"/test") => defaultActionBuilder {
+          request =>
+            val fromHeader = request.headers.get(HeaderNames.xSessionId).getOrElse("")
+            val fromSession = request.session.get(SessionKeys.sessionId).getOrElse("")
+            Results.Ok(
+              Json.obj(
+                "fromHeader" -> fromHeader,
+                "fromSession" -> fromSession
+              )
             )
-          )
-      }
-      case GET(p"/test2") => defaultActionBuilder.apply {
-        implicit request =>
-          Results.Ok.addingToSession("foo" -> "bar")
+        }
+        case GET(p"/test2") => defaultActionBuilder {
+          implicit request =>
+            Results.Ok.addingToSession("foo" -> "bar")
+        }
       }
     }
   }
 
-  import SessionIdFilterSpec._
-
   override lazy val app: Application = {
-
     import play.api.inject._
 
     new GuiceApplicationBuilder()
       .overrides(
-        bind[HttpFilters].to[SessionIdFilterSpec.Filters], // Should it be added to default filters?
+        bind[HttpFilters].to[SessionIdFilterSpec.Filters], // TODO Should it be added to default filters?
         bind[SessionIdFilter].to[TestSessionIdFilter]
       )
       .configure(
@@ -97,7 +94,6 @@ class SessionIdFilterSpec extends AnyWordSpec with Matchers with OptionValues wi
   }
 
   "session id filter" must {
-
     "add a sessionId if one doesn't already exist" in {
       val result = route(app, FakeRequest(GET, "/test")).value
 

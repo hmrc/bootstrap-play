@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
 import play.api.mvc._
-import play.api.mvc.request.{AssignedCell, RequestAttrKey}
+import play.api.mvc.request.{Cell, RequestAttrKey}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
@@ -65,7 +65,7 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
     val rhUpdatedWithDeviceIdCookie =
       rh.addAttr(
         key   = RequestAttrKey.Cookies,
-        value = new AssignedCell(Cookies(cookieResult.cookies))
+        value = Cell(Cookies(cookieResult.cookies))
       )
 
     next(rhUpdatedWithDeviceIdCookie).map { result =>

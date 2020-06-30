@@ -39,7 +39,8 @@ class FrontendFilters @Inject()(
   sessionCookieCryptoFilter: SessionCookieCryptoFilter,
   sessionTimeoutFilter     : SessionTimeoutFilter,
   cacheControlFilter       : CacheControlFilter,
-  mdcFilter                : MDCFilter
+  mdcFilter                : MDCFilter,
+  sessionIdFilter          : SessionIdFilter
 ) extends HttpFilters {
 
   val frontendFilters = Seq(
@@ -50,10 +51,14 @@ class FrontendFilters @Inject()(
     loggingFilter,
     frontendAuditFilter,
     sessionTimeoutFilter,
-    csrfFilter,
+    csrfFilter, // this one is excluded by some clients - should it have an "enabled" config?
     cacheControlFilter,
-    mdcFilter
+    mdcFilter,
+    sessionIdFilter // is documentation enough to get clients to not add sessionId filter twice?
+      // can we add it with reference.conf?
   )
+
+
 
   lazy val enableSecurityHeaderFilter: Boolean =
     configuration.getOptional[Boolean]("security.headers.filter.enabled").getOrElse(true)

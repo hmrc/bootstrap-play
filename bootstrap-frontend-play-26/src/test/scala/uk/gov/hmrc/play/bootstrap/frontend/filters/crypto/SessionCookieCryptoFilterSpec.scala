@@ -39,8 +39,7 @@ class SessionCookieCryptoFilterSpec
     with ScalaFutures
     with LoneElement {
 
-  "Filter" should {
-
+  "SessionCookieCryptoFilter" should {
     "decrypt session cookie and make values available as session on a request" in new Setup {
       val allCookies = "all cookies encoded as one string"
       val request    = FakeRequest().withHeaders(HeaderNames.COOKIE -> allCookies)
