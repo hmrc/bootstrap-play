@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
-import uk.gov.hmrc.play.bootstrap.frontend.filters.{HeadersFilter, SessionTimeoutFilter}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.{HeadersFilter, SessionIdFilter, SessionTimeoutFilter}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
 
@@ -57,7 +57,8 @@ package bootstrap {
       sessionCookieCryptoFilter: SessionCookieCryptoFilter,
       sessionTimeoutFilter     : SessionTimeoutFilter,
       cacheControlFilter       : CacheControlFilter,
-      mdcFilter                : MDCFilter
+      mdcFilter                : MDCFilter,
+      sessionIdFilter          : SessionIdFilter
     ) extends uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters(
       configuration,
       loggingFilter,
@@ -70,7 +71,8 @@ package bootstrap {
       sessionCookieCryptoFilter,
       sessionTimeoutFilter,
       cacheControlFilter,
-      mdcFilter
+      mdcFilter,
+      sessionIdFilter
     )
 
     package frontend {
