@@ -55,7 +55,7 @@ class JsonErrorHandler @Inject()(
     * This is used to reduce the number of noise the number of duplicated alerts
     * for a microservice.
     */
-  protected val upstreamWarnStatuses: Seq[Int] = configuration.getOptional[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes").getOrElse(Nil)
+  protected val upstreamWarnStatuses: Seq[Int] = configuration.get[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes")
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
     Future.successful {

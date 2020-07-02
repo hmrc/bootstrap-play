@@ -33,12 +33,9 @@ class DefaultDeviceIdFilter @Inject()(
   override val ec: ExecutionContext
 ) extends DeviceIdFilter {
 
-  private val currentSecretKey  = "cookie.deviceId.secret"
-  private val previousSecretKey = "cookie.deviceId.previous.secret"
-
   override lazy val secret: String =
-    configuration.underlying.getString(currentSecretKey)
+    configuration.get[String]("cookie.deviceId.secret")
 
   override lazy val previousSecrets: Seq[String] =
-    configuration.getOptional[Seq[String]](previousSecretKey).getOrElse(Seq.empty)
+    configuration.get[Seq[String]]("cookie.deviceId.previous.secret")
 }

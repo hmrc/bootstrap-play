@@ -27,6 +27,7 @@ import org.scalatest.matchers.{MatchResult, Matcher}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
+import com.typesafe.config.ConfigFactory
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -306,7 +307,7 @@ class SessionTimeoutFilterSpec
   "SessionTimeoutFilterConfig.fromConfig" should {
 
     "return defaults when there is no config" in {
-      val config = Configuration.empty
+      val config = Configuration(ConfigFactory.load("frontend.conf"))
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be('empty)
       result.onlyWipeAuthToken     shouldBe false

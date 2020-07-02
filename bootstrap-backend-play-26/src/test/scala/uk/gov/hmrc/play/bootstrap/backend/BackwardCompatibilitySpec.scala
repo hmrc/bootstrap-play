@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.bootstrap.backend
 
 import akka.stream.Materializer
 import com.github.ghik.silencer.silent
+import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
@@ -102,7 +103,7 @@ class BackwardCompatibilitySpec
       new uk.gov.hmrc.play.bootstrap.http.JsonErrorHandler(
         auditConnector = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
         httpAuditEvent = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],
-        configuration  = Configuration()
+        configuration  = Configuration(ConfigFactory.load("backend.conf"))
       )(ec             = mock[ExecutionContext])
 
       // and can load from config
