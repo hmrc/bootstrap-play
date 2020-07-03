@@ -41,6 +41,7 @@ class FrontendFilters @Inject()(
   sessionTimeoutFilter     : SessionTimeoutFilter,
   cacheControlFilter       : CacheControlFilter,
   mdcFilter                : MDCFilter,
+  whitelistFilter          : WhitelistFilter,
   sessionIdFilter          : SessionIdFilter
 ) extends HttpFilters {
 
@@ -60,6 +61,7 @@ class FrontendFilters @Inject()(
       cacheControlFilter,
       mdcFilter
     ) ++
+    whenEnabled("bootstrap.filters.whitelist.enabled", whitelistFilter) ++
     whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
 
   private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =

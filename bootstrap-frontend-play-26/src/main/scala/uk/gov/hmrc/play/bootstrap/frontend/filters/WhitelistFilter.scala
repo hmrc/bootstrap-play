@@ -27,19 +27,19 @@ class WhitelistFilter @Inject() (
   override val mat: Materializer
 ) extends AkamaiWhitelistFilter {
 
-  override val whitelist: Seq[String] =
-    config.underlying.getString("filters.whitelist.ips")
+  override lazy val whitelist: Seq[String] =
+    config.get[String]("filters.whitelist.ips")
       .split(",")
       .map(_.trim)
       .filter(_.nonEmpty)
 
-  override val destination: Call = {
-    val path = config.underlying.getString("filters.whitelist.destination")
+  override lazy val destination: Call = {
+    val path = config.get[String]("filters.whitelist.destination")
     Call("GET", path)
   }
 
-  override val excludedPaths: Seq[Call] =
-    config.underlying.getString("filters.whitelist.excluded")
+  override lazy val excludedPaths: Seq[Call] =
+    config.get[String]("filters.whitelist.excluded")
       .split(",")
       .map(_.trim)
       .filter(_.nonEmpty)

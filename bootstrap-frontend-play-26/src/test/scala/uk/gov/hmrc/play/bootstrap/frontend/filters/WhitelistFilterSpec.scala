@@ -61,7 +61,7 @@ class WhitelistFilterSpec
               )
 
               assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer)
+                new WhitelistFilter(config, mockMaterializer).whitelist
               }
             }
         }
@@ -136,7 +136,7 @@ class WhitelistFilterSpec
               )
 
               assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer)
+                new WhitelistFilter(config, mockMaterializer).destination
               }
             }
         }
@@ -182,7 +182,7 @@ class WhitelistFilterSpec
               )
 
               assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer)
+                new WhitelistFilter(config, mockMaterializer).excludedPaths
               }
             }
         }
