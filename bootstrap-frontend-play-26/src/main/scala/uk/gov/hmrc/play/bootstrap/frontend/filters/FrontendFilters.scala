@@ -61,7 +61,7 @@ class FrontendFilters @Inject()(
       cacheControlFilter,
       mdcFilter
     ) ++
-    whenEnabled("bootstrap.filters.whitelist.enabled", whitelistFilter) ++
+    whenEnabled("bootstrap.filters.whitelist.enabled", whitelistFilter.loadConfig) ++
     whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
 
   private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =

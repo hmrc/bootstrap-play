@@ -51,17 +51,17 @@ class WhitelistFilterSpec
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
           (otherConfig, destination, excluded) =>
 
-            whenever(!otherConfig.contains("filters.whitelist.ips")) {
+            whenever(!otherConfig.contains("bootstrap.filters.whitelist.ips")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("filters.whitelist.destination" -> destination) +
-                  ("filters.whitelist.excluded"    -> excluded)
+                  ("bootstrap.filters.whitelist.destination" -> destination) +
+                  ("bootstrap.filters.whitelist.excluded"    -> excluded)
                 ).toSeq: _*
               )
 
               assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer).whitelist
+                new WhitelistFilter(config, mockMaterializer).loadConfig
               }
             }
         }
@@ -77,9 +77,9 @@ class WhitelistFilterSpec
 
             val config = Configuration(
               (otherConfig +
-                ("filters.whitelist.destination" -> destination) +
-                ("filters.whitelist.excluded"    -> excluded) +
-                ("filters.whitelist.ips"         -> "")
+                ("bootstrap.filters.whitelist.destination" -> destination) +
+                ("bootstrap.filters.whitelist.excluded"    -> excluded) +
+                ("bootstrap.filters.whitelist.ips"         -> "")
               ).toSeq: _*
             )
 
@@ -103,9 +103,9 @@ class WhitelistFilterSpec
 
             val config = Configuration(
               (otherConfig +
-                ("filters.whitelist.destination" -> destination) +
-                ("filters.whitelist.excluded"    -> excluded) +
-                ("filters.whitelist.ips"         -> ipString)
+                ("bootstrap.filters.whitelist.destination" -> destination) +
+                ("bootstrap.filters.whitelist.excluded"    -> excluded) +
+                ("bootstrap.filters.whitelist.ips"         -> ipString)
               ).toSeq: _*
             )
 
@@ -126,17 +126,17 @@ class WhitelistFilterSpec
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
           (otherConfig, destination, excluded) =>
 
-            whenever(!otherConfig.contains("filters.whitelist.destination")) {
+            whenever(!otherConfig.contains("bootstrap.filters.whitelist.destination")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("filters.whitelist.ips"      -> destination) +
-                  ("filters.whitelist.excluded" -> excluded)
+                  ("bootstrap.filters.whitelist.ips"      -> destination) +
+                  ("bootstrap.filters.whitelist.excluded" -> excluded)
                   ).toSeq: _*
               )
 
               assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer).destination
+                new WhitelistFilter(config, mockMaterializer).loadConfig
               }
             }
         }
@@ -150,9 +150,9 @@ class WhitelistFilterSpec
 
           val config = Configuration(
             (otherConfig +
-              ("filters.whitelist.ips"         -> destination) +
-              ("filters.whitelist.excluded"    -> excluded) +
-              ("filters.whitelist.destination" -> destination)
+              ("bootstrap.filters.whitelist.ips"         -> destination) +
+              ("bootstrap.filters.whitelist.excluded"    -> excluded) +
+              ("bootstrap.filters.whitelist.destination" -> destination)
               ).toSeq: _*
           )
 
@@ -172,17 +172,17 @@ class WhitelistFilterSpec
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
           (otherConfig, destination, excluded) =>
 
-            whenever(!otherConfig.contains("filters.whitelist.excluded")) {
+            whenever(!otherConfig.contains("bootstrap.filters.whitelist.excluded")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("filters.whitelist.destination" -> destination) +
-                  ("filters.whitelist.ips"    -> excluded)
+                  ("bootstrap.filters.whitelist.destination" -> destination) +
+                  ("bootstrap.filters.whitelist.ips"    -> excluded)
                   ).toSeq: _*
               )
 
               assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer).excludedPaths
+                new WhitelistFilter(config, mockMaterializer).loadConfig
               }
             }
         }
@@ -202,9 +202,9 @@ class WhitelistFilterSpec
 
             val config = Configuration(
               (otherConfig +
-                ("filters.whitelist.destination" -> destination) +
-                ("filters.whitelist.excluded"    -> excludedPathString) +
-                ("filters.whitelist.ips"         -> ips)
+                ("bootstrap.filters.whitelist.destination" -> destination) +
+                ("bootstrap.filters.whitelist.excluded"    -> excludedPathString) +
+                ("bootstrap.filters.whitelist.ips"         -> ips)
                 ).toSeq: _*
             )
 

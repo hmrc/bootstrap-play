@@ -27,21 +27,43 @@ class WhitelistFilter @Inject() (
   override val mat: Materializer
 ) extends AkamaiWhitelistFilter {
 
-  override lazy val whitelist: Seq[String] =
-    config.get[String]("filters.whitelist.ips")
-      .split(",")
-      .map(_.trim)
-      .filter(_.nonEmpty)
+  case class WhitelistFilterConfig(
+    whitelist: Seq[String],
+    destination: Call,
+    excludedPaths: Seq[Call]
+  )
 
-  override lazy val destination: Call = {
-    val path = config.get[String]("filters.whitelist.destination")
-    Call("GET", path)
+  private lazy val whitelistFilterConfig = WhitelistFilterConfig(
+    whitelist =
+      config.get[String]("bootstrap.filters.whitelist.ips")
+        .split(",")
+        .map(_.trim)
+        .filter(_.nonEmpty),
+
+    destination = {
+      val path = config.get[String]("bootstrap.filters.whitelist.destination")
+      Call("GET", path)
+    },
+
+    excludedPaths =
+      config.get[String]("bootstrap.filters.whitelist.excluded")
+        .split(",")
+        .map(_.trim)
+        .filter(_.nonEmpty)
+        .map(path => Call("GET", path))
+  )
+
+  def loadConfig: WhitelistFilter = {
+    whitelistFilterConfig
+    this
   }
 
+  override lazy val whitelist: Seq[String] =
+    whitelistFilterConfig.whitelist
+
+  override lazy val destination: Call =
+    whitelistFilterConfig.destination
+
   override lazy val excludedPaths: Seq[Call] =
-    config.get[String]("filters.whitelist.excluded")
-      .split(",")
-      .map(_.trim)
-      .filter(_.nonEmpty)
-      .map(path => Call("GET", path))
+    whitelistFilterConfig.excludedPaths
 }
