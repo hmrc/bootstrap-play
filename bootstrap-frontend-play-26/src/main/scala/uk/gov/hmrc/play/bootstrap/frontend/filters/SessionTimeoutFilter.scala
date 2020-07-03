@@ -19,10 +19,9 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import akka.stream.Materializer
 import javax.inject.Inject
 import java.time.{Duration, Instant}
-import java.time.temporal.ChronoUnit
 import play.api.Configuration
 import play.api.mvc.{Filter, RequestHeader, Result, Session}
-import play.api.mvc.request.{AssignedCell, RequestAttrKey}
+import play.api.mvc.request.{Cell, RequestAttrKey}
 import uk.gov.hmrc.http.SessionKeys._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,21 +36,17 @@ object SessionTimeoutFilterConfig {
 
   def fromConfig(configuration: Configuration): SessionTimeoutFilterConfig = {
 
-    val defaultTimeout = Duration.of(15, ChronoUnit.MINUTES)
-
-    // TODO provide a session.timeout=2.minutes i.e. Duration config? (Can fallback to session.timeoutSeconds)
-    val timeoutDuration = configuration
-      .getOptional[Long]("session.timeoutSeconds")
-      .map(Duration.ofSeconds)
-      .getOrElse(defaultTimeout)
+    val timeoutDuration = Duration.ofSeconds(
+      configuration
+        .getOptional[Long]("session.timeoutSeconds")
+        .getOrElse(configuration.get[scala.concurrent.duration.Duration]("session.timeout").toSeconds)
+    )
 
     val wipeIdleSession = configuration
-      .getOptional[Boolean]("session.wipeIdleSession")
-      .getOrElse(true)
+      .get[Boolean]("session.wipeIdleSession")
 
     val additionalSessionKeysToKeep = configuration
-      .getOptional[Seq[String]]("session.additionalSessionKeysToKeep")
-      .getOrElse(Seq.empty)
+      .get[Seq[String]]("session.additionalSessionKeysToKeep")
       .toSet
 
     SessionTimeoutFilterConfig(
@@ -138,7 +133,7 @@ class SessionTimeoutFilter @Inject()(
   private def requestWithUpdatedSession(requestHeader: RequestHeader, session: Session): RequestHeader =
     requestHeader.addAttr(
       key   = RequestAttrKey.Session,
-      value = new AssignedCell(session)
+      value = Cell(session)
     )
 
   private def preservedSessionData(session: Session): Seq[(String, String)] =

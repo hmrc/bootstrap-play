@@ -302,7 +302,10 @@ class JsonErrorHandlerSpec
       .thenReturn(Future.successful(Success))
     val httpAuditEvent = mock[HttpAuditEvent]
 
-    val configuration    = Configuration("appName" -> "myApp")
+    val configuration    = Configuration(
+      "appName" -> "myApp",
+      "bootstrap.errorHandler.warnOnly.statusCodes" -> Seq.empty
+      )
     lazy val jsonErrorHandler = new JsonErrorHandler(auditConnector, httpAuditEvent, configuration)
 
     def randomErrorStatusCode(): Int =

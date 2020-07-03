@@ -20,6 +20,7 @@ import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.http.HttpFilters
+import play.api.mvc.EssentialFilter
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
@@ -39,28 +40,31 @@ class FrontendFilters @Inject()(
   sessionCookieCryptoFilter: SessionCookieCryptoFilter,
   sessionTimeoutFilter     : SessionTimeoutFilter,
   cacheControlFilter       : CacheControlFilter,
-  mdcFilter                : MDCFilter
+  mdcFilter                : MDCFilter,
+  whitelistFilter          : WhitelistFilter,
+  sessionIdFilter          : SessionIdFilter
 ) extends HttpFilters {
 
-  val frontendFilters = Seq(
-    metricsFilter,
-    sessionCookieCryptoFilter,
-    headersFilter,
-    deviceIdFilter,
-    loggingFilter,
-    frontendAuditFilter,
-    sessionTimeoutFilter,
-    csrfFilter,
-    cacheControlFilter,
-    mdcFilter
-  )
+  override val filters: Seq[EssentialFilter] =
+    whenEnabled("security.headers.filter.enabled", securityFilter) ++
+    Seq(
+      metricsFilter,
+      sessionCookieCryptoFilter,
+      headersFilter,
+      deviceIdFilter,
+      loggingFilter,
+      frontendAuditFilter,
+      sessionTimeoutFilter
+    ) ++
+    whenEnabled("bootstrap.filters.csrf.enabled", csrfFilter) ++
+    Seq(
+      cacheControlFilter,
+      mdcFilter
+    ) ++
+    whenEnabled("bootstrap.filters.whitelist.enabled", whitelistFilter.loadConfig) ++
+    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
 
-  lazy val enableSecurityHeaderFilter: Boolean =
-    configuration.getOptional[Boolean]("security.headers.filter.enabled").getOrElse(true)
-
-  override val filters =
-    if (enableSecurityHeaderFilter)
-      Seq(securityFilter) ++ frontendFilters
-    else
-      frontendFilters
+  private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =
+    if (configuration.get[Boolean](key)) Seq(filter)
+    else Seq.empty
 }

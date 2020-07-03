@@ -21,6 +21,7 @@ import com.github.ghik.silencer.silent
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
+import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
@@ -63,7 +64,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.FrontendFilters" in {
       new uk.gov.hmrc.play.bootstrap.filters.FrontendFilters(
-        configuration             = Configuration(),
+        configuration             = Configuration(ConfigFactory.load("frontend.conf")),
         loggingFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
         headersFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter],
         securityFilter            = mock[play.filters.headers.SecurityHeadersFilter],
@@ -74,7 +75,9 @@ class BackwardCompatibilitySpec
         sessionCookieCryptoFilter = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter],
         sessionTimeoutFilter      = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter],
         cacheControlFilter        = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
-        mdcFilter                 = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
+        mdcFilter                 = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter],
+        whitelistFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.WhitelistFilter],
+        sessionIdFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter]
       )
 
       // and can load from config
@@ -83,7 +86,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.ApplicationCryptoProvider" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.ApplicationCryptoProvider(
-        configuration = Configuration()
+        configuration = Configuration(ConfigFactory.load("frontend.conf"))
       )
     }
 
