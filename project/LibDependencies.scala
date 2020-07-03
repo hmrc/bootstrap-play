@@ -47,9 +47,7 @@ object LibDependencies {
 
   private def frontendCommon(playVersion: String, playSuffix: String) = common(playVersion, playSuffix) ++
     Seq(
-      "uk.gov.hmrc"            %% "play-whitelist-filter"      % s"3.4.0-$playSuffix",
-      // the following are not used by bootstrap - but transitively added for clients
-      "uk.gov.hmrc"            %% s"cookie-banner-$playSuffix" % "0.8.0"
+      "uk.gov.hmrc"            %% "play-whitelist-filter"      % s"3.4.0-$playSuffix"
     )
 
   private def test(playVersion: String) =
