@@ -15,10 +15,6 @@ lazy val commonSettings = Seq(
   majorVersion := 2,
   scalaVersion := scala2_12,
   makePublicallyAvailableOnBintray := true,
-  resolvers := Seq(
-                 Resolver.bintrayRepo("hmrc", "releases"),
-                 Resolver.typesafeRepo("releases")
-               ),
   scalacOptions ++= Seq("-feature"),
   libraryDependencies ++= Seq(
     compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
