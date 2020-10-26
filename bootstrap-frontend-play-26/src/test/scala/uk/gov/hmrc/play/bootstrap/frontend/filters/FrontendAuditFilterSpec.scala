@@ -239,11 +239,10 @@ class FrontendAuditFilterSpec
       }
     }
 
-    "use the session to read Authorization, session Id and token" when {
+    "use the session to read Authorization, session Id" when {
 
       "the request succeeds" in {
         val request = FakeRequest("GET", "/foo").withSession(
-          "token"     -> "aToken",
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
           "sessionId" -> "mySessionId"
         )
@@ -269,7 +268,6 @@ class FrontendAuditFilterSpec
         val event = verifyAndRetrieveEvent
         event.auditType               shouldBe "RequestReceived"
         event.detail("Authorization") shouldBe "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE="
-        event.detail("token")         shouldBe "aToken"
         event.tags("X-Session-ID")    shouldBe "mySessionId"
       }
     }
