@@ -60,14 +60,10 @@ case class PermitAllOnDev(environment: Environment) extends RedirectUrlPolicy[Id
   override def applies(url: String): Id[Boolean] = environment.mode == Mode.Dev
 }
 
-object AbsoluteWithHostnameFromWhitelist {
+object AbsoluteWithHostnameFromAllowlist {
 
-  def apply(allowedHosts: String*) = new RedirectUrlPolicy[Id] {
-    override def applies(url: String): Id[Boolean] = Try(new URL(url)) match {
-      case Success(parsedUrl) if allowedHosts.contains(parsedUrl.getHost) => true
-      case _                                                              => false
-    }
-  }
+  def apply(allowedHosts: String*): RedirectUrlPolicy[Id] =
+    apply(allowedHosts.toSet)
 
   def apply(allowedHosts: Set[String]) = new RedirectUrlPolicy[Id] {
     override def applies(url: String): Id[Boolean] = Try(new URL(url)) match {
@@ -78,7 +74,7 @@ object AbsoluteWithHostnameFromWhitelist {
 
   def apply(allowedHostsFn: => Future[Set[String]])(implicit ec: ExecutionContext) = new RedirectUrlPolicy[Future] {
     override def applies(url: String): Future[Boolean] = Try(new URL(url)) match {
-      case Success(parsedUrl) => for (allowedHosts <- allowedHostsFn) yield allowedHosts.contains(parsedUrl.getHost)
+      case Success(parsedUrl) => allowedHostsFn.map(_.contains(parsedUrl.getHost))
       case _                  => Future.successful(false)
     }
   }

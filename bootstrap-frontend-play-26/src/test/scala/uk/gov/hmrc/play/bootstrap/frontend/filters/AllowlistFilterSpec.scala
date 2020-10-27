@@ -17,17 +17,16 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
-import com.typesafe.config.ConfigException
 import org.mockito.scalatest.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import play.api.Configuration
+import play.api.{Configuration, PlayException}
 import play.api.mvc.Call
 
-class WhitelistFilterSpec
+class AllowlistFilterSpec
   extends AnyWordSpecLike
      with Matchers
      with ScalaCheckDrivenPropertyChecks
@@ -42,7 +41,7 @@ class WhitelistFilterSpec
     } yield (key, value)
   )
 
-  "the list of whitelisted IP addresses" should {
+  "the list of allowisted IP addresses" should {
 
     "throw an exception" when {
 
@@ -51,17 +50,17 @@ class WhitelistFilterSpec
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
           (otherConfig, destination, excluded) =>
 
-            whenever(!otherConfig.contains("bootstrap.filters.whitelist.ips")) {
+            whenever(!otherConfig.contains("bootstrap.filters.allowlist.ips")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("bootstrap.filters.whitelist.destination" -> destination) +
-                  ("bootstrap.filters.whitelist.excluded"    -> excluded)
+                  ("bootstrap.filters.allowlist.destination" -> destination) +
+                  ("bootstrap.filters.allowlist.excluded"    -> excluded)
                 ).toSeq: _*
               )
 
-              assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer).loadConfig
+              assertThrows[PlayException] {
+                new AllowlistFilter(config, mockMaterializer).loadConfig
               }
             }
         }
@@ -77,15 +76,15 @@ class WhitelistFilterSpec
 
             val config = Configuration(
               (otherConfig +
-                ("bootstrap.filters.whitelist.destination" -> destination) +
-                ("bootstrap.filters.whitelist.excluded"    -> excluded) +
-                ("bootstrap.filters.whitelist.ips"         -> "")
+                ("bootstrap.filters.allowlist.destination" -> destination) +
+                ("bootstrap.filters.allowlist.excluded"    -> excluded) +
+                ("bootstrap.filters.allowlist.ips"         -> "")
               ).toSeq: _*
             )
 
-            val whitelistFilter = new WhitelistFilter(config, mockMaterializer)
+            val allowlistFilter = new AllowlistFilter(config, mockMaterializer)
 
-            whitelistFilter.whitelist shouldBe empty
+            allowlistFilter.allowlist shouldBe empty
           }
       }
     }
@@ -103,21 +102,21 @@ class WhitelistFilterSpec
 
             val config = Configuration(
               (otherConfig +
-                ("bootstrap.filters.whitelist.destination" -> destination) +
-                ("bootstrap.filters.whitelist.excluded"    -> excluded) +
-                ("bootstrap.filters.whitelist.ips"         -> ipString)
+                ("bootstrap.filters.allowlist.destination" -> destination) +
+                ("bootstrap.filters.allowlist.excluded"    -> excluded) +
+                ("bootstrap.filters.allowlist.ips"         -> ipString)
               ).toSeq: _*
             )
 
-            val whitelistFilter = new WhitelistFilter(config, mockMaterializer)
+            val allowlistFilter = new AllowlistFilter(config, mockMaterializer)
 
-            whitelistFilter.whitelist should contain theSameElementsAs ips
+            allowlistFilter.allowlist should contain theSameElementsAs ips
         }
       }
     }
   }
 
-  "the destination for non-whitelisted visitors" should {
+  "the destination for non-allowlisted visitors" should {
 
     "throw an exception" when {
 
@@ -126,17 +125,17 @@ class WhitelistFilterSpec
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
           (otherConfig, destination, excluded) =>
 
-            whenever(!otherConfig.contains("bootstrap.filters.whitelist.destination")) {
+            whenever(!otherConfig.contains("bootstrap.filters.allowlist.destination")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("bootstrap.filters.whitelist.ips"      -> destination) +
-                  ("bootstrap.filters.whitelist.excluded" -> excluded)
+                  ("bootstrap.filters.allowlist.ips"      -> destination) +
+                  ("bootstrap.filters.allowlist.excluded" -> excluded)
                   ).toSeq: _*
               )
 
-              assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer).loadConfig
+              assertThrows[PlayException] {
+                new AllowlistFilter(config, mockMaterializer).loadConfig
               }
             }
         }
@@ -150,15 +149,15 @@ class WhitelistFilterSpec
 
           val config = Configuration(
             (otherConfig +
-              ("bootstrap.filters.whitelist.ips"         -> destination) +
-              ("bootstrap.filters.whitelist.excluded"    -> excluded) +
-              ("bootstrap.filters.whitelist.destination" -> destination)
+              ("bootstrap.filters.allowlist.ips"         -> destination) +
+              ("bootstrap.filters.allowlist.excluded"    -> excluded) +
+              ("bootstrap.filters.allowlist.destination" -> destination)
               ).toSeq: _*
           )
 
-          val whitelistFilter = new WhitelistFilter(config, mockMaterializer)
+          val allowlistFilter = new AllowlistFilter(config, mockMaterializer)
 
-          whitelistFilter.destination shouldEqual Call("GET", destination)
+          allowlistFilter.destination shouldEqual Call("GET", destination)
       }
     }
   }
@@ -172,17 +171,17 @@ class WhitelistFilterSpec
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
           (otherConfig, destination, excluded) =>
 
-            whenever(!otherConfig.contains("bootstrap.filters.whitelist.excluded")) {
+            whenever(!otherConfig.contains("bootstrap.filters.allowlist.excluded")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("bootstrap.filters.whitelist.destination" -> destination) +
-                  ("bootstrap.filters.whitelist.ips"    -> excluded)
+                  ("bootstrap.filters.allowlist.destination" -> destination) +
+                  ("bootstrap.filters.allowlist.ips"         -> excluded)
                   ).toSeq: _*
               )
 
-              assertThrows[ConfigException] {
-                new WhitelistFilter(config, mockMaterializer).loadConfig
+              assertThrows[PlayException] {
+                new AllowlistFilter(config, mockMaterializer).loadConfig
               }
             }
         }
@@ -202,17 +201,17 @@ class WhitelistFilterSpec
 
             val config = Configuration(
               (otherConfig +
-                ("bootstrap.filters.whitelist.destination" -> destination) +
-                ("bootstrap.filters.whitelist.excluded"    -> excludedPathString) +
-                ("bootstrap.filters.whitelist.ips"         -> ips)
+                ("bootstrap.filters.allowlist.destination" -> destination) +
+                ("bootstrap.filters.allowlist.excluded"    -> excludedPathString) +
+                ("bootstrap.filters.allowlist.ips"         -> ips)
                 ).toSeq: _*
             )
 
             val expectedCalls = excludedPaths.map(Call("GET", _))
 
-            val whitelistFilter = new WhitelistFilter(config, mockMaterializer)
+            val allowlistFilter = new AllowlistFilter(config, mockMaterializer)
 
-            whitelistFilter.excludedPaths should contain theSameElementsAs expectedCalls
+            allowlistFilter.excludedPaths should contain theSameElementsAs expectedCalls
         }
       }
     }

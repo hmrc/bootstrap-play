@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.{Configuration, ConfigLoader}
 import play.api.http.HttpFilters
 import play.api.mvc.EssentialFilter
 import play.filters.csrf.CSRFFilter
@@ -41,7 +41,7 @@ class FrontendFilters @Inject()(
   sessionTimeoutFilter     : SessionTimeoutFilter,
   cacheControlFilter       : CacheControlFilter,
   mdcFilter                : MDCFilter,
-  whitelistFilter          : WhitelistFilter,
+  allowlistFilter          : AllowlistFilter,
   sessionIdFilter          : SessionIdFilter
 ) extends HttpFilters {
 
@@ -61,10 +61,18 @@ class FrontendFilters @Inject()(
       cacheControlFilter,
       mdcFilter
     ) ++
-    whenEnabled("bootstrap.filters.whitelist.enabled", whitelistFilter.loadConfig) ++
+    whenEnabledFallback(
+      "bootstrap.filters.allowlist.enabled",
+      "bootstrap.filters.whitelist.enabled",
+      allowlistFilter.loadConfig
+    ) ++
     whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
 
   private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =
     if (configuration.get[Boolean](key)) Seq(filter)
+    else Seq.empty
+
+  private def whenEnabledFallback(key: String, deprecated: String, filter: => EssentialFilter): Seq[EssentialFilter] =
+    if (ConfigUtil.getOptionalDeprecated[Boolean](configuration, key, deprecated).getOrElse(false)) Seq(filter)
     else Seq.empty
 }

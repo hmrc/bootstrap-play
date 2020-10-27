@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.play
 
+import akka.stream.Materializer
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
-import uk.gov.hmrc.play.bootstrap.frontend.filters.{HeadersFilter, SessionIdFilter, SessionTimeoutFilter, WhitelistFilter}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.{HeadersFilter, SessionIdFilter, SessionTimeoutFilter, AllowlistFilter}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
 
@@ -58,7 +59,7 @@ package bootstrap {
       sessionTimeoutFilter     : SessionTimeoutFilter,
       cacheControlFilter       : CacheControlFilter,
       mdcFilter                : MDCFilter,
-      whitelistFilter          : WhitelistFilter,
+      allowlistFilter          : AllowlistFilter,
       sessionIdFilter          : SessionIdFilter
     ) extends uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters(
       configuration,
@@ -73,9 +74,16 @@ package bootstrap {
       sessionTimeoutFilter,
       cacheControlFilter,
       mdcFilter,
-      whitelistFilter,
+      allowlistFilter,
       sessionIdFilter
     )
+
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter", "4.0.0")
+    @Singleton
+    class WhitelistFilter @Inject()(
+      config: Configuration,
+      mat: Materializer
+    ) extends AllowlistFilter(config, mat)
 
     package frontend {
       package object crypto {

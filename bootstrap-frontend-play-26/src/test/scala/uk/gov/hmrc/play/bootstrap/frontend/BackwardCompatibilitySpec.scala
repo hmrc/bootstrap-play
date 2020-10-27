@@ -76,7 +76,7 @@ class BackwardCompatibilitySpec
         sessionTimeoutFilter      = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter],
         cacheControlFilter        = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
         mdcFilter                 = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter],
-        whitelistFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.WhitelistFilter],
+        allowlistFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter],
         sessionIdFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter]
       )
 
