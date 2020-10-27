@@ -49,7 +49,28 @@ class DeprecatedConfigChecker(
     stringKeys.flatMap(checkForDeprecatedValue) ++
     stringArrayKeys.flatMap(checkForDeprecatedValues)
 
-  deprecations.map { case (k,d,v) =>
+  deprecations.foreach { case (k,d,v) =>
     logger.warn(s"The key '$k' is configured with value '$d', which is deprecated. Please use '$v' instead.")
+  }
+
+  val deprecatedKeys = List(
+    "httpHeadersWhitelist"                    -> "bootstrap.http.headersAllowlist",
+    "bootstrap.filters.whitelist.enabled"     -> "bootstrap.filters.allowlist.enabled",
+    "bootstrap.filters.whitelist.destination" -> "bootstrap.filters.allowlist.destination",
+    "bootstrap.filters.whitelist.excluded"    -> "bootstrap.filters.allowlist.excluded",
+    "bootstrap.filters.whitelist.ips"         -> "bootstrap.filters.allowlist.ips"
+  )
+
+  val errs = deprecatedKeys.filter { case (d, _) => configuration.has(d) }
+  if (errs.nonEmpty) {
+    if (configuration.get[Boolean]("bootstrap.configuration.failOnObsoleteKeys"))
+      throw configuration.globalError(
+        "The following configurations keys were found which are obsolete. Their presence indicate misconfiguration. You must remove them or use the suggested alternatives:\n" +
+          errs.map { case (d, k) =>  s"'$d' - Please use '$k' instead" }.mkString("\n")
+      )
+    else
+      errs.foreach { case (d, k) =>
+        logger.warn(s"The configuration key '$d' is no longer supported and is being IGNORED! Please use '$k' instead.")
+      }
   }
 }

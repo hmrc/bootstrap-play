@@ -17,13 +17,14 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
+import com.typesafe.config.ConfigException
 import org.mockito.scalatest.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import play.api.{Configuration, PlayException}
+import play.api.Configuration
 import play.api.mvc.Call
 
 class AllowlistFilterSpec
@@ -41,7 +42,7 @@ class AllowlistFilterSpec
     } yield (key, value)
   )
 
-  "the list of allowisted IP addresses" should {
+  "the list of allowlisted IP addresses" should {
 
     "throw an exception" when {
 
@@ -59,7 +60,7 @@ class AllowlistFilterSpec
                 ).toSeq: _*
               )
 
-              assertThrows[PlayException] {
+              assertThrows[ConfigException] {
                 new AllowlistFilter(config, mockMaterializer).loadConfig
               }
             }
@@ -134,7 +135,7 @@ class AllowlistFilterSpec
                   ).toSeq: _*
               )
 
-              assertThrows[PlayException] {
+              assertThrows[ConfigException] {
                 new AllowlistFilter(config, mockMaterializer).loadConfig
               }
             }
@@ -180,7 +181,7 @@ class AllowlistFilterSpec
                   ).toSeq: _*
               )
 
-              assertThrows[PlayException] {
+              assertThrows[ConfigException] {
                 new AllowlistFilter(config, mockMaterializer).loadConfig
               }
             }

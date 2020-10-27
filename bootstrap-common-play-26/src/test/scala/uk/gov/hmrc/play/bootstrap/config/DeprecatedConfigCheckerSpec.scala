@@ -18,13 +18,12 @@ package uk.gov.hmrc.play.bootstrap.config
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.Configuration
+import play.api.{Configuration, PlayException}
 
 class DeprecatedConfigCheckerSpec extends AnyWordSpec with Matchers {
 
   "DeprecatedConfigChecker" should {
     "detect useage of deprecated values" in {
-
       val config = Configuration(
         "play.http.errorHandler" -> "deprecated1",
         "play.http.filters"      -> "deprecated2",
@@ -46,6 +45,40 @@ class DeprecatedConfigCheckerSpec extends AnyWordSpec with Matchers {
         ("play.modules.disabled" , "deprecated4", "val4"),
         ("play.modules.enabled"  , "deprecated5", "val5")
       )
+    }
+
+    "throw exception when deprecated keys are used" in {
+      val config = Configuration(
+        "bootstrap.configuration.failOnObsoleteKeys" -> true,
+        "httpHeadersWhitelist"                       -> List(""),
+        "bootstrap.filters.whitelist.enabled"        -> true,
+        "bootstrap.filters.whitelist.destination"    -> List(""),
+        "bootstrap.filters.whitelist.excluded"       -> List(""),
+        "bootstrap.filters.whitelist.ips"            -> List("")
+      )
+
+      assertThrows[PlayException] {
+        new DeprecatedConfigChecker(config, deprecatedValues = Map.empty)
+      }
+    }
+
+    "detect useage of deprecated keys" in {
+      val r = scala.util.Random
+      val allDeprecatedConfig = Seq(
+        "httpHeadersWhitelist"                       -> List(""),
+        "bootstrap.filters.whitelist.enabled"        -> true,
+        "bootstrap.filters.whitelist.destination"    -> List(""),
+        "bootstrap.filters.whitelist.excluded"       -> List(""),
+        "bootstrap.filters.whitelist.ips"            -> List("")
+      )
+      val deprecatedConfig = r.shuffle(allDeprecatedConfig).take(r.nextInt(allDeprecatedConfig.length))
+
+      val config = Configuration(
+        (("bootstrap.configuration.failOnObsoleteKeys" -> false) +: deprecatedConfig) :_ *
+      )
+
+      val deprecatedConfigChecker = new DeprecatedConfigChecker(config, deprecatedValues = Map.empty)
+      deprecatedConfigChecker.errs shouldBe deprecatedConfigChecker.deprecatedKeys.filter { case (d, _) => deprecatedConfig.exists(_._1 == d) }
     }
   }
 }

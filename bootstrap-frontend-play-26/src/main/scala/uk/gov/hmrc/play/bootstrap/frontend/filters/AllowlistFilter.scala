@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
 import com.google.inject.{Inject, Singleton}
-import play.api.{Configuration, ConfigLoader, Logger}
+import play.api.Configuration
 import play.api.mvc.Call
 import uk.gov.hmrc.allowlist.AkamaiAllowlistFilter
 
@@ -29,37 +29,25 @@ class AllowlistFilter @Inject() (
 ) extends AkamaiAllowlistFilter {
 
   case class AllowlistFilterConfig(
-    allowlist: Seq[String],
-    destination: Call,
+    allowlist    : Seq[String],
+    destination  : Call,
     excludedPaths: Seq[Call]
   )
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
     allowlist =
-      ConfigUtil.getDeprecated[String](
-          config,
-          "bootstrap.filters.allowlist.ips",
-          "bootstrap.filters.whitelist.ips"
-        )
+      config.get[String]("bootstrap.filters.allowlist.ips")
         .split(",")
         .map(_.trim)
         .filter(_.nonEmpty),
 
     destination = {
-      val path = ConfigUtil.getDeprecated[String](
-          config,
-          "bootstrap.filters.allowlist.destination",
-          "bootstrap.filters.whitelist.destination"
-        )
+      val path = config.get[String]("bootstrap.filters.allowlist.destination")
       Call("GET", path)
     },
 
     excludedPaths =
-      ConfigUtil.getDeprecated[String](
-          config,
-          "bootstrap.filters.allowlist.excluded",
-          "bootstrap.filters.whitelist.excluded"
-        )
+      config.get[String]("bootstrap.filters.allowlist.excluded")
         .split(",")
         .map(_.trim)
         .filter(_.nonEmpty)
@@ -74,7 +62,7 @@ class AllowlistFilter @Inject() (
   override lazy val allowlist: Seq[String] =
     allowlistFilterConfig.allowlist
 
-  @deprecated("Use allowlist", "4.0.0")
+  @deprecated("Use allowlist instead", "4.0.0")
   def whitelist: Seq[String] =
     allowlist
 
@@ -83,23 +71,4 @@ class AllowlistFilter @Inject() (
 
   override lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
-}
-
-private[filters] object ConfigUtil {
-
-  private val logger = Logger(getClass)
-
-  private[filters] def getDeprecated[A](config: Configuration, k: String, deprecated: String)(implicit loader: ConfigLoader[A]): A =
-    getOptionalDeprecated(config, k, deprecated)
-      .getOrElse(throw config.globalError(s"Missing configuration key: ['$k']"))
-
-  private[filters] def getOptionalDeprecated[A](config: Configuration, k: String, deprecated: String)(implicit loader: ConfigLoader[A]): Option[A] =
-    config.getOptional[A](k)
-      .orElse {
-        val v = config.getOptional[A](deprecated)
-        if (v.isDefined)
-          logger.warn(s"Configuration key '$deprecated' is deprecated. Use '$k' instead.")
-        v
-      }
-
 }

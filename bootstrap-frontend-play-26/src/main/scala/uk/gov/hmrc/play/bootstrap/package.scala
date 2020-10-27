@@ -78,7 +78,7 @@ package bootstrap {
       sessionIdFilter
     )
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter", "4.0.0")
+    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter instead", "4.0.0")
     @Singleton
     class WhitelistFilter @Inject()(
       config: Configuration,
