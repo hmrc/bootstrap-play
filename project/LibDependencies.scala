@@ -26,7 +26,7 @@ object LibDependencies {
       "io.dropwizard.metrics"  %  "metrics-graphite"           % "4.1.5",
       "uk.gov.hmrc"            %% "auth-client"                % s"3.0.0-$playSuffix",
       "uk.gov.hmrc"            %% "crypto"                     % "5.6.0",
-      "uk.gov.hmrc"            %% s"http-verbs-$playSuffix"    % "12.1.0-SNAPSHOT",
+      "uk.gov.hmrc"            %% s"http-verbs-$playSuffix"    % "12.1.0",
       "uk.gov.hmrc"            %% s"play-auditing-$playSuffix" % "6.0.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"      %% "filters-helpers"            % playVersion,
