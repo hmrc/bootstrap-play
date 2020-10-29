@@ -17,53 +17,58 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.mvc.Call
-import uk.gov.hmrc.whitelist.AkamaiWhitelistFilter
+import uk.gov.hmrc.allowlist.AkamaiAllowlistFilter
 
-class WhitelistFilter @Inject() (
+@Singleton
+class AllowlistFilter @Inject() (
   config: Configuration,
   override val mat: Materializer
-) extends AkamaiWhitelistFilter {
+) extends AkamaiAllowlistFilter {
 
-  case class WhitelistFilterConfig(
-    whitelist: Seq[String],
-    destination: Call,
+  case class AllowlistFilterConfig(
+    allowlist    : Seq[String],
+    destination  : Call,
     excludedPaths: Seq[Call]
   )
 
-  private lazy val whitelistFilterConfig = WhitelistFilterConfig(
-    whitelist =
-      config.get[String]("bootstrap.filters.whitelist.ips")
+  private lazy val allowlistFilterConfig = AllowlistFilterConfig(
+    allowlist =
+      config.get[String]("bootstrap.filters.allowlist.ips")
         .split(",")
         .map(_.trim)
         .filter(_.nonEmpty),
 
     destination = {
-      val path = config.get[String]("bootstrap.filters.whitelist.destination")
+      val path = config.get[String]("bootstrap.filters.allowlist.destination")
       Call("GET", path)
     },
 
     excludedPaths =
-      config.get[String]("bootstrap.filters.whitelist.excluded")
+      config.get[String]("bootstrap.filters.allowlist.excluded")
         .split(",")
         .map(_.trim)
         .filter(_.nonEmpty)
         .map(path => Call("GET", path))
   )
 
-  def loadConfig: WhitelistFilter = {
-    whitelistFilterConfig
+  def loadConfig: AllowlistFilter = {
+    allowlistFilterConfig
     this
   }
 
-  override lazy val whitelist: Seq[String] =
-    whitelistFilterConfig.whitelist
+  override lazy val allowlist: Seq[String] =
+    allowlistFilterConfig.allowlist
+
+  @deprecated("Use allowlist instead", "4.0.0")
+  def whitelist: Seq[String] =
+    allowlist
 
   override lazy val destination: Call =
-    whitelistFilterConfig.destination
+    allowlistFilterConfig.destination
 
   override lazy val excludedPaths: Seq[Call] =
-    whitelistFilterConfig.excludedPaths
+    allowlistFilterConfig.excludedPaths
 }

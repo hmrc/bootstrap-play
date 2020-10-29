@@ -99,7 +99,7 @@ class SessionTimeoutFilterSpec
 
     val config = SessionTimeoutFilterConfig(
       timeoutDuration       = Duration.of(1, ChronoUnit.MINUTES),
-      additionalSessionKeys = Set("whitelisted")
+      additionalSessionKeys = Set("allowlisted")
     )
 
     def app(config: SessionTimeoutFilterConfig = config): Application = {
@@ -111,7 +111,7 @@ class SessionTimeoutFilterSpec
         .build()
     }
 
-    "strip non-whitelist session variables from request if timestamp is old" in {
+    "strip non-allowlist session variables from request if timestamp is old" in {
 
       running(app()) {
 
@@ -120,19 +120,18 @@ class SessionTimeoutFilterSpec
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> timestamp,
             authToken            -> "a-token",
-            userId               -> "some-userId",
-            "whitelisted"        -> "whitelisted"
+            "allowlisted"        -> "allowlisted"
           ))
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-        rhSession                                 should onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession                                 should onlyContainAllowlistedKeys(Set("allowlisted"))
         rhSession.get(lastRequestTimestamp).value shouldEqual timestamp
-        rhSession.get("whitelisted").value        shouldEqual "whitelisted"
+        rhSession.get("allowlisted").value        shouldEqual "allowlisted"
       }
     }
 
-    "strip non-whitelist session variables from result if timestamp is old" in {
+    "strip non-allowlist session variables from result if timestamp is old" in {
 
       running(app()) {
 
@@ -142,14 +141,14 @@ class SessionTimeoutFilterSpec
             lastRequestTimestamp -> timestamp,
             loginOrigin          -> "gg",
             authToken            -> "a-token",
-            "whitelisted"        -> "whitelisted"
+            "allowlisted"        -> "allowlisted"
           ))
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-        rhSession                    should onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession                    should onlyContainAllowlistedKeys(Set("allowlisted"))
         rhSession.get(loginOrigin)   shouldBe Some("gg")
-        rhSession.get("whitelisted") shouldBe Some("whitelisted")
+        rhSession.get("allowlisted") shouldBe Some("allowlisted")
       }
     }
 
@@ -169,7 +168,7 @@ class SessionTimeoutFilterSpec
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
-        rhSession               shouldNot onlyContainWhitelistedKeys(Set("whitelisted"))
+        rhSession               shouldNot onlyContainAllowlistedKeys(Set("allowlisted"))
         rhSession.get("custom") shouldBe Some("custom")
 
         session(result).get("custom") shouldBe Some("custom")
@@ -184,16 +183,12 @@ class SessionTimeoutFilterSpec
           app(),
           FakeRequest(GET, "/test").withSession(
             authToken -> "a-token",
-            token     -> "another-token",
-            userId    -> "a-userId",
             "custom"  -> "custom"
           ))
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
         rhSession.get(authToken).value      shouldEqual "a-token"
-        rhSession.get(userId).value         shouldEqual "a-userId"
-        rhSession.get(token).value          shouldEqual "another-token"
         rhSession.get("custom").value       shouldEqual "custom"
         rhSession.get(lastRequestTimestamp) shouldBe None
 
@@ -213,10 +208,8 @@ class SessionTimeoutFilterSpec
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> oldTimestamp,
             authToken            -> "a-token",
-            token                -> "another-token",
-            userId               -> "a-userId",
             "custom"             -> "custom",
-            "whitelisted"        -> "whitelisted"
+            "allowlisted"        -> "allowlisted"
           )
         )
 
@@ -224,8 +217,6 @@ class SessionTimeoutFilterSpec
 
         rhSession.get("custom").value shouldEqual "custom"
         rhSession.get(authToken)      shouldNot be(defined)
-        rhSession.get(userId)         shouldNot be(defined)
-        rhSession.get(token)          shouldNot be(defined)
 
         session(result).get("custom").value shouldEqual "custom"
         session(result).get(authToken)      shouldNot be(defined)
@@ -265,16 +256,12 @@ class SessionTimeoutFilterSpec
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> "invalid-format",
             authToken            -> "a-token",
-            token                -> "another-token",
-            userId               -> "a-userId",
             loginOrigin          -> "gg",
             "custom"             -> "custom"
           )
         )
 
         session(result).get(authToken).value            shouldEqual "a-token"
-        session(result).get(userId).value               shouldEqual "a-userId"
-        session(result).get(token).value                shouldEqual "another-token"
         session(result).get(loginOrigin).value          shouldEqual "gg"
         session(result).get("custom").value             shouldEqual "custom"
         session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
@@ -291,8 +278,7 @@ class SessionTimeoutFilterSpec
           .withCookies(Cookie("aTestName", "aTestValue"))
           .withSession(
             lastRequestTimestamp -> timestamp,
-            authToken            -> "a-token",
-            userId               -> "some-userId"
+            authToken            -> "a-token"
           )
 
         val Some(result) = route(app(), request)
@@ -339,13 +325,13 @@ class SessionTimeoutFilterSpec
     }
   }
 
-  private def onlyContainWhitelistedKeys(additionalSessionKeysToKeep: Set[String]) =
+  private def onlyContainAllowlistedKeys(additionalSessionKeysToKeep: Set[String]) =
     new Matcher[Map[String, String]] {
       override def apply(data: Map[String, String]): MatchResult =
         MatchResult(
-          (data.keySet -- SessionTimeoutFilter.whitelistedSessionKeys -- additionalSessionKeysToKeep).isEmpty,
-          s"Session keys ${data.keySet} did not contain only whitelisted keys: ${SessionTimeoutFilter.whitelistedSessionKeys}",
-          s"Session keys ${data.keySet} contained only whitelisted keys: ${SessionTimeoutFilter.whitelistedSessionKeys}"
+          (data.keySet -- SessionTimeoutFilter.allowlistedSessionKeys -- additionalSessionKeysToKeep).isEmpty,
+          s"Session keys ${data.keySet} did not contain only allowlisted keys: ${SessionTimeoutFilter.allowlistedSessionKeys}",
+          s"Session keys ${data.keySet} contained only allowlisted keys: ${SessionTimeoutFilter.allowlistedSessionKeys}"
         )
     }
 }

@@ -151,6 +151,25 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Migrations
 
+### Version 3.0.0
+
+#### http-verbs
+
+Http-verbs has been bumped to major version 12.0.0. See [http-verbs]("https://github.com/hmrc/http-verbs") for details.
+
+#### configuration
+
+The following configuration has been renamed, the previous keys are invalid and will need to be updated.
+
+| Invalid config key                      | Should now be                           |
+| --- | --- |
+| httpHeadersWhitelist                    | bootstrap.http.headersAllowlist         |
+| bootstrap.filters.whitelist.enabled     | bootstrap.filters.allowlist.enabled     |
+| bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination |
+| bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded    |
+| bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips         |
+
+
 ### From bootstrap-play-26
 
 #### RunMode was removed
