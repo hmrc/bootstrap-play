@@ -18,12 +18,14 @@ package uk.gov.hmrc.play.bootstrap.frontend
 
 import akka.stream.Materializer
 import com.github.ghik.silencer.silent
+import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
-import com.typesafe.config.ConfigFactory
 import play.api.Configuration
+import play.api.http.EnabledFilters
 import play.api.i18n.MessagesApi
+import play.api.inject.guice.GuiceInjectorBuilder
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.DataEvent
@@ -63,21 +65,12 @@ class BackwardCompatibilitySpec
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.FrontendFilters" in {
+      val config = Configuration(ConfigFactory.load("frontend.conf").withoutPath("play.filters.enabled"))
       new uk.gov.hmrc.play.bootstrap.filters.FrontendFilters(
-        configuration             = Configuration(ConfigFactory.load("frontend.conf")),
-        loggingFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
-        headersFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter],
-        securityFilter            = mock[play.filters.headers.SecurityHeadersFilter],
-        frontendAuditFilter       = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],
-        metricsFilter             = mock[com.kenshoo.play.metrics.MetricsFilter],
-        deviceIdFilter            = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter],
-        csrfFilter                = mock[play.filters.csrf.CSRFFilter],
-        sessionCookieCryptoFilter = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter],
-        sessionTimeoutFilter      = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter],
-        cacheControlFilter        = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
-        mdcFilter                 = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter],
+        configuration             = config,
         allowlistFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter],
-        sessionIdFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter]
+        sessionIdFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter],
+        enabledFilters            = new EnabledFilters(environment, config, new GuiceInjectorBuilder().configure(config).build())
       )
 
       // and can load from config

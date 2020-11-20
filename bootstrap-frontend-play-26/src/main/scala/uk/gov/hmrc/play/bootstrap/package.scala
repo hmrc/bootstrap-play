@@ -44,38 +44,21 @@ package bootstrap {
   }
 
   package filters {
+
+    import play.api.http.EnabledFilters
+
     @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters instead", "2.12.0")
     @Singleton
     class FrontendFilters @Inject()(
       configuration            : Configuration,
-      loggingFilter            : LoggingFilter,
-      headersFilter            : HeadersFilter,
-      securityFilter           : SecurityHeadersFilter,
-      frontendAuditFilter      : AuditFilter,
-      metricsFilter            : MetricsFilter,
-      deviceIdFilter           : DeviceIdFilter,
-      csrfFilter               : CSRFFilter,
-      sessionCookieCryptoFilter: SessionCookieCryptoFilter,
-      sessionTimeoutFilter     : SessionTimeoutFilter,
-      cacheControlFilter       : CacheControlFilter,
-      mdcFilter                : MDCFilter,
       allowlistFilter          : AllowlistFilter,
-      sessionIdFilter          : SessionIdFilter
+      sessionIdFilter          : SessionIdFilter,
+      enabledFilters           : EnabledFilters
     ) extends uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters(
       configuration,
-      loggingFilter,
-      headersFilter,
-      securityFilter,
-      frontendAuditFilter,
-      metricsFilter,
-      deviceIdFilter,
-      csrfFilter,
-      sessionCookieCryptoFilter,
-      sessionTimeoutFilter,
-      cacheControlFilter,
-      mdcFilter,
       allowlistFilter,
-      sessionIdFilter
+      sessionIdFilter,
+      enabledFilters
     )
 
     @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter instead", "4.0.0")
