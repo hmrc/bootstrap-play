@@ -36,7 +36,7 @@ class BackendConfigLoadSpec extends AnyWordSpecLike with Matchers {
   "config loading" should {
     "load config correctly" in {
       val app = new GuiceApplicationBuilder()
-        .configure(Configuration(ConfigFactory.load("backend.conf")))
+        .configure(Configuration(ConfigFactory.load("backend.conf").withoutPath("play.filters.enabled")))
         .build()
       val injector = app.injector
 
