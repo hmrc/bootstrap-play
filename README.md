@@ -43,7 +43,6 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModu
 
 # Provides an implementation and configures all filters required by a Platform frontend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.frontend.FrontendModule"
-play.http.filters = "uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters"
 
 ```
 
@@ -77,7 +76,6 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModu
 
 # Provides an implementation and configures all filters required by a Platform backend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.backend.BackendModule"
-play.http.filters = "uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters"
 
 ```
 
@@ -167,11 +165,12 @@ The following configuration has been renamed, the previous keys are invalid and 
 
 | Invalid config key                      | Should now be                           |
 | --- | --- |
-| httpHeadersWhitelist                    | bootstrap.http.headersAllowlist         |
-| bootstrap.filters.whitelist.enabled     | bootstrap.filters.allowlist.enabled     |
-| bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination |
-| bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded    |
-| bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips         |
+| bootstrap.filters.whitelist.enabled     | play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter" |
+| bootstrap.filters.whitelist.enabled     | play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter" |
+| httpHeadersWhitelist                    | bootstrap.http.headersAllowlist                                                       |
+| bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination                                               |
+| bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded                                                  |
+| bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips                                                       |
 
 
 ### From bootstrap-play-26
