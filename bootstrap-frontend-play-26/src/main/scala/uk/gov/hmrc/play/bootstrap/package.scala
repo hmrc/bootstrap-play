@@ -17,14 +17,9 @@
 package uk.gov.hmrc.play
 
 import akka.stream.Materializer
-import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.filters.csrf.CSRFFilter
-import play.filters.headers.SecurityHeadersFilter
-import uk.gov.hmrc.play.bootstrap.frontend.filters.{HeadersFilter, SessionIdFilter, SessionTimeoutFilter, AllowlistFilter}
-import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter
-import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
+import uk.gov.hmrc.play.bootstrap.frontend.filters.{AllowlistFilter, SessionIdFilter}
 
 
 package bootstrap {
