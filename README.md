@@ -40,8 +40,8 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule"
 
 # Provides an implementation and configures all filters required by a Platform frontend microservice.
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.FrontendModule"
-play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.FrontendFilters"
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.frontend.FrontendModule"
+play.http.filters = "uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters"
 
 ```
 
@@ -72,8 +72,8 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule"
 
 # Provides an implementation and configures all filters required by a Platform backend microservice.
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.MicroserviceModule"
-play.http.filters = "uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters"
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.backend.BackendModule"
+play.http.filters = "uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters"
 
 ```
 
