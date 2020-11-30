@@ -42,7 +42,8 @@ package bootstrap {
 
     import play.api.http.EnabledFilters
 
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters instead", "2.12.0")
+
+    @deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "2.12.0")
     @Singleton
     class FrontendFilters @Inject()(
       configuration            : Configuration,
