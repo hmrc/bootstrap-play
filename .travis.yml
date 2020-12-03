@@ -1,8 +1,0 @@
-
-sudo: false
-language: scala
-script: sbt +test
-jdk: openjdk8
-cache:
-  directories:
-    - '$HOME/.ivy2/cache'
