@@ -27,13 +27,13 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import play.api.routing.Router.Attrs
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.EventKeys._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, RequestBodyCaptor, ResponseBodyCaptor}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -47,8 +47,11 @@ trait FrontendAuditFilter extends AuditFilter {
     eventType: String,
     transactionName: String,
     request: RequestHeader,
-    detail: Map[String, String] = Map())(
-    implicit hc: HeaderCarrier  = HeaderCarrierConverter.fromHeadersAndSession(request.headers)): DataEvent
+    detail: Map[String, String] = Map()
+  )(
+    implicit
+    hc: HeaderCarrier
+  ): DataEvent
 
   def controllerNeedsAuditing(controllerName: String): Boolean
 
@@ -68,29 +71,35 @@ trait FrontendAuditFilter extends AuditFilter {
 
   override def apply(nextFilter: EssentialAction) = new EssentialAction {
     def apply(requestHeader: RequestHeader) = {
+      val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
 
-      val next        = nextFilter(requestHeader)
-      implicit val hc = HeaderCarrierConverter.fromHeadersAndSession(requestHeader.headers, Some(requestHeader.session))
+      implicit val hc = HeaderCarrierConverter.fromRequestAndSession(requestHeader, requestHeader.session)
 
       val loggingContext = s"${requestHeader.method} ${requestHeader.uri} "
 
-      def performAudit(requestBody: String, maybeResult: Try[Result])(responseBody: String): Unit =
-        maybeResult match {
+      def performAudit(requestBody: String, tryResult: Try[Result])(responseBody: String): Unit = {
+        val detail = tryResult match {
           case Success(result) =>
             val responseHeader = result.header
-            val detail = Map(
-              ResponseMessage -> filterResponseBody(result, responseHeader, responseBody),
-              StatusCode      -> responseHeader.status.toString
-            ) ++ buildRequestDetails(requestHeader, requestBody) ++ buildResponseDetails(responseHeader)
-            auditConnector.sendEvent(dataEvent(requestReceived, requestHeader.uri, requestHeader, detail))
+            Map(
+                ResponseMessage -> filterResponseBody(result, responseHeader, responseBody),
+                StatusCode      -> responseHeader.status.toString
+              ) ++
+              buildRequestDetails(requestHeader, requestBody) ++
+              buildResponseDetails(responseHeader)
           case Failure(f) =>
-            auditConnector.sendEvent(
-              dataEvent(
-                requestReceived,
-                requestHeader.uri,
-                requestHeader,
-                Map(FailedRequestMessage -> f.getMessage) ++ buildRequestDetails(requestHeader, requestBody)))
+            Map(FailedRequestMessage -> f.getMessage) ++
+              buildRequestDetails(requestHeader, requestBody)
         }
+        auditConnector.sendEvent(
+          dataEvent(
+            eventType       = requestReceived,
+            transactionName = requestHeader.uri,
+            request         = requestHeader,
+            detail          = detail
+          )
+        )
+      }
 
       if (needsAuditing(requestHeader))
         onCompleteWithInput(loggingContext, next, performAudit)
@@ -216,16 +225,15 @@ trait FrontendAuditFilter extends AuditFilter {
     }
 
   private def getQueryStringValue(seqOfArgs: Seq[String]): String =
-    seqOfArgs.foldLeft("")(
-      (queryStringArrayConcat, queryStringArrayItem) => {
+    seqOfArgs.foldLeft(""){
+      (queryStringArrayConcat, queryStringArrayItem) =>
         val queryStringArrayPrepend = queryStringArrayConcat match {
           case "" => ""
           case _  => ","
         }
 
         queryStringArrayConcat + queryStringArrayPrepend + queryStringArrayItem
-      }
-    )
+    }
 
   private def cleanQueryStringForDatastream(queryString: String): String =
     queryString.trim match {
@@ -250,7 +258,8 @@ class DefaultFrontendAuditFilter @Inject()(
     eventType: String,
     transactionName: String,
     request: RequestHeader,
-    detail: Map[String, String])(implicit hc: HeaderCarrier): DataEvent =
+    detail: Map[String, String]
+  )(implicit hc: HeaderCarrier): DataEvent =
     httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
