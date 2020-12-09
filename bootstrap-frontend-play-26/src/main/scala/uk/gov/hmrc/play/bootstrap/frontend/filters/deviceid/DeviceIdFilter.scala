@@ -19,10 +19,10 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 import play.api.mvc._
 import play.api.mvc.request.{Cell, RequestAttrKey}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -52,7 +52,7 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
           case None =>
             // Invalid deviceId cookie. Replace invalid cookie from request with new deviceId cookie and return in response.
             val deviceIdCookie = buildNewDeviceIdCookie()
-            sendDataEvent(rh, deviceCookeValueId.value, deviceIdCookie.value)
+            sendBadDeviceDataEvent(rh, deviceCookeValueId.value, deviceIdCookie.value)
             CookieResult(allCookiesApartFromDeviceId.toSeq :+ deviceIdCookie, deviceIdCookie)
         }
       }
@@ -77,8 +77,10 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
 
   private case class CookieResult(cookies: Seq[Cookie], newDeviceIdCookie: Cookie)
 
-  private def sendDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String): Unit = {
-    val hc: HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+  private def sendBadDeviceDataEvent(rh: RequestHeader, badDeviceId: String, goodDeviceId: String): Unit = {
+    val hc = HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
+               // for backward compatibility, clear (the bad) deviceID, since we are sending explicitly in the event detail
+               .copy(deviceID = None)
     auditConnector.sendEvent(
       DataEvent(
         appName,
