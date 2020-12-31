@@ -18,7 +18,6 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
 import play.api.mvc._
 import play.api.mvc.request.{Cell, RequestAttrKey}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}

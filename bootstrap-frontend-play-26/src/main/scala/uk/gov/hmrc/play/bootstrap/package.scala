@@ -20,6 +20,7 @@ import akka.stream.Materializer
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import play.api.http.EnabledFilters
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.bootstrap.frontend.filters.{HeadersFilter, SessionIdFilter, SessionTimeoutFilter, AllowlistFilter}
@@ -48,6 +49,7 @@ package bootstrap {
     @Singleton
     class FrontendFilters @Inject()(
       configuration            : Configuration,
+      defaultFilters           : EnabledFilters,
       loggingFilter            : LoggingFilter,
       headersFilter            : HeadersFilter,
       securityFilter           : SecurityHeadersFilter,
@@ -63,6 +65,7 @@ package bootstrap {
       sessionIdFilter          : SessionIdFilter
     ) extends uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters(
       configuration,
+      defaultFilters,
       loggingFilter,
       headersFilter,
       securityFilter,

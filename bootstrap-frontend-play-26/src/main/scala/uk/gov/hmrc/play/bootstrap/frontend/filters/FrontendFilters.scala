@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.http.HttpFilters
+import play.api.http.{EnabledFilters, HttpFilters}
 import play.api.mvc.EssentialFilter
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
@@ -30,6 +30,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
 @Singleton
 class FrontendFilters @Inject()(
   configuration            : Configuration,
+  defaultFilters           : EnabledFilters,
   loggingFilter            : LoggingFilter,
   headersFilter            : HeadersFilter,
   securityFilter           : SecurityHeadersFilter,
@@ -46,6 +47,7 @@ class FrontendFilters @Inject()(
 ) extends HttpFilters {
 
   override val filters: Seq[EssentialFilter] =
+    defaultFilters.filters ++
     whenEnabled("security.headers.filter.enabled", securityFilter) ++
     Seq(
       metricsFilter,

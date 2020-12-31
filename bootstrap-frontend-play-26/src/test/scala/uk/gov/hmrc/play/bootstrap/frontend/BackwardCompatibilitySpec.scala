@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend
 
 import akka.stream.Materializer
 import com.github.ghik.silencer.silent
+import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
@@ -63,8 +64,13 @@ class BackwardCompatibilitySpec
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.FrontendFilters" in {
+      val defaultFilters = mock[play.api.http.EnabledFilters]
+      when(defaultFilters.filters)
+        .thenReturn(Seq.empty)
+
       new uk.gov.hmrc.play.bootstrap.filters.FrontendFilters(
         configuration             = Configuration(ConfigFactory.load("frontend.conf")),
+        defaultFilters            = defaultFilters,
         loggingFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
         headersFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter],
         securityFilter            = mock[play.filters.headers.SecurityHeadersFilter],

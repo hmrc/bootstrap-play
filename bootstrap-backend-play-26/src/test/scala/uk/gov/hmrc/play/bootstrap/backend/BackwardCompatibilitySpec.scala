@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.backend
 
 import akka.stream.Materializer
+import org.mockito.Mockito.when
 import com.github.ghik.silencer.silent
 import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
@@ -63,12 +64,18 @@ class BackwardCompatibilitySpec
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters" in {
+
+      val defaultFilters = mock[play.api.http.EnabledFilters]
+      when(defaultFilters.filters)
+        .thenReturn(Seq.empty)
+
       new uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters(
-        metricsFilter = mock[com.kenshoo.play.metrics.MetricsFilter],
-        auditFilter   = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],
-        loggingFilter = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
-        cacheFilter   = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
-        mdcFilter     = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
+        defaultFilters = defaultFilters,
+        metricsFilter  = mock[com.kenshoo.play.metrics.MetricsFilter],
+        auditFilter    = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],
+        loggingFilter  = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
+        cacheFilter    = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
+        mdcFilter      = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
       )
 
       // and can load from config
