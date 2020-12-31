@@ -83,10 +83,10 @@ lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("boots
   )
 
   def copySources(module: Project) = Seq(
-    Compile / scalaSource := (module / Compile / scalaSource).value,
-    Compile / resources   := (module / Compile / resources).value,
-    Test    / scalaSource := (module / Test    / scalaSource).value,
-    Test    / resources   := (module / Test    / resources).value
+    Compile / scalaSource       := (module / Compile / scalaSource      ).value,
+    Compile / resourceDirectory := (module / Compile / resourceDirectory).value,
+    Test    / scalaSource       := (module / Test    / scalaSource      ).value,
+    Test    / resourceDirectory := (module / Test    / resourceDirectory).value
   )
 
 lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))

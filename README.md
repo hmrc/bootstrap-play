@@ -25,6 +25,8 @@ libraryDependencies += "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "x.x.x"
 In your application.conf file, add:
 
 ```properties
+include "frontend.conf"
+
 # An ApplicationLoader that uses Guice to bootstrap the application.
 play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
 
@@ -57,6 +59,8 @@ libraryDependencies += "uk.gov.hmrc" %% "govuk-template" % "x.x.x"
 In your application.conf file, add:
 
 ```properties
+include "backend.conf"
+
 # An ApplicationLoader that uses Guice to bootstrap the application.
 play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
 

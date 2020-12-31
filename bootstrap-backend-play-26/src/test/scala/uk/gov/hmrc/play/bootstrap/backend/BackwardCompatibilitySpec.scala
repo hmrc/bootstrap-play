@@ -70,6 +70,7 @@ class BackwardCompatibilitySpec
         .thenReturn(Seq.empty)
 
       new uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters(
+        configuration  = Configuration(ConfigFactory.load("backend.conf")),
         defaultFilters = defaultFilters,
         metricsFilter  = mock[com.kenshoo.play.metrics.MetricsFilter],
         auditFilter    = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],

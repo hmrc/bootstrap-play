@@ -18,12 +18,14 @@ package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
+import play.api.Configuration
 import play.api.http.{EnabledFilters, HttpFilters}
 import play.api.mvc.EssentialFilter
 import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
 
 @Singleton
 class BackendFilters @Inject()(
+  configuration : Configuration,
   defaultFilters: EnabledFilters,
   metricsFilter : MetricsFilter,
   auditFilter   : AuditFilter,
@@ -33,10 +35,19 @@ class BackendFilters @Inject()(
 ) extends HttpFilters {
 
   override val filters: Seq[EssentialFilter] =
-    defaultFilters.filters :+
-    metricsFilter :+
-    auditFilter   :+
-    loggingFilter :+
-    cacheFilter   :+
-    mdcFilter
+    defaultFilters.filters ++
+    Seq(
+      metricsFilter
+    ) ++
+    whenEnabled("auditing.enabled", auditFilter) ++
+    Seq(
+      auditFilter,
+      loggingFilter,
+      cacheFilter,
+      mdcFilter
+    )
+
+  private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =
+    if (configuration.get[Boolean](key)) Seq(filter)
+    else Seq.empty
 }

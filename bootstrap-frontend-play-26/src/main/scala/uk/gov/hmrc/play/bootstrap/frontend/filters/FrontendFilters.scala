@@ -34,7 +34,7 @@ class FrontendFilters @Inject()(
   loggingFilter            : LoggingFilter,
   headersFilter            : HeadersFilter,
   securityFilter           : SecurityHeadersFilter,
-  frontendAuditFilter      : AuditFilter,
+  auditFilter              : AuditFilter,
   metricsFilter            : MetricsFilter,
   deviceIdFilter           : DeviceIdFilter,
   csrfFilter               : CSRFFilter,
@@ -54,8 +54,10 @@ class FrontendFilters @Inject()(
       sessionCookieCryptoFilter,
       headersFilter,
       deviceIdFilter,
-      loggingFilter,
-      frontendAuditFilter,
+      loggingFilter
+    ) ++
+    whenEnabled("auditing.enabled", auditFilter) ++
+    Seq(
       sessionTimeoutFilter
     ) ++
     whenEnabled("bootstrap.filters.csrf.enabled", csrfFilter) ++

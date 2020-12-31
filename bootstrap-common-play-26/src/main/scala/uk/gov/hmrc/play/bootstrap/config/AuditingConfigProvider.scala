@@ -29,7 +29,7 @@ class AuditingConfigProvider @Inject()(
     configuration
       .getOptional[Configuration]("auditing")
       .map { c =>
-        val enabled = c.getOptional[Boolean]("enabled").getOrElse(true)
+        val enabled = c.get[Boolean]("enabled")
 
         if (enabled) {
           AuditingConfig(

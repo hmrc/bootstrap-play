@@ -46,6 +46,7 @@ package bootstrap {
     @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters instead", "2.12.0")
     @Singleton
     class MicroserviceFilters @Inject()(
+      configuration : Configuration,
       defaultFilters: EnabledFilters,
       metricsFilter : MetricsFilter,
       auditFilter   : AuditFilter,
@@ -53,6 +54,7 @@ package bootstrap {
       cacheFilter   : CacheControlFilter,
       mdcFilter     : MDCFilter
     ) extends uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters(
+      configuration,
       defaultFilters,
       metricsFilter,
       auditFilter,
