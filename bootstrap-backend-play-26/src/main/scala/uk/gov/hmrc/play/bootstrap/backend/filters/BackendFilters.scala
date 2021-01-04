@@ -37,17 +37,10 @@ class BackendFilters @Inject()(
   override val filters: Seq[EssentialFilter] =
     defaultFilters.filters ++
     Seq(
-      metricsFilter
-    ) ++
-    whenEnabled("auditing.enabled", auditFilter) ++
-    Seq(
+      metricsFilter,
       auditFilter,
       loggingFilter,
       cacheFilter,
       mdcFilter
     )
-
-  private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =
-    if (configuration.get[Boolean](key)) Seq(filter)
-    else Seq.empty
 }
