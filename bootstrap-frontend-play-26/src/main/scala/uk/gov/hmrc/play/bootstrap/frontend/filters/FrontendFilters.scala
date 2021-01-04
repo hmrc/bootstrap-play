@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,9 @@ class FrontendFilters @Inject()(
   sessionIdFilter          : SessionIdFilter
 ) extends HttpFilters {
 
+  // TODO should security.headers.filter.enabled and bootstrap.filters.csrf.enabled just be provided in defaultFilters?
+  //  i.e. is there any reason to disable it between dev/environments?
+  // infact apart from auditing.enabled, should any change between dev/environments?
   override val filters: Seq[EssentialFilter] =
     defaultFilters.filters ++
     whenEnabled("security.headers.filter.enabled", securityFilter) ++
