@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,24 +40,23 @@ import scala.util.{Failure, Success, Try}
 
 trait FrontendAuditFilter extends AuditFilter {
 
+  private val logger = Logger(getClass)
+
   protected implicit def ec: ExecutionContext
   def auditConnector: AuditConnector
+
+  def controllerNeedsAuditing(controllerName: String): Boolean
 
   def dataEvent(
     eventType: String,
     transactionName: String,
     request: RequestHeader,
     detail: Map[String, String] = Map()
-  )(
-    implicit
+  )(implicit
     hc: HeaderCarrier
   ): DataEvent
 
-  def controllerNeedsAuditing(controllerName: String): Boolean
-
-  private val logger = Logger(getClass)
-
-  private val textHtml = ".*(text/html).*".r
+  implicit def mat: Materializer
 
   val maxBodySize = 32665
 
@@ -67,15 +66,14 @@ trait FrontendAuditFilter extends AuditFilter {
 
   def applicationPort: Option[Int]
 
-  implicit def mat: Materializer
 
   override def apply(nextFilter: EssentialAction) = new EssentialAction {
-    def apply(requestHeader: RequestHeader) = {
+    override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
 
       implicit val hc = HeaderCarrierConverter.fromRequestAndSession(requestHeader, requestHeader.session)
 
-      val loggingContext = s"${requestHeader.method} ${requestHeader.uri} "
+      val loggingContext = s"${requestHeader.method} ${requestHeader.uri}"
 
       def performAudit(requestBody: String, tryResult: Try[Result])(responseBody: String): Unit = {
         val detail = tryResult match {
@@ -116,8 +114,9 @@ trait FrontendAuditFilter extends AuditFilter {
   protected def onCompleteWithInput(
     loggingContext: String,
     next: Accumulator[ByteString, Result],
-    handler: (String, Try[Result]) => String => Unit)(
-    implicit ec: ExecutionContext): Accumulator[ByteString, Result] = {
+    handler: (String, Try[Result]) => String => Unit
+  )(implicit ec: ExecutionContext
+  ): Accumulator[ByteString, Result] = {
     val requestBodyPromise = Promise[String]()
     val requestBodyFuture  = requestBodyPromise.future
 
@@ -153,9 +152,8 @@ trait FrontendAuditFilter extends AuditFilter {
                     logger.warn(
                       s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength $maxBodySize - do you need to be auditing this payload?")
                     rb.take(maxBodySize).decodeString("UTF-8")
-                  } else {
+                  } else
                     rb.decodeString("UTF-8")
-                  }
                 handler(res, Success(result))(auditString)
               }
               h
@@ -169,6 +167,8 @@ trait FrontendAuditFilter extends AuditFilter {
           throw ex
       }
   }
+
+  private val textHtml = ".*(text/html).*".r
 
   private def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String) =
     result.body.contentType
@@ -216,7 +216,8 @@ trait FrontendAuditFilter extends AuditFilter {
   private[filters] def stripPasswords(
     contentType: Option[String],
     requestBody: String,
-    maskedFormFields: Seq[String]): String =
+    maskedFormFields: Seq[String]
+  ): String =
     contentType match {
       case Some("application/x-www-form-urlencoded") =>
         maskedFormFields.foldLeft(requestBody)((maskedBody, field) =>
@@ -248,11 +249,15 @@ class DefaultFrontendAuditFilter @Inject()(
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
   override val mat: Materializer
-)(implicit protected val ec: ExecutionContext) extends FrontendAuditFilter {
+)(implicit protected val ec: ExecutionContext
+) extends FrontendAuditFilter {
 
   override val maskedFormFields: Seq[String] = Seq.empty
 
   override val applicationPort: Option[Int] = None
+
+  override def controllerNeedsAuditing(controllerName: String): Boolean =
+    controllerConfigs.controllerNeedsAuditing(controllerName)
 
   override def dataEvent(
     eventType: String,
@@ -261,7 +266,4 @@ class DefaultFrontendAuditFilter @Inject()(
     detail: Map[String, String]
   )(implicit hc: HeaderCarrier): DataEvent =
     httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
-
-  override def controllerNeedsAuditing(controllerName: String): Boolean =
-    controllerConfigs.controllerNeedsAuditing(controllerName)
 }
