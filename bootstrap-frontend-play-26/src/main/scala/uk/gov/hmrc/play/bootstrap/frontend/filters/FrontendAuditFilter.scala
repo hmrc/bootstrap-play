@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
 import javax.inject.Inject
+import play.api.Configuration
 import play.api.http.HeaderNames
 import play.api.mvc.{RequestHeader, ResponseHeader, Result}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -93,6 +94,7 @@ trait FrontendAuditFilter
 }
 
 class DefaultFrontendAuditFilter @Inject()(
+  config: Configuration,
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
@@ -103,6 +105,9 @@ class DefaultFrontendAuditFilter @Inject()(
   override val maskedFormFields: Seq[String] = Seq.empty
 
   override val applicationPort: Option[Int] = None
+
+  override val isAuditingEnabled: Boolean =
+    config.get[Boolean]("auditing.enabled")
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)

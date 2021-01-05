@@ -42,6 +42,8 @@ trait CommonAuditFilter extends AuditFilter {
 
   def auditConnector: AuditConnector
 
+  def isAuditingEnabled: Boolean
+
   def controllerNeedsAuditing(controllerName: String): Boolean
 
   def dataEvent(
@@ -100,6 +102,7 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   protected def needsAuditing(request: RequestHeader): Boolean =
+    isAuditingEnabled &&
     request.attrs.get(Attrs.HandlerDef).map(_.controller).forall(controllerNeedsAuditing)
 
   protected def onCompleteWithInput(
