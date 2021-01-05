@@ -163,16 +163,16 @@ Http-verbs has been bumped to major version 12.0.0. See [http-verbs]("https://gi
 
 The following configuration has been renamed, the previous keys are invalid and will need to be updated.
 
-| Invalid config key                      | Should now be                       
-| --- | --- | 
+| Invalid config key                      | Should now be
+| --- | --- |
 | security.headers.filter.enabled         | play.filters.enabled+="play.filters.headers.SecurityHeadersFilter"
 | bootstrap.filters.csrf.enabled          | play.filters.enabled+="play.filters.csrf.CSRFFilter"
 | bootstrap.filters.sessionId.enabled     | play.filters.enabled+="uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter"
 | bootstrap.filters.whitelist.enabled     | play.filters.enabled+="uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"
-| httpHeadersWhitelist                    | bootstrap.http.headersAllowlist                                                       
-| bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination                                               
-| bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded                                                  
-| bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips                                                       
+| httpHeadersWhitelist                    | bootstrap.http.headersAllowlist
+| bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination
+| bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded
+| bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips
 
 #### Disabling filters
 Filters can be disabled via config, for example:
