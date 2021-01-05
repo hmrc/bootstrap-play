@@ -153,6 +153,34 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Migrations
 
+### Version 4.0.0
+
+#### http-verbs
+
+Http-verbs has been bumped to major version 13.0.0. See [http-verbs]("https://github.com/hmrc/http-verbs") for details.
+
+#### Filters
+
+`FrontendFilters` and `BackendFilters` have been deprecated. The preferred way to set filters is via `play.filters.enabled`.
+
+The motivation for this is to allow configuration of default Play filters via `play.filters.enabled` as per the Play documentation, and improve visibility of which filters are actually being used.
+
+If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters`, you will only need to remove this setting, since backend.conf has defined `play.filters.enabled` to the same filters.
+
+If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters.FrontendFilters`, you will need to remove this setting, but also change the following configurations:
+
+| Deprecated config key                   | Should now be                           |
+| --- | --- |
+| security.headers.filter.enabled         | play.filters.enabled += "play.filters.headers.SecurityHeadersFilter"
+| bootstrap.filters.csrf.enabled          | play.filters.enabled += "play.filters.csrf.CSRFFilter"
+| bootstrap.filters.sessionId.enabled     | play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter"
+| bootstrap.filters.allowlist.enabled     | play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"
+
+If you have set `play.http.filters` to a custom filter, we recommend that you remove this, and use `play.filters.enabled` instead. You can append extra filters with `play.filters.enabled += ` or remove filters with `play.filters.disabled += `.
+
+If you are using a custom filter which injects the `play.api.http.EnabledFilters`, or are already using the default `play.api.http.EnabledFilters`, then pay extra attention since the default `play.filters.enabled` has now been defined differently by bootstrap.
+
+
 ### Version 3.0.0
 
 #### http-verbs
@@ -163,21 +191,14 @@ Http-verbs has been bumped to major version 12.0.0. See [http-verbs]("https://gi
 
 The following configuration has been renamed, the previous keys are invalid and will need to be updated.
 
-| Invalid config key                      | Should now be
+| Invalid config key                      | Should now be                           |
 | --- | --- |
-| security.headers.filter.enabled         | play.filters.enabled+="play.filters.headers.SecurityHeadersFilter"
-| bootstrap.filters.csrf.enabled          | play.filters.enabled+="play.filters.csrf.CSRFFilter"
-| bootstrap.filters.sessionId.enabled     | play.filters.enabled+="uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter"
-| bootstrap.filters.whitelist.enabled     | play.filters.enabled+="uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"
-| httpHeadersWhitelist                    | bootstrap.http.headersAllowlist
-| bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination
-| bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded
-| bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips
+| httpHeadersWhitelist                    | bootstrap.http.headersAllowlist         |
+| bootstrap.filters.whitelist.enabled     | bootstrap.filters.allowlist.enabled     |
+| bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination |
+| bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded    |
+| bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips         |
 
-#### Disabling filters
-Filters can be disabled via config, for example:
-
-`play.filters.disabled += "play.filters.csrf.CSRFFilter"`
 
 ### From bootstrap-play-26
 
