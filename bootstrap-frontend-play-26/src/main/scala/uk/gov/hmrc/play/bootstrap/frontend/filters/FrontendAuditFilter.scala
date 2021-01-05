@@ -94,7 +94,7 @@ trait FrontendAuditFilter
 }
 
 class DefaultFrontendAuditFilter @Inject()(
-  config: Configuration,
+  override val config: Configuration,
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
@@ -105,9 +105,6 @@ class DefaultFrontendAuditFilter @Inject()(
   override val maskedFormFields: Seq[String] = Seq.empty
 
   override val applicationPort: Option[Int] = None
-
-  override val isAuditingEnabled: Boolean =
-    config.get[Boolean]("auditing.enabled")
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)

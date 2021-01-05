@@ -167,9 +167,9 @@ class BackwardCompatibilitySpec
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.FrontendAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.FrontendAuditFilter {
         override def ec             = mock[ExecutionContext]
+        override def config         = mock[Configuration]
         override def auditConnector = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector]
         override def mat            = mock[Materializer]
-        override val isAuditingEnabled: Boolean = true
         override def controllerNeedsAuditing(controllerName: String): Boolean = true
         override def dataEvent(
           eventType      : String,

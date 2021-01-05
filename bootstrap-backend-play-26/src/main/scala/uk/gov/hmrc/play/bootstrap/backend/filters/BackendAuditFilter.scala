@@ -44,16 +44,13 @@ trait BackendAuditFilter
 }
 
 class DefaultBackendAuditFilter @Inject()(
-  config: Configuration,
+  override val config: Configuration,
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
   override val mat: Materializer
 )(implicit protected val ec: ExecutionContext
 ) extends BackendAuditFilter {
-
-  override val isAuditingEnabled: Boolean =
-    config.get[Boolean]("auditing.enabled")
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)

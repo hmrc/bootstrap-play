@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
+import play.api.Configuration
 import play.api.mvc.EssentialFilter
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
@@ -40,9 +41,9 @@ trait CommonAuditFilter extends AuditFilter {
 
   protected implicit def ec: ExecutionContext
 
-  def auditConnector: AuditConnector
+  def config: Configuration
 
-  def isAuditingEnabled: Boolean
+  def auditConnector: AuditConnector
 
   def controllerNeedsAuditing(controllerName: String): Boolean
 
@@ -102,7 +103,7 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   protected def needsAuditing(request: RequestHeader): Boolean =
-    isAuditingEnabled &&
+    config.get[Boolean]("auditing.enabled") &&
     request.attrs.get(Attrs.HandlerDef).map(_.controller).forall(controllerNeedsAuditing)
 
   protected def onCompleteWithInput(
