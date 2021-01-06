@@ -19,6 +19,8 @@ package uk.gov.hmrc.play
 import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import play.filters.csrf.CSRFFilter
+import play.filters.headers.SecurityHeadersFilter
 import uk.gov.hmrc.play.bootstrap.frontend.filters.{AllowlistFilter, SessionIdFilter}
 
 
@@ -46,12 +48,16 @@ package bootstrap {
     @deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "2.12.0")
     @Singleton
     class FrontendFilters @Inject()(
-      configuration            : Configuration,
-      allowlistFilter          : AllowlistFilter,
-      sessionIdFilter          : SessionIdFilter,
-      enabledFilters           : EnabledFilters
+      configuration        : Configuration,
+      securityHeadersFilter: SecurityHeadersFilter,
+      csrfFilter           : CSRFFilter,
+      allowlistFilter      : AllowlistFilter,
+      sessionIdFilter      : SessionIdFilter,
+      enabledFilters       : EnabledFilters
     ) extends uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters(
       configuration,
+      securityHeadersFilter,
+      csrfFilter,
       allowlistFilter,
       sessionIdFilter,
       enabledFilters
@@ -61,7 +67,7 @@ package bootstrap {
     @Singleton
     class WhitelistFilter @Inject()(
       config: Configuration,
-      mat: Materializer
+      mat   : Materializer
     ) extends AllowlistFilter(config, mat)
 
     package frontend {

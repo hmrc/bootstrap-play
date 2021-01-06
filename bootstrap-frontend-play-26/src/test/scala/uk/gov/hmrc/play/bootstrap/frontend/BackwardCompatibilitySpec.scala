@@ -68,6 +68,8 @@ class BackwardCompatibilitySpec
       val config = Configuration(ConfigFactory.load("frontend.conf").withoutPath("play.filters.enabled"))
       new uk.gov.hmrc.play.bootstrap.filters.FrontendFilters(
         configuration             = config,
+        securityHeadersFilter     = mock[play.filters.headers.SecurityHeadersFilter],
+        csrfFilter                = mock[play.filters.csrf.CSRFFilter],
         allowlistFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter],
         sessionIdFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter],
         enabledFilters            = new EnabledFilters(environment, config, new GuiceInjectorBuilder().configure(config).build())

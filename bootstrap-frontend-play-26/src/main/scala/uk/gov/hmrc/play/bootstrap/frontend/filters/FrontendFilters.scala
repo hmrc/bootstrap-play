@@ -28,6 +28,8 @@ import scala.reflect.ClassTag
 @Singleton
 class FrontendFilters @Inject()(
   configuration            : Configuration,
+  securityHeadersFilter    : SecurityHeadersFilter,
+  csrfFilter               : CSRFFilter,
   allowlistFilter          : AllowlistFilter,
   sessionIdFilter          : SessionIdFilter,
   enabledFilters           : EnabledFilters
@@ -38,10 +40,10 @@ class FrontendFilters @Inject()(
 
   override val filters: Seq[EssentialFilter] = {
     val filters =
-      removeWhenDisabled[SecurityHeadersFilter]("security.headers.filter.enabled")(
-        removeWhenDisabled[CSRFFilter]("bootstrap.filters.csrf.enabled")(
-          addWhenEnabled("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig)(
-            addWhenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)(
+      applyConfig("security.headers.filter.enabled", securityHeadersFilter)(
+        applyConfig("bootstrap.filters.csrf.enabled", csrfFilter)(
+          applyConfig("bootstrap.filters.sessionId.enabled", sessionIdFilter)(
+            applyConfig("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig)(
               enabledFilters.filters
             )
           )
@@ -51,18 +53,20 @@ class FrontendFilters @Inject()(
     filters
   }
 
-  private def addWhenEnabled[T](key: String, filter: => EssentialFilter)(filters: Seq[EssentialFilter]): Seq[EssentialFilter] =
-    if (configuration.get[Boolean](key))
-      filters :+ filter
-    else
-      filters
-
-  private def removeWhenDisabled[T : ClassTag](key: String)(filters: Seq[EssentialFilter]): Seq[EssentialFilter] =
-    if (!configuration.get[Boolean](key))
+  private def applyConfig[T <: EssentialFilter : ClassTag](enabledKey: String, filter: => T)(filters: Seq[EssentialFilter]): Seq[EssentialFilter] =
+    if (configuration.get[Boolean](enabledKey)) {
+      val alreadyContains =
+        filters.exists {
+          case f: T => true
+          case f    => false
+        }
+      if (alreadyContains)
+        filters
+      else
+        filters :+ filter
+    } else
       filters.filter {
         case f: T => false
         case f    => true
       }
-    else
-      filters
 }
