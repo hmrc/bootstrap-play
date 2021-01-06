@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play
 
 import akka.stream.Materializer
+import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -41,12 +42,21 @@ package bootstrap {
   }
 
   package filters {
-
-    import play.api.http.EnabledFilters
-
-    @deprecated("Config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required. Bootstrap filters are now configured via backend.conf", "2.12.0")
+    @deprecated("Config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required. Bootstrap filters are now configured via backend.conf", "4.0.0")
     @Singleton
-    class MicroserviceFilters @Inject()(enabledFilters: EnabledFilters) extends uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters(enabledFilters)
+    class MicroserviceFilters @Inject()(
+      metricsFilter: MetricsFilter,
+      auditFilter  : AuditFilter,
+      loggingFilter: LoggingFilter,
+      cacheFilter  : CacheControlFilter,
+      mdcFilter    : MDCFilter
+    ) extends uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters(
+      metricsFilter,
+      auditFilter,
+      loggingFilter,
+      cacheFilter,
+      mdcFilter
+    )
 
     package object microservice {
       @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.BackendAuditFilter instead", "2.12.0")

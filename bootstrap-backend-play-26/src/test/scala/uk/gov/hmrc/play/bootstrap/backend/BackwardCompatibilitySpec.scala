@@ -23,7 +23,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
-import play.api.http.EnabledFilters
 import play.api.libs.json.OFormat
 import play.api.mvc.{ControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -65,7 +64,11 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters" in {
       new uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters(
-        mock[EnabledFilters]
+        metricsFilter = mock[com.kenshoo.play.metrics.MetricsFilter],
+        auditFilter   = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],
+        loggingFilter = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
+        cacheFilter   = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
+        mdcFilter     = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
       )
 
       // and can load from config

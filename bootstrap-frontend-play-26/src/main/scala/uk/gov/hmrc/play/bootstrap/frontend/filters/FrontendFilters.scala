@@ -16,57 +16,60 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
+import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.{Configuration, Logger}
-import play.api.http.{EnabledFilters, HttpFilters}
+import play.api.http.HttpFilters
 import play.api.mvc.EssentialFilter
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
-import scala.reflect.ClassTag
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter
+import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
 
-@deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "2.12.0")
+@deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "4.0.0")
 @Singleton
 class FrontendFilters @Inject()(
   configuration            : Configuration,
-  securityHeadersFilter    : SecurityHeadersFilter,
+  loggingFilter            : LoggingFilter,
+  headersFilter            : HeadersFilter,
+  securityFilter           : SecurityHeadersFilter,
+  frontendAuditFilter      : AuditFilter,
+  metricsFilter            : MetricsFilter,
+  deviceIdFilter           : DeviceIdFilter,
   csrfFilter               : CSRFFilter,
+  sessionCookieCryptoFilter: SessionCookieCryptoFilter,
+  sessionTimeoutFilter     : SessionTimeoutFilter,
+  cacheControlFilter       : CacheControlFilter,
+  mdcFilter                : MDCFilter,
   allowlistFilter          : AllowlistFilter,
-  sessionIdFilter          : SessionIdFilter,
-  enabledFilters           : EnabledFilters
+  sessionIdFilter          : SessionIdFilter
 ) extends HttpFilters {
 
   private val logger = Logger(getClass)
+
   logger.warn("play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilter\" is no longer required and can be removed. Filters are configured using play's default filter system: https://www.playframework.com/documentation/2.7.x/Filters#Default-Filters")
 
-  override val filters: Seq[EssentialFilter] = {
-    val filters =
-      applyConfig("security.headers.filter.enabled", securityHeadersFilter)(
-        applyConfig("bootstrap.filters.csrf.enabled", csrfFilter)(
-          applyConfig("bootstrap.filters.sessionId.enabled", sessionIdFilter)(
-            applyConfig("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig)(
-              enabledFilters.filters
-            )
-          )
-        )
-      )
-    logger.info(s"EnabledFilters has been amended to ${filters.map(_.getClass.getName).mkString("\n  ", "\n  ", "\n")}")
-    filters
-  }
+  override val filters: Seq[EssentialFilter] =
+    whenEnabled("security.headers.filter.enabled", securityFilter) ++
+    Seq(
+      metricsFilter,
+      sessionCookieCryptoFilter,
+      headersFilter,
+      deviceIdFilter,
+      loggingFilter,
+      frontendAuditFilter,
+      sessionTimeoutFilter
+    ) ++
+    whenEnabled("bootstrap.filters.csrf.enabled", csrfFilter) ++
+    Seq(
+      cacheControlFilter,
+      mdcFilter
+    ) ++
+    whenEnabled("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig) ++
+    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
 
-  private def applyConfig[T <: EssentialFilter : ClassTag](enabledKey: String, filter: => T)(filters: Seq[EssentialFilter]): Seq[EssentialFilter] =
-    if (configuration.get[Boolean](enabledKey)) {
-      val alreadyContains =
-        filters.exists {
-          case f: T => true
-          case f    => false
-        }
-      if (alreadyContains)
-        filters
-      else
-        filters :+ filter
-    } else
-      filters.filter {
-        case f: T => false
-        case f    => true
-      }
+  private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =
+    if (configuration.get[Boolean](key)) Seq(filter)
+    else Seq.empty
 }

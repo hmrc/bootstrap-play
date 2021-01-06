@@ -16,16 +16,28 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.filters
 
+import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.http.{DefaultHttpFilters, EnabledFilters}
+import play.api.http.DefaultHttpFilters
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, LoggingFilter, MDCFilter}
 
-@deprecated("Config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required. Bootstrap filters are now configured via backend.conf", "2.12.0")
+
+@deprecated("Config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required. Bootstrap filters are now configured via backend.conf", "4.0.0")
 @Singleton
-class BackendFilters @Inject()(enabledFilters: EnabledFilters) extends DefaultHttpFilters(enabledFilters.filters: _*) {
-
+class BackendFilters @Inject()(
+  metricsFilter: MetricsFilter,
+  auditFilter  : AuditFilter,
+  loggingFilter: LoggingFilter,
+  cacheFilter  : CacheControlFilter,
+  mdcFilter    : MDCFilter
+) extends DefaultHttpFilters(
+  metricsFilter,
+  auditFilter,
+  loggingFilter,
+  cacheFilter,
+  mdcFilter
+) {
   private val logger = Logger(getClass)
   logger.warn("play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required and can be removed. Filters are configured using play's default filter system: https://www.playframework.com/documentation/2.7.x/Filters#Default-Filters")
-
 }
-

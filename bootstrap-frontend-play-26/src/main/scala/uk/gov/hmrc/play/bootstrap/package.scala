@@ -17,11 +17,14 @@
 package uk.gov.hmrc.play
 
 import akka.stream.Materializer
+import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.filters.csrf.CSRFFilter
 import play.filters.headers.SecurityHeadersFilter
-import uk.gov.hmrc.play.bootstrap.frontend.filters.{AllowlistFilter, SessionIdFilter}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.{HeadersFilter, SessionIdFilter, SessionTimeoutFilter, AllowlistFilter}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter
+import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
 
 
 package bootstrap {
@@ -41,26 +44,38 @@ package bootstrap {
   }
 
   package filters {
-
-    import play.api.http.EnabledFilters
-
-
-    @deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "2.12.0")
+    @deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "4.0.0")
     @Singleton
     class FrontendFilters @Inject()(
-      configuration        : Configuration,
-      securityHeadersFilter: SecurityHeadersFilter,
-      csrfFilter           : CSRFFilter,
-      allowlistFilter      : AllowlistFilter,
-      sessionIdFilter      : SessionIdFilter,
-      enabledFilters       : EnabledFilters
+      configuration            : Configuration,
+      loggingFilter            : LoggingFilter,
+      headersFilter            : HeadersFilter,
+      securityFilter           : SecurityHeadersFilter,
+      frontendAuditFilter      : AuditFilter,
+      metricsFilter            : MetricsFilter,
+      deviceIdFilter           : DeviceIdFilter,
+      csrfFilter               : CSRFFilter,
+      sessionCookieCryptoFilter: SessionCookieCryptoFilter,
+      sessionTimeoutFilter     : SessionTimeoutFilter,
+      cacheControlFilter       : CacheControlFilter,
+      mdcFilter                : MDCFilter,
+      allowlistFilter          : AllowlistFilter,
+      sessionIdFilter          : SessionIdFilter
     ) extends uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters(
       configuration,
-      securityHeadersFilter,
+      loggingFilter,
+      headersFilter,
+      securityFilter,
+      frontendAuditFilter,
+      metricsFilter,
+      deviceIdFilter,
       csrfFilter,
+      sessionCookieCryptoFilter,
+      sessionTimeoutFilter,
+      cacheControlFilter,
+      mdcFilter,
       allowlistFilter,
-      sessionIdFilter,
-      enabledFilters
+      sessionIdFilter
     )
 
     @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter instead", "4.0.0")

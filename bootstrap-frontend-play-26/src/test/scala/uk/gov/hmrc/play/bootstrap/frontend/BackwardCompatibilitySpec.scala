@@ -65,14 +65,21 @@ class BackwardCompatibilitySpec
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.FrontendFilters" in {
-      val config = Configuration(ConfigFactory.load("frontend.conf").withoutPath("play.filters.enabled"))
       new uk.gov.hmrc.play.bootstrap.filters.FrontendFilters(
-        configuration             = config,
-        securityHeadersFilter     = mock[play.filters.headers.SecurityHeadersFilter],
+        configuration             = Configuration(ConfigFactory.load("frontend.conf")),
+        loggingFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
+        headersFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter],
+        securityFilter            = mock[play.filters.headers.SecurityHeadersFilter],
+        frontendAuditFilter       = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],
+        metricsFilter             = mock[com.kenshoo.play.metrics.MetricsFilter],
+        deviceIdFilter            = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter],
         csrfFilter                = mock[play.filters.csrf.CSRFFilter],
+        sessionCookieCryptoFilter = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter],
+        sessionTimeoutFilter      = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilter],
+        cacheControlFilter        = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
+        mdcFilter                 = mock[uk.gov.hmrc.play.bootstrap.filters.MDCFilter],
         allowlistFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter],
-        sessionIdFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter],
-        enabledFilters            = new EnabledFilters(environment, config, new GuiceInjectorBuilder().configure(config).build())
+        sessionIdFilter           = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter]
       )
 
       // and can load from config

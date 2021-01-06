@@ -169,12 +169,16 @@ If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters
 
 If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters.FrontendFilters`, you will need to remove this setting, but also change the following configurations:
 
-| Deprecated config key                   | Should now be                           |
+| Deprecated config key                   | Change
 | --- | --- |
-| security.headers.filter.enabled         | play.filters.enabled += "play.filters.headers.SecurityHeadersFilter"
-| bootstrap.filters.csrf.enabled          | play.filters.enabled += "play.filters.csrf.CSRFFilter"
-| bootstrap.filters.sessionId.enabled     | play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter"
-| bootstrap.filters.allowlist.enabled     | play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"
+| `security.headers.filter.enabled=true`         | Just remove - this is the default
+| `security.headers.filter.enabled=false`        | Replace with `play.filters.disabled += "play.filters.headers.SecurityHeadersFilter"`
+| `bootstrap.filters.csrf.enabled=true`          | Just remove - this is the default
+| `bootstrap.filters.csrf.enabled=false`         | Replace with  `play.filters.disabled += "play.filters.csrf.CSRFFilter"`
+| `bootstrap.filters.sessionId.enabled=true`     | Replace with  `play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter"`
+| `bootstrap.filters.sessionId.enabled=false`    | Just remove - this is the default
+| `bootstrap.filters.allowlist.enabled=true`     | Replace with  `play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"`
+| `bootstrap.filters.allowlist.enabled=false`    | Just remove - this is the default
 
 If you have set `play.http.filters` to a custom filter, we recommend that you remove this, and use `play.filters.enabled` instead. You can append extra filters with `play.filters.enabled += ` or remove filters with `play.filters.disabled += `.
 
