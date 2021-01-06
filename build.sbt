@@ -113,8 +113,7 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.commonPlay27,
-    copySources(bootstrapBackendPlay26),
-    unmanagedResourceDirectories in Compile += baseDirectory.value / "src/main/resources",
+    copySources(bootstrapBackendPlay26)
   ).dependsOn(
     bootstrapCommonPlay27,
     bootstrapTestPlay27 % "test->test",
@@ -127,8 +126,7 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
     commonSettings,
     crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.frontendCommonPlay27,
-    copySources(bootstrapFrontendPlay26),
-    unmanagedResourceDirectories in Compile += baseDirectory.value / "src/main/resources",
+    copySources(bootstrapFrontendPlay26)
   ).dependsOn(
     bootstrapCommonPlay27,
     bootstrapTestPlay27 % "test->test",
