@@ -83,9 +83,9 @@ lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("boots
   )
 
   def copySources(module: Project) = Seq(
-    Compile / scalaSource       := (module / Compile / scalaSource).value,
+    Compile / scalaSource       := (module / Compile / scalaSource      ).value,
     Compile / resourceDirectory := (module / Compile / resourceDirectory).value,
-    Test    / scalaSource       := (module / Test    / scalaSource).value,
+    Test    / scalaSource       := (module / Test    / scalaSource      ).value,
     Test    / resourceDirectory := (module / Test    / resourceDirectory).value
   )
 

@@ -18,12 +18,14 @@ package uk.gov.hmrc.play.bootstrap.frontend
 
 import akka.stream.Materializer
 import com.github.ghik.silencer.silent
+import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
-import com.typesafe.config.ConfigFactory
 import play.api.Configuration
+import play.api.http.EnabledFilters
 import play.api.i18n.MessagesApi
+import play.api.inject.guice.GuiceInjectorBuilder
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.DataEvent
