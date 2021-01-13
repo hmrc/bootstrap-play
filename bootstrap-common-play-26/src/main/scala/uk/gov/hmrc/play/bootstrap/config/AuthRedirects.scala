@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ trait AuthRedirects {
     if (env.mode.equals(Mode.Test)) "Test" else config.getOptional[String]("run.mode").getOrElse("Dev")
 
   private val hostDefaults: Map[String, String] = Map(
-    "Dev.external-url.company-auth-frontend.host"          -> "http://localhost:9025",
+    "Dev.external-url.bas-gateway-frontend.host"           -> "http://localhost:9553",
     "Dev.external-url.citizen-auth-frontend.host"          -> "http://localhost:9029",
     "Dev.external-url.identity-verification-frontend.host" -> "http://localhost:9938",
     "Dev.external-url.stride-auth-frontend.host"           -> "http://localhost:9041"
@@ -45,7 +45,7 @@ trait AuthRedirects {
     config.getOptional[String](key).orElse(hostDefaults.get(key)).getOrElse("")
   }
 
-  def ggLoginUrl: String = host("company-auth-frontend") + "/gg/sign-in"
+  def ggLoginUrl: String = host("bas-gateway-frontend") + "/bas-gateway/sign-in"
 
   def verifyLoginUrl: String = host("citizen-auth-frontend") + "/ida/login"
 
@@ -66,7 +66,7 @@ trait AuthRedirects {
     Redirect(
       ggLoginUrl,
       Map(
-        "continue" -> Seq(continueUrl),
+        "continue_url" -> Seq(continueUrl),
         "origin"   -> Seq(origin)
       ))
 
