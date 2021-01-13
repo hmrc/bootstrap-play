@@ -37,8 +37,8 @@ class AuthRedirectsSpec extends AnyWordSpec with ScalaFutures with Matchers {
   }
 
   trait BaseUri {
-    val ggLoginService = "http://localhost:9025"
-    val ggLoginPath    = "/gg/sign-in"
+    val ggLoginService = "http://localhost:9553"
+    val ggLoginPath    = "/bas-gateway/sign-in"
 
     val ivService = "http://localhost:9938"
     val ivPath    = "/mdtp/uplift"
@@ -75,13 +75,13 @@ class AuthRedirectsSpec extends AnyWordSpec with ScalaFutures with Matchers {
   "redirect with defaults from config" should {
     "redirect to GG login in Dev" in new Setup with Dev {
       validate(Redirect.toGGLogin("/continue"))(
-        expectedLocation = s"$ggLoginService$ggLoginPath?continue=%2Fcontinue&origin=app"
+        expectedLocation = s"$ggLoginService$ggLoginPath?continue_url=%2Fcontinue&origin=app"
       )
     }
 
     "redirect to GG login in Prod" in new Setup with Prod {
       validate(Redirect.toGGLogin("/continue"))(
-        expectedLocation = s"$ggLoginPath?continue=%2Fcontinue&origin=app"
+        expectedLocation = s"$ggLoginPath?continue_url=%2Fcontinue&origin=app"
       )
     }
 
@@ -108,10 +108,10 @@ class AuthRedirectsSpec extends AnyWordSpec with ScalaFutures with Matchers {
     }
 
     "allow to override the host defaults" in new Setup with Dev {
-      override def extraConfig = Map("Dev.external-url.company-auth-frontend.host" -> "http://localhost:9999")
+      override def extraConfig = Map("Dev.external-url.bas-gateway-frontend.host" -> "http://localhost:9999")
 
       validate(Redirect.toGGLogin("/continue"))(
-        expectedLocation = s"http://localhost:9999$ggLoginPath?continue=%2Fcontinue&origin=app"
+        expectedLocation = s"http://localhost:9999$ggLoginPath?continue_url=%2Fcontinue&origin=app"
       )
     }
 
@@ -120,7 +120,7 @@ class AuthRedirectsSpec extends AnyWordSpec with ScalaFutures with Matchers {
       override def extraConfig = Map("sosOrigin" -> "customOrigin")
 
       validate(Redirect.toGGLogin("/continue"))(
-        expectedLocation = s"$ggLoginService$ggLoginPath?continue=%2Fcontinue&origin=customOrigin"
+        expectedLocation = s"$ggLoginService$ggLoginPath?continue_url=%2Fcontinue&origin=customOrigin"
       )
     }
 
@@ -131,7 +131,7 @@ class AuthRedirectsSpec extends AnyWordSpec with ScalaFutures with Matchers {
       }
 
       validate(CustomRedirect.toGGLogin("/continue"))(
-        expectedLocation = s"$ggLoginService$ggLoginPath?continue=%2Fcontinue&origin=customOrigin"
+        expectedLocation = s"$ggLoginService$ggLoginPath?continue_url=%2Fcontinue&origin=customOrigin"
       )
     }
   }
