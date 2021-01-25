@@ -19,18 +19,16 @@ object LibDependencies {
   private def common(playVersion: String, playSuffix: String) =
     Seq(
       "ch.qos.logback"         %  "logback-core"               % "1.2.3",
-      "com.kenshoo"            %% "metrics-play"               % (if (playVersion == play26Version) "2.6.19_0.7.0"
-                                                                  else "2.7.3_0.8.2" // scala_2_12 only
-                                                                 ),
+      "com.kenshoo"            %% "metrics-play"               % "2.7.3_0.8.2",
       "com.typesafe.play"      %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"  %  "metrics-graphite"           % "4.1.5",
-      "uk.gov.hmrc"            %% "auth-client"                % s"3.0.0-$playSuffix",
-      "uk.gov.hmrc"            %% "crypto"                     % "5.6.0",
+      "uk.gov.hmrc"            %% "auth-client"                % s"4.0.0-$playSuffix-SNAPSHOT",
+      "uk.gov.hmrc"            %% "crypto"                     % "6.0.0-SNAPSHOT",
       "uk.gov.hmrc"            %% s"http-verbs-$playSuffix"    % "13.0.0-SNAPSHOT",
       "uk.gov.hmrc"            %% s"play-auditing-$playSuffix" % "7.0.0-SNAPSHOT",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"      %% "filters-helpers"            % playVersion,
-      "uk.gov.hmrc"            %% "logback-json-logger"        % "4.8.0",
+      "uk.gov.hmrc"            %% "logback-json-logger"        % "5.0.0-SNAPSHOT",
       // test dependencies
       "com.github.tomakehurst" %  "wiremock-jre8"              % "2.26.3"                % Test,
       "com.typesafe.play"      %% "play-test"                  % playVersion             % Test,
@@ -47,7 +45,7 @@ object LibDependencies {
 
   private def frontendCommon(playVersion: String, playSuffix: String) = common(playVersion, playSuffix) ++
     Seq(
-      "uk.gov.hmrc"            %% "play-allowlist-filter"      % s"0.1.0-$playSuffix"
+      "uk.gov.hmrc"            %% "play-allowlist-filter"      % s"1.0.0-$playSuffix-SNAPSHOT" // 0.1.0
     )
 
   private def test(playVersion: String) =

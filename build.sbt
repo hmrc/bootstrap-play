@@ -2,13 +2,9 @@
 import sbt.Keys._
 import sbt._
 
-val scala2_11 = "2.11.12"
-val scala2_12 = "2.12.10"
+val scala2_12 = "2.12.12"
 
-val crossScalaVersionsPlay26 = Seq(scala2_11, scala2_12)
-val crossScalaVersionsPlay27 = Seq(scala2_12) // metrix not available for scala2_11
-
-val silencerVersion = "1.4.4"
+val silencerVersion = "1.7.1"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
@@ -38,7 +34,6 @@ lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.commonPlay26
   )
 
@@ -46,7 +41,6 @@ lazy val bootstrapTestPlay26 = Project("bootstrap-test-play-26", file("bootstrap
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.testPlay26
   ).dependsOn(bootstrapCommonPlay26)
 
@@ -54,7 +48,6 @@ lazy val bootstrapBackendPlay26 = Project("bootstrap-backend-play-26", file("boo
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.commonPlay26
   ).dependsOn(
     bootstrapCommonPlay26,
@@ -66,7 +59,6 @@ lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("b
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.frontendCommonPlay26
   ).dependsOn(
     bootstrapCommonPlay26,
@@ -78,7 +70,6 @@ lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.healthPlay26
   )
 
@@ -93,7 +84,6 @@ lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.commonPlay27,
     copySources(bootstrapCommonPlay26)
   )
@@ -102,7 +92,6 @@ lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.testPlay27,
     copySources(bootstrapTestPlay26)
   ).dependsOn(bootstrapCommonPlay27)
@@ -111,7 +100,6 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.commonPlay27,
     copySources(bootstrapBackendPlay26)
   ).dependsOn(
@@ -124,7 +112,6 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.frontendCommonPlay27,
     copySources(bootstrapFrontendPlay26)
   ).dependsOn(
@@ -137,7 +124,6 @@ lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.healthPlay27,
     copySources(bootstrapHealthPlay26)
   )
