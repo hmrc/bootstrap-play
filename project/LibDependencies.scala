@@ -34,8 +34,9 @@ object LibDependencies {
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.1.0",
+      
       // test dependencies
-      "com.github.tomakehurst"  %  "wiremock-jre8"              % "2.27.2"                % Test,
+      "com.github.tomakehurst"  %  "wiremock-jre8"              % "2.26.3"                % Test,
       "com.typesafe.play"       %% "play-test"                  % playVersion             % Test,
       "org.mockito"             %% "mockito-scala"              % "1.16.23"               % Test,
       "org.mockito"             %% "mockito-scala-scalatest"    % "1.16.23"               % Test,
@@ -64,7 +65,10 @@ object LibDependencies {
             "com.vladsch.flexmark"   %  "flexmark-all"              % "0.35.10"           % Test
     ) ++
       (if(playVersion == play28Version)
-        Seq("com.typesafe.akka"      %% "akka-stream-testkit"       % "2.6.10"            % Test)
+        Seq(
+          "com.typesafe.akka"      %% "akka-stream-testkit"         % "2.6.10"            % Test,
+          "com.typesafe.play"      %% "play-akka-http-server"       % "2.8.7"            % Test,
+        )
       else Nil)
 
   private def health(playVersion: String, playSuffix: String) =

@@ -22,7 +22,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
@@ -45,6 +45,7 @@ class BackendAuditFilterSpec
      with Matchers
      with Eventually
      with ScalaFutures
+     with IntegrationPatience
      with MockitoSugar
      with BeforeAndAfterAll {
 
