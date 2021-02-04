@@ -1,6 +1,7 @@
 
 import sbt.Keys._
 import sbt._
+//import play.sbt.PlayImport.PlayKeys
 
 val scala2_12 = "2.12.12"
 
@@ -27,7 +28,8 @@ lazy val library = (project in file("."))
   )
   .aggregate(
     bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26, bootstrapHealthPlay26,
-    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27
+    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27,
+    bootstrapCommonPlay28, bootstrapTestPlay28, bootstrapBackendPlay28, bootstrapFrontendPlay28, bootstrapHealthPlay28,
   )
 
 lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("bootstrap-common-play-26"))
@@ -100,7 +102,16 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    libraryDependencies ++= LibDependencies.commonPlay27,
+    excludeDependencies ++= Seq(
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-annotations"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-core"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-databind")
+    ),    
+    libraryDependencies ++= LibDependencies.commonPlay27 ++ Seq(
+      "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-core" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5",
+    ),
     copySources(bootstrapBackendPlay26)
   ).dependsOn(
     bootstrapCommonPlay27,
@@ -125,5 +136,80 @@ lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("boots
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.healthPlay27,
+    copySources(bootstrapHealthPlay26)
+  )
+
+lazy val bootstrapCommonPlay28 = Project("bootstrap-common-play-28", file("bootstrap-common-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    excludeDependencies ++= Seq(
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-annotations"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-core"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-databind")
+    ), 
+    libraryDependencies ++= LibDependencies.commonPlay28 ++ Seq(
+      "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-core" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5",
+    ),
+    copySources(bootstrapCommonPlay26)
+  )
+
+lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap-test-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= LibDependencies.testPlay28
+  )
+  .dependsOn(bootstrapCommonPlay28)
+
+lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("bootstrap-backend-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    excludeDependencies ++= Seq(
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-annotations"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-core"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-databind")
+    ),
+    libraryDependencies ++= LibDependencies.commonPlay28 ++ Seq(
+      "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-core" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5",
+    ),
+    copySources(bootstrapBackendPlay26)
+  ).dependsOn(
+    bootstrapCommonPlay28,
+    bootstrapTestPlay28 % "test->test",
+    bootstrapHealthPlay28 // dependency just to add to classpath
+  )
+
+lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("bootstrap-frontend-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    excludeDependencies ++= Seq(
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-annotations"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-core"),
+      ExclusionRule("com.fasterxml.jackson.core", "jackson-databind")
+    ),    
+    libraryDependencies ++= LibDependencies.frontendCommonPlay28 ++ Seq(
+      "com.fasterxml.jackson.core" % "jackson-annotations" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-core" % "2.10.5",
+      "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5",
+    ),
+    copySources(bootstrapFrontendPlay26)
+  ).dependsOn(
+    bootstrapCommonPlay28,
+    bootstrapTestPlay28 % "test->test",
+    bootstrapHealthPlay28 // dependency just to add to classpath
+  )
+
+lazy val bootstrapHealthPlay28 = Project("bootstrap-health-play-28", file("bootstrap-health-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= LibDependencies.healthPlay28,
     copySources(bootstrapHealthPlay26)
   )
