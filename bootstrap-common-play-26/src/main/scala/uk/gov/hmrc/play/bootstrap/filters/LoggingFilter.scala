@@ -34,7 +34,7 @@ trait LoggingFilter extends Filter {
 
   val now: () => Long = System.currentTimeMillis
 
-  protected def logger: LoggerLike = Logger
+  protected def logger: LoggerLike = Logger(getClass)
 
   def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
     val startTime   = now()

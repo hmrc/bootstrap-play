@@ -18,12 +18,14 @@ package uk.gov.hmrc.play.bootstrap.frontend
 
 import akka.stream.Materializer
 import com.github.ghik.silencer.silent
+import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar
-import com.typesafe.config.ConfigFactory
 import play.api.Configuration
+import play.api.http.EnabledFilters
 import play.api.i18n.MessagesApi
+import play.api.inject.guice.GuiceInjectorBuilder
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.DataEvent
@@ -167,6 +169,7 @@ class BackwardCompatibilitySpec
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.FrontendAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.FrontendAuditFilter {
         override def ec             = mock[ExecutionContext]
+        override def config         = mock[Configuration]
         override def auditConnector = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector]
         override def mat            = mock[Materializer]
         override def controllerNeedsAuditing(controllerName: String): Boolean = true
@@ -183,6 +186,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter(
+        config            = mock[Configuration],
         controllerConfigs = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
         auditConnector    = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
         httpAuditEvent    = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],

@@ -32,7 +32,7 @@ import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
-import play.api.Application
+import play.api.{Application, Configuration}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
@@ -79,7 +79,8 @@ class FrontendAuditFilterSpec
 
   override def newAppForTest(testData: TestData): Application = {
     val config: Map[String, Any] =
-      if (testData.tags contains NonStrictCookies.name) Map("play.http.cookies.strict" -> false)
+      if (testData.tags contains NonStrictCookies.name)
+        Map("play.http.cookies.strict" -> false)
       else Map.empty
 
     new GuiceApplicationBuilder()
@@ -509,14 +510,12 @@ class FrontendAuditFilterServerSpec
             filter.apply(Action {
               Results.Ok
             })
-
         }
       )
       .build()
   }
 
   "Attempting to audit a large in-memory response" in {
-
     val url      = s"http://localhost:$port/longresponse"
     val response = await(client.url(url).get())
 
@@ -527,7 +526,6 @@ class FrontendAuditFilterServerSpec
   }
 
   "Attempting to audit a standard in-memory response" in {
-
     val url      = s"http://localhost:$port/standardresponse"
     val response = await(client.url(url).get())
 
@@ -538,7 +536,6 @@ class FrontendAuditFilterServerSpec
   }
 
   "Attempting to audit a large request" in {
-
     val url      = s"http://localhost:$port/longrequest"
     val response = await(client.url(url).post(largeContent))
 
@@ -563,6 +560,7 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   private implicit val system               = ActorSystem("FrontendAuditFilterInstance")
   protected implicit val mat: Materializer  = ActorMaterializer()
   private implicit val ec: ExecutionContext = system.dispatcher
+  val config                                = Configuration("auditing.enabled" -> true)
   val auditConnector                        = mock[AuditConnector]
   val controllerConfigs                     = mock[ControllerConfigs]
   val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
@@ -570,7 +568,7 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   when(controllerConfigs.controllerNeedsAuditing(anyString())).thenReturn(false)
 
   protected val filter: FrontendAuditFilter =
-    new DefaultFrontendAuditFilter(controllerConfigs, auditConnector, httpAuditEvent, mat) {
+    new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, mat) {
       override val maskedFormFields: Seq[String] = Seq("password")
       override val applicationPort: Option[Int]  = Some(80)
     }

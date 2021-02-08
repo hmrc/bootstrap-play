@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.backend.controller
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 trait BackendBaseController
   extends play.api.mvc.BaseController
@@ -27,9 +27,11 @@ trait BackendBaseController
     with WithJsonBody
     with BackendHeaderCarrierProvider
 
-abstract class BackendController(override val controllerComponents: ControllerComponents) extends BackendBaseController
+abstract class BackendController(
+  override val controllerComponents: ControllerComponents
+) extends BackendBaseController
 
 trait BackendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
-    HeaderCarrierConverter.fromHeadersAndSessionAndRequest(request.headers, request = Some(request))
+    HeaderCarrierConverter.fromRequest(request)
 }

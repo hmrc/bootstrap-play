@@ -42,7 +42,7 @@ package bootstrap {
   }
 
   package filters {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters instead", "2.12.0")
+    @deprecated("Config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required. Bootstrap filters are now configured via backend.conf", "4.0.0")
     @Singleton
     class MicroserviceFilters @Inject()(
       metricsFilter: MetricsFilter,
@@ -66,12 +66,14 @@ package bootstrap {
     package microservice {
       @deprecated("Use uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter instead", "2.12.0")
       class DefaultMicroserviceAuditFilter @Inject()(
+        config           : Configuration,
         controllerConfigs: ControllerConfigs,
         auditConnector   : AuditConnector,
         httpAuditEvent   : HttpAuditEvent,
         mat              : Materializer
       )(implicit ec: ExecutionContext
       ) extends uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter(
+        config,
         controllerConfigs,
         auditConnector,
         httpAuditEvent,

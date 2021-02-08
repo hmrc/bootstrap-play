@@ -35,7 +35,7 @@ class DefaultHttpClient @Inject()(
 ) extends uk.gov.hmrc.http.HttpClient
      with WSHttp {
 
-  override lazy val configuration: Option[Config] = Option(config.underlying)
+  override lazy val configuration: Config = config.underlying
 
   override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
 }

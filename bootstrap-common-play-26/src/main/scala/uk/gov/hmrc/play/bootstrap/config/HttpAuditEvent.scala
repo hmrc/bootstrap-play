@@ -20,7 +20,6 @@ import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Named}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.audit.AuditExtensions._
 import uk.gov.hmrc.play.audit.model.DataEvent
 
@@ -49,8 +48,10 @@ trait HttpAuditEvent {
     eventType: String,
     transactionName: String,
     request: RequestHeader,
-    detail: Map[String, String] = Map())(
-    implicit hc: HeaderCarrier  = HeaderCarrierConverter.fromHeadersAndSession(request.headers)): DataEvent = {
+    detail: Map[String, String] = Map()
+  )(implicit
+    hc: HeaderCarrier
+  ): DataEvent = {
 
     import auditDetailKeys._
     import headers._

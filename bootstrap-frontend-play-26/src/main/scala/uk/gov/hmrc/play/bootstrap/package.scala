@@ -44,7 +44,7 @@ package bootstrap {
   }
 
   package filters {
-    @deprecated("Use uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters instead", "2.12.0")
+    @deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "4.0.0")
     @Singleton
     class FrontendFilters @Inject()(
       configuration            : Configuration,
@@ -82,7 +82,7 @@ package bootstrap {
     @Singleton
     class WhitelistFilter @Inject()(
       config: Configuration,
-      mat: Materializer
+      mat   : Materializer
     ) extends AllowlistFilter(config, mat)
 
     package frontend {

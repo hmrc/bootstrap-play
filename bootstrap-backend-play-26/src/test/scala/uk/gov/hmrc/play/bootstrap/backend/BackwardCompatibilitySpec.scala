@@ -78,6 +78,7 @@ class BackwardCompatibilitySpec
     "preserve uk.gov.hmrc.play.bootstrap.filters.microservice.MicroserviceAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.microservice.MicroserviceAuditFilter {
         override def ec             = mock[ExecutionContext]
+        override def config         = mock[Configuration]
         override def auditConnector = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector]
         override def mat            = mock[Materializer]
         override def controllerNeedsAuditing(controllerName: String): Boolean = true
@@ -92,6 +93,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.microservice.DefaultMicroserviceAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.microservice.DefaultMicroserviceAuditFilter(
+        config            = mock[Configuration],
         controllerConfigs = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
         auditConnector    = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
         httpAuditEvent    = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],

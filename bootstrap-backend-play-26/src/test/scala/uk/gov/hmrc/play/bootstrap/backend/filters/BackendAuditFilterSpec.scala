@@ -22,10 +22,11 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.mvc.Results.NotFound
 import play.api.mvc.{Action, AnyContent}
 import play.api.test.FakeRequest
@@ -44,6 +45,7 @@ class BackendAuditFilterSpec
      with Matchers
      with Eventually
      with ScalaFutures
+     with IntegrationPatience
      with MockitoSugar
      with BeforeAndAfterAll {
 
@@ -75,12 +77,13 @@ class BackendAuditFilterSpec
 
     val httpAuditEvent = new HttpAuditEvent { override def appName = applicationName }
 
-    def createAuditFilter(connector: AuditConnector) =
-      new DefaultBackendAuditFilter(controllerConfigs, connector, httpAuditEvent, materializer)
+    def createAuditFilter(config: Configuration, connector: AuditConnector) =
+      new DefaultBackendAuditFilter(config, controllerConfigs, connector, httpAuditEvent, materializer)
 
     "audit a request and response with header information" in {
       val mockAuditConnector = mock[AuditConnector]
-      val auditFilter        = createAuditFilter(mockAuditConnector)
+      val config             = Configuration("auditing.enabled" -> true)
+      val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
       when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(Success))
@@ -105,9 +108,27 @@ class BackendAuditFilterSpec
       }
     }
 
+    "skip auditing when disabled" in {
+      val mockAuditConnector = mock[AuditConnector]
+      val config             = Configuration("auditing.enabled" -> false)
+      val auditFilter        = createAuditFilter(config, mockAuditConnector)
+
+      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(Success))
+
+      val result = await(auditFilter.apply(nextAction)(request).run)
+
+      await(result.body.dataStream.runForeach { i => })
+
+      eventually {
+        verifyNoMoreInteractions(mockAuditConnector)
+      }
+    }
+
     "audit a response even when an action further down the chain throws an exception" in {
       val mockAuditConnector = mock[AuditConnector]
-      val auditFilter        = createAuditFilter(mockAuditConnector)
+      val config             = Configuration("auditing.enabled" -> true)
+      val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
       when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(Success))

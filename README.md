@@ -25,6 +25,8 @@ libraryDependencies += "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "x.x.x"
 In your application.conf file, add:
 
 ```properties
+include "frontend.conf"
+
 # An ApplicationLoader that uses Guice to bootstrap the application.
 play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
 
@@ -41,7 +43,6 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModu
 
 # Provides an implementation and configures all filters required by a Platform frontend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.frontend.FrontendModule"
-play.http.filters = "uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters"
 
 ```
 
@@ -57,6 +58,8 @@ libraryDependencies += "uk.gov.hmrc" %% "govuk-template" % "x.x.x"
 In your application.conf file, add:
 
 ```properties
+include "backend.conf"
+
 # An ApplicationLoader that uses Guice to bootstrap the application.
 play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
 
@@ -73,7 +76,6 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModu
 
 # Provides an implementation and configures all filters required by a Platform backend microservice.
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.backend.BackendModule"
-play.http.filters = "uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters"
 
 ```
 
@@ -150,6 +152,38 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
 ## Migrations
+
+### Version 4.0.0
+
+#### http-verbs
+
+Http-verbs has been bumped to major version 13.0.0. See [http-verbs]("https://github.com/hmrc/http-verbs") for details.
+
+#### Filters
+
+`FrontendFilters` and `BackendFilters` have been deprecated. The preferred way to set filters is via `play.filters.enabled`.
+
+The motivation for this is to allow configuration of default Play filters via `play.filters.enabled` as per the Play documentation, and improve visibility of which filters are actually being used.
+
+If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters`, you will only need to remove this setting, since backend.conf has defined `play.filters.enabled` to the same filters.
+
+If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters.FrontendFilters`, you will need to remove this setting, but also change the following configurations:
+
+| Deprecated config key                   | Change
+| --- | --- |
+| `security.headers.filter.enabled=true`         | Just remove - this is the default
+| `security.headers.filter.enabled=false`        | Replace with `play.filters.disabled += "play.filters.headers.SecurityHeadersFilter"`
+| `bootstrap.filters.csrf.enabled=true`          | Just remove - this is the default
+| `bootstrap.filters.csrf.enabled=false`         | Replace with  `play.filters.disabled += "play.filters.csrf.CSRFFilter"`
+| `bootstrap.filters.sessionId.enabled=true`     | Replace with  `play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter"`
+| `bootstrap.filters.sessionId.enabled=false`    | Just remove - this is the default
+| `bootstrap.filters.allowlist.enabled=true`     | Replace with  `play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"`
+| `bootstrap.filters.allowlist.enabled=false`    | Just remove - this is the default
+
+If you have set `play.http.filters` to a custom filter, we recommend that you remove this, and use `play.filters.enabled` instead. You can append extra filters with `play.filters.enabled += ` or remove filters with `play.filters.disabled += `.
+
+If you are using a custom filter which injects the `play.api.http.EnabledFilters`, or are already using the default `play.api.http.EnabledFilters`, then pay extra attention since the default `play.filters.enabled` has now been defined differently by bootstrap.
+
 
 ### Version 3.0.0
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.http.HttpFilters
 import play.api.mvc.EssentialFilter
 import play.filters.csrf.CSRFFilter
@@ -27,6 +27,7 @@ import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, CacheControlFilter, Logg
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCryptoFilter
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceIdFilter
 
+@deprecated("remove config setting play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters\" is no longer required. Bootstrap filters are now configured via frontend.conf", "4.0.0")
 @Singleton
 class FrontendFilters @Inject()(
   configuration            : Configuration,
@@ -44,6 +45,10 @@ class FrontendFilters @Inject()(
   allowlistFilter          : AllowlistFilter,
   sessionIdFilter          : SessionIdFilter
 ) extends HttpFilters {
+
+  private val logger = Logger(getClass)
+
+  logger.warn("play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilter\" is no longer required and can be removed. Filters are configured using play's default filter system: https://www.playframework.com/documentation/2.7.x/Filters#Default-Filters")
 
   override val filters: Seq[EssentialFilter] =
     whenEnabled("security.headers.filter.enabled", securityFilter) ++
