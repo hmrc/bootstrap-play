@@ -27,7 +27,7 @@ object LibDependencies {
       "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2",
       "com.typesafe.play"       %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
-      "uk.gov.hmrc"             %% "auth-client"                % s"4.0.0-$playSuffix-SNAPSHOT",
+      "uk.gov.hmrc"             %% "auth-client"                % s"4.0.0-$playSuffix",
       "uk.gov.hmrc"             %% "crypto"                     % "6.0.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % "13.0.0",
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.0.0",
