@@ -2,13 +2,9 @@
 import sbt.Keys._
 import sbt._
 
-val scala2_11 = "2.11.12"
-val scala2_12 = "2.12.10"
+val scala2_12 = "2.12.12"
 
-val crossScalaVersionsPlay26 = Seq(scala2_11, scala2_12)
-val crossScalaVersionsPlay27 = Seq(scala2_12) // metrix not available for scala2_11
-
-val silencerVersion = "1.4.4"
+val silencerVersion = "1.7.1"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
@@ -31,14 +27,14 @@ lazy val library = (project in file("."))
   )
   .aggregate(
     bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26, bootstrapHealthPlay26,
-    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27
+    bootstrapCommonPlay27, bootstrapTestPlay27, bootstrapBackendPlay27, bootstrapFrontendPlay27, bootstrapHealthPlay27,
+    bootstrapCommonPlay28, bootstrapTestPlay28, bootstrapBackendPlay28, bootstrapFrontendPlay28, bootstrapHealthPlay28,
   )
 
 lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("bootstrap-common-play-26"))
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.commonPlay26
   )
 
@@ -46,7 +42,6 @@ lazy val bootstrapTestPlay26 = Project("bootstrap-test-play-26", file("bootstrap
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.testPlay26
   ).dependsOn(bootstrapCommonPlay26)
 
@@ -54,7 +49,6 @@ lazy val bootstrapBackendPlay26 = Project("bootstrap-backend-play-26", file("boo
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.commonPlay26
   ).dependsOn(
     bootstrapCommonPlay26,
@@ -66,7 +60,6 @@ lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("b
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.frontendCommonPlay26
   ).dependsOn(
     bootstrapCommonPlay26,
@@ -78,7 +71,6 @@ lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay26,
     libraryDependencies ++= LibDependencies.healthPlay26
   )
 
@@ -93,7 +85,6 @@ lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.commonPlay27,
     copySources(bootstrapCommonPlay26)
   )
@@ -102,7 +93,6 @@ lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.testPlay27,
     copySources(bootstrapTestPlay26)
   ).dependsOn(bootstrapCommonPlay27)
@@ -111,7 +101,6 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.commonPlay27,
     copySources(bootstrapBackendPlay26)
   ).dependsOn(
@@ -124,7 +113,6 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.frontendCommonPlay27,
     copySources(bootstrapFrontendPlay26)
   ).dependsOn(
@@ -137,7 +125,54 @@ lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    crossScalaVersions := crossScalaVersionsPlay27,
     libraryDependencies ++= LibDependencies.healthPlay27,
+    copySources(bootstrapHealthPlay26)
+  )
+
+lazy val bootstrapCommonPlay28 = Project("bootstrap-common-play-28", file("bootstrap-common-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= LibDependencies.commonPlay28,
+    copySources(bootstrapCommonPlay26)
+  )
+
+lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap-test-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= LibDependencies.testPlay28
+  )
+  .dependsOn(bootstrapCommonPlay28)
+
+lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("bootstrap-backend-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= LibDependencies.commonPlay28,
+    copySources(bootstrapBackendPlay26)
+  ).dependsOn(
+    bootstrapCommonPlay28,
+    bootstrapTestPlay28 % "test->test",
+    bootstrapHealthPlay28 // dependency just to add to classpath
+  )
+
+lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("bootstrap-frontend-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= LibDependencies.frontendCommonPlay28,
+    copySources(bootstrapFrontendPlay26)
+  ).dependsOn(
+    bootstrapCommonPlay28,
+    bootstrapTestPlay28 % "test->test",
+    bootstrapHealthPlay28 // dependency just to add to classpath
+  )
+
+lazy val bootstrapHealthPlay28 = Project("bootstrap-health-play-28", file("bootstrap-health-play-28"))
+  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
+  .settings(
+    commonSettings,
+    libraryDependencies ++= LibDependencies.healthPlay28,
     copySources(bootstrapHealthPlay26)
   )

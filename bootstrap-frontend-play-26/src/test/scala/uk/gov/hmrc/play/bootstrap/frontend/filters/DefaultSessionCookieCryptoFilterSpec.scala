@@ -33,7 +33,6 @@ import play.api.routing.Router
 import play.api.test.Helpers._
 import uk.gov.hmrc.crypto._
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto._
-
 import scala.reflect.ClassTag
 
 class DefaultSessionCookieCryptoFilterSpec
@@ -83,12 +82,13 @@ class DefaultSessionCookieCryptoFilterSpec
     val Action = stubControllerComponents().actionBuilder
 
     new GuiceApplicationBuilder()
+      .configure("cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==")
       .router(Router.from {
         case GET(p"/") =>
           Action { implicit request =>
             request.session.data shouldBe existingSessionData
             Results.Ok.addingToSession(newSessionData.toSeq: _*)
-          }
+        }
       })
       .overrides(
         bind[HttpFilters].to[Filters],
@@ -98,7 +98,6 @@ class DefaultSessionCookieCryptoFilterSpec
       )
       .disable(classOf[CookiesModule])
       .bindings(new LegacyCookiesModule)
-      .configure("cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==")
       .build()
   }
 
