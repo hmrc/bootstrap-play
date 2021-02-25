@@ -88,6 +88,20 @@ class DefaultDeviceIdFilterSpec
         mdtpidCookieValue should include(uuid)
       }
     }
+
+    "set cookie's secure property based on config" in {
+
+      Seq(true, false).foreach { secureCookie =>
+        running(application(having = appConfig + ("cookie.deviceId.secure" -> secureCookie))) { application =>
+          val Some(result) = route(application, FakeRequest(GET, "/test"))
+          val deviceIdCookie = cookies(result).get(DeviceId.MdtpDeviceId)
+          deviceIdCookie shouldBe 'defined
+          deviceIdCookie.get.secure shouldBe secureCookie
+        }
+      }
+
+
+    }
   }
 
   private val theSecret         = "some_secret"
@@ -96,9 +110,10 @@ class DefaultDeviceIdFilterSpec
   private val createDeviceId = new DeviceIdCookie {
     override val secret          = theSecret
     override val previousSecrets = Seq(thePreviousSecret)
+    override val secure          = true
   }
 
-  private val appConfigNoPreviousKey: Map[String, Any] = Map("cookie.deviceId.secret" -> theSecret)
+  private val appConfigNoPreviousKey: Map[String, Any] = Map("cookie.deviceId.secret" -> theSecret, "cookie.deviceId.secure" -> true)
   private val appConfig: Map[String, Any] = appConfigNoPreviousKey + ("cookie.deviceId.previous.secret" -> Seq(
     thePreviousSecret))
 

@@ -62,7 +62,7 @@ class DeviceIdFilterSpec
       mockAction
     }
 
-    lazy val filter = new DeviceIdFilter {
+    def makeFilter(secureCookie: Boolean) = new DeviceIdFilter {
       implicit val mat: Materializer = ActorMaterializer()
 
       lazy val mdtpCookie = super.buildNewDeviceIdCookie()
@@ -73,6 +73,7 @@ class DeviceIdFilterSpec
 
       override val secret          = "SOME_SECRET"
       override val previousSecrets = Seq("previous_key_1", "previous_key_2")
+      override val secure          = secureCookie
 
       override val appName = "SomeAppName"
 
@@ -80,6 +81,7 @@ class DeviceIdFilterSpec
 
       override protected implicit def ec: ExecutionContext = ExecutionContext.global
     }
+    lazy val filter = makeFilter(secureCookie = true)
 
     lazy val newFormatGoodCookieDeviceId = filter.mdtpCookie
 
@@ -104,7 +106,7 @@ class DeviceIdFilterSpec
       event.detail should contain("deviceID"         -> validCookie)
     }
 
-    def invokeFilter(cookies: Seq[Cookie], expectedResultCookie: Cookie, times: Option[Int] = None) = {
+    def invokeFilter(filter: DeviceIdFilter)(cookies: Seq[Cookie], expectedResultCookie: Cookie, times: Option[Int] = None) = {
       val incomingRequest = FakeRequest().withCookies(cookies: _*)
       val result          = filter(action)(incomingRequest).futureValue
 
@@ -131,7 +133,7 @@ class DeviceIdFilterSpec
         val deviceIdMadeFromPrevKey = DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, prevSecret))
         val cookie                  = filter.makeCookie(deviceIdMadeFromPrevKey)
 
-        val result = invokeFilter(Seq(cookie), cookie, Some(2))
+        val result = invokeFilter(filter)(Seq(cookie), cookie, Some(2))
 
         val responseCookie = mdtpdiSetCookie(result)
         responseCookie.value  shouldBe deviceIdMadeFromPrevKey.value
@@ -143,7 +145,7 @@ class DeviceIdFilterSpec
   "During request pre-processing, the filter" should {
 
     "create a new deviceId if the deviceId cookie received contains an empty value " in new Setup {
-      val result = invokeFilter(Seq(newFormatGoodCookieDeviceId.copy(value = "")), newFormatGoodCookieDeviceId)
+      val result = invokeFilter(filter)(Seq(newFormatGoodCookieDeviceId.copy(value = "")), newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
@@ -151,7 +153,7 @@ class DeviceIdFilterSpec
     }
 
     "create new deviceId cookie when no cookies exists" in new Setup {
-      val result = invokeFilter(Seq.empty, newFormatGoodCookieDeviceId)
+      val result = invokeFilter(filter)(Seq.empty, newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
@@ -159,7 +161,7 @@ class DeviceIdFilterSpec
     }
 
     "not change the request or the response when a valid new format mtdpdi cookie exists" in new Setup {
-      val result = invokeFilter(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId)
+      val result = invokeFilter(filter)(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId)
 
       val expectedCookie1 = requestPassedToAction().cookies.get("AnotherCookie1").get
       val expectedCookie2 = requestPassedToAction().cookies.get(DeviceId.MdtpDeviceId).get
@@ -172,9 +174,11 @@ class DeviceIdFilterSpec
       responseCookie.secure shouldBe true
     }
 
-    "make an insecure mtdpdi cookie secure, keeping the same value" in new Setup {
+    "respect mtdpdi cookie secure setting, keeping the same value - starting with secure=false" in new Setup {
+      override lazy val filter = makeFilter(secureCookie = true)
+
       val result =
-        invokeFilter(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId.copy(secure = false))
+        invokeFilter(filter)(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId.copy(secure = false))
 
       val expectedCookie1 = requestPassedToAction().cookies.get("AnotherCookie1").get
       val expectedCookie2 = requestPassedToAction().cookies.get(DeviceId.MdtpDeviceId).get
@@ -186,6 +190,25 @@ class DeviceIdFilterSpec
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe true
     }
+
+    "respect mtdpdi cookie secure setting, keeping the same value - starting with secure=true" in new Setup {
+      override lazy val filter = makeFilter(secureCookie = false)
+
+      val result =
+        invokeFilter(filter)(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId.copy(secure = true))
+
+      val expectedCookie1 = requestPassedToAction().cookies.get("AnotherCookie1").get
+      val expectedCookie2 = requestPassedToAction().cookies.get(DeviceId.MdtpDeviceId).get
+
+      expectedCookie1.value shouldBe "normalValue1"
+      expectedCookie2.value shouldBe newFormatGoodCookieDeviceId.value
+
+      val responseCookie = mdtpdiSetCookie(result)
+      responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
+      responseCookie.secure shouldBe false
+    }
+
+
 
     "identify new format deviceId cookie has invalid hash and create new deviceId cookie" in new Setup {
 
@@ -194,7 +217,7 @@ class DeviceIdFilterSpec
         Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears))
       }
 
-      val result = invokeFilter(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
+      val result = invokeFilter(filter)(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
@@ -210,7 +233,7 @@ class DeviceIdFilterSpec
         Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears))
       }
 
-      val result = invokeFilter(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
+      val result = invokeFilter(filter)(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
@@ -229,7 +252,7 @@ class DeviceIdFilterSpec
           Some(DeviceId.TenYears))
       }
 
-      val result = invokeFilter(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
+      val result = invokeFilter(filter)(Seq(newFormatBadCookieDeviceId), newFormatGoodCookieDeviceId)
 
       val responseCookie = mdtpdiSetCookie(result)
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
