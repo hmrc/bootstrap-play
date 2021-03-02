@@ -21,9 +21,9 @@ import java.util.UUID
 import play.api.mvc.Cookie
 
 trait DeviceIdCookie {
-  val secret: String
-  val previousSecrets: Seq[String]
-  val secure: Boolean
+  def secret: String
+  def previousSecrets: Seq[String]
+  def secure: Boolean
 
   def getTimeStamp = System.currentTimeMillis()
 

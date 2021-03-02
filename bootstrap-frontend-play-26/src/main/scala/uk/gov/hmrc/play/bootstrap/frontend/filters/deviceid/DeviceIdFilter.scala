@@ -44,7 +44,7 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
 
           case Some(deviceId) =>
             // Valid new format cookie.
-            // Ensure the cookie is secure by setting it again with the secure flag
+            // Ensure the cookie has appropriate 'secure' flag by setting it again, this will also extend the life of the cookie
             val secureDeviceIdCookie = buildNewDeviceIdCookie().copy(value = deviceId.value)
             CookieResult(allCookiesApartFromDeviceId.toSeq :+ secureDeviceIdCookie, secureDeviceIdCookie)
 

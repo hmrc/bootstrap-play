@@ -160,7 +160,7 @@ class DeviceIdFilterSpec
       responseCookie.secure shouldBe true
     }
 
-    "not change the request or the response when a valid new format mtdpdi cookie exists" in new Setup {
+    "not change the request or the response when a valid new format mdtpdi cookie exists" in new Setup {
       val result = invokeFilter(filter)(Seq(newFormatGoodCookieDeviceId, normalCookie), newFormatGoodCookieDeviceId)
 
       val expectedCookie1 = requestPassedToAction().cookies.get("AnotherCookie1").get
@@ -174,7 +174,7 @@ class DeviceIdFilterSpec
       responseCookie.secure shouldBe true
     }
 
-    "respect mtdpdi cookie secure setting, keeping the same value - starting with secure=false" in new Setup {
+    "respect mdtpdi cookie secure setting, keeping the same value - starting with secure=false" in new Setup {
       override lazy val filter = makeFilter(secureCookie = true)
 
       val result =
@@ -191,7 +191,7 @@ class DeviceIdFilterSpec
       responseCookie.secure shouldBe true
     }
 
-    "respect mtdpdi cookie secure setting, keeping the same value - starting with secure=true" in new Setup {
+    "respect mdtpdi cookie secure setting, keeping the same value - starting with secure=true" in new Setup {
       override lazy val filter = makeFilter(secureCookie = false)
 
       val result =
@@ -207,8 +207,6 @@ class DeviceIdFilterSpec
       responseCookie.value  shouldBe newFormatGoodCookieDeviceId.value
       responseCookie.secure shouldBe false
     }
-
-
 
     "identify new format deviceId cookie has invalid hash and create new deviceId cookie" in new Setup {
 

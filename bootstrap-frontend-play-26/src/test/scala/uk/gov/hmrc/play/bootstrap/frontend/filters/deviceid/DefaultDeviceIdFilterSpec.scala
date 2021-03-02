@@ -99,8 +99,6 @@ class DefaultDeviceIdFilterSpec
           deviceIdCookie.get.secure shouldBe secureCookie
         }
       }
-
-
     }
   }
 
