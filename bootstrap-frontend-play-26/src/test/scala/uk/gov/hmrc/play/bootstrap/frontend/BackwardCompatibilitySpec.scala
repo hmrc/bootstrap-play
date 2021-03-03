@@ -142,6 +142,7 @@ class BackwardCompatibilitySpec
       new uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdCookie {
         override val secret          = ""
         override val previousSecrets = Seq.empty
+        override val secure          = true
       }
     }
 
@@ -152,6 +153,7 @@ class BackwardCompatibilitySpec
         override def appName         = ""
         override val previousSecrets = mock[Seq[String]]
         override val secret          = ""
+        override val secure          = true
         override def mat             = mock[Materializer]
       }
     }
