@@ -159,6 +159,14 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 Http-verbs has been bumped to major version 13.0.0. See [http-verbs]("https://github.com/hmrc/http-verbs") for details.
 
+#### configuration
+
+The following configuration has been renamed, the previous keys are invalid and will need to be updated.
+
+| Invalid config key                      | Should now be                           |
+| --- | --- |
+| auditing.auditExtraHeaders              | auditing.auditSentHeaders               |
+
 #### Filters
 
 `FrontendFilters` and `BackendFilters` have been deprecated. The preferred way to set filters is via `play.filters.enabled`.
@@ -202,7 +210,7 @@ The following configuration has been renamed, the previous keys are invalid and 
 | bootstrap.filters.whitelist.destination | bootstrap.filters.allowlist.destination |
 | bootstrap.filters.whitelist.excluded    | bootstrap.filters.allowlist.excluded    |
 | bootstrap.filters.whitelist.ips         | bootstrap.filters.allowlist.ips         |
-
+| auditing.auditExtraHeaders              | auditing.auditSentHeaders               |
 
 ### From bootstrap-play-26
 

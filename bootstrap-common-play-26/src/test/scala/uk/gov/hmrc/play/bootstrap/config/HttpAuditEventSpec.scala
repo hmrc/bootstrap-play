@@ -16,62 +16,31 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import org.scalatest.LoneElement
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor
 
-class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with LoneElement with GuiceOneAppPerSuite {
-
-  "The optional audit fields code" should {
-
-    "Return the correct size map when fed with a given amount of items" in {
-      val optionalFields =
-        HeaderFieldsExtractor.optionalAuditFields(Map("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool"))
-      optionalFields.loneElement shouldBe ("surrogate" -> "Cool")
-    }
-
-    "Return the correct size map when fed with two identical items" in {
-      val optionalFields = HeaderFieldsExtractor.optionalAuditFields(
-        Map("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool"))
-      optionalFields.loneElement shouldBe ("surrogate" -> "Cool")
-    }
-
-    "Return the correct size map when fed with seq values" in {
-      val optionalFields = HeaderFieldsExtractor.optionalAuditFieldsSeq(
-        Map(
-          "Foo"       -> Seq("Bar"),
-          "Ehh"       -> Seq("Meh"),
-          "Surrogate" -> Seq("Cool"),
-          "Surrogate" -> Seq("Cool", "funk", "grr")))
-      optionalFields.loneElement shouldBe ("surrogate" -> "Cool,funk,grr")
-    }
-
-    "Return the correct size map when fed with no items" in {
-      val optionalFields = HeaderFieldsExtractor.optionalAuditFields(Map("Foo" -> "Bar", "Ehh" -> "Meh"))
-      optionalFields shouldBe empty
-    }
-  }
+class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerSuite {
 
   "The code to generate an audit event" should {
-    implicit val hc = HeaderCarrier()
+    implicit val hc: HeaderCarrier = HeaderCarrier()
 
     object HttpAuditEventForTest extends HttpAuditEvent {
       override def appName: String = "my-test-app"
     }
 
     "create a valid audit event with optional headers" in {
-      val r =
-        FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"), ("Surrogate" -> "Cool"), ("Surrogate" -> "Cool"))
-      val event = HttpAuditEventForTest.dataEvent("foo", "bar", r)
+      val request =
+        FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool")
+      val event = HttpAuditEventForTest.dataEvent("foo", "bar", request)
       event.detail.get("surrogate") shouldBe Some("Cool,Cool") //FRIC - play 2.5 now comman delimits multiple headers with the same name into a single header
     }
+
     "create a valid audit event with no optional headers" in {
-      val r     = FakeRequest().withHeaders(("Foo" -> "Bar"), ("Ehh" -> "Meh"))
-      val event = HttpAuditEventForTest.dataEvent("foo", "bar", r)
+      val request     = FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh")
+      val event = HttpAuditEventForTest.dataEvent("foo", "bar", request)
       event.detail.get("surrogate") shouldBe None
     }
   }

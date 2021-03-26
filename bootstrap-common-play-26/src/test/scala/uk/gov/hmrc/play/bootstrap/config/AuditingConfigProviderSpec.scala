@@ -33,13 +33,15 @@ class AuditingConfigProviderSpec extends AnyWordSpec with Matchers with MockitoS
         "auditing.enabled"               -> "true",
         "auditing.traceRequests"         -> "true",
         "auditing.consumer.baseUri.host" -> "localhost",
-        "auditing.consumer.baseUri.port" -> "8100"
+        "auditing.consumer.baseUri.port" -> "8100",
+        "auditing.auditSentHeaders"      -> "false"
       )
 
       new AuditingConfigProvider(configuration, appName).get() shouldBe AuditingConfig(
-        consumer    = Some(Consumer(BaseUri("localhost", 8100, "http"))),
-        enabled     = true,
-        auditSource = appName
+        consumer         = Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled          = true,
+        auditSource      = appName,
+        auditSentHeaders = false
       )
     }
 
@@ -49,9 +51,10 @@ class AuditingConfigProviderSpec extends AnyWordSpec with Matchers with MockitoS
       )
 
       new AuditingConfigProvider(config, appName).get() shouldBe AuditingConfig(
-        consumer    = None,
-        enabled     = false,
-        auditSource = "auditing disabled"
+        consumer         = None,
+        enabled          = false,
+        auditSource      = "auditing disabled",
+        auditSentHeaders = false
       )
     }
   }
