@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play
 
-import uk.gov.hmrc.play.bootstrap.binders.{AbsoluteWithHostnameFromAllowlist, RedirectUrlPolicy}
 import scala.concurrent.{ExecutionContext, Future}
 
 package bootstrap {

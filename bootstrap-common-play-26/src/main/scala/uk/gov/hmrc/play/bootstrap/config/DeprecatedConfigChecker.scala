@@ -58,7 +58,8 @@ class DeprecatedConfigChecker(
     "bootstrap.filters.whitelist.enabled"     -> "bootstrap.filters.allowlist.enabled",
     "bootstrap.filters.whitelist.destination" -> "bootstrap.filters.allowlist.destination",
     "bootstrap.filters.whitelist.excluded"    -> "bootstrap.filters.allowlist.excluded",
-    "bootstrap.filters.whitelist.ips"         -> "bootstrap.filters.allowlist.ips"
+    "bootstrap.filters.whitelist.ips"         -> "bootstrap.filters.allowlist.ips",
+    "auditing.auditExtraHeaders"              -> "auditing.auditSentHeaders"
   )
 
   val errs = deprecatedKeys.filter { case (d, _) => configuration.has(d) }
