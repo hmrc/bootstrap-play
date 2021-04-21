@@ -35,7 +35,11 @@ lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("boots
   .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
-    libraryDependencies ++= LibDependencies.commonPlay26
+    libraryDependencies ++= LibDependencies.commonPlay26,
+    Compile / unmanagedSourceDirectories   += baseDirectory.value / "../bootstrap-common/src/main/scala",
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "../bootstrap-common/src/main/resources",
+    Test    / unmanagedSourceDirectories   += baseDirectory.value / "../bootstrap-common/src/test/scala",
+    Test    / unmanagedResourceDirectories += baseDirectory.value / "../bootstrap-common/src/test/resources"
   )
 
 lazy val bootstrapTestPlay26 = Project("bootstrap-test-play-26", file("bootstrap-test-play-26"))
@@ -86,7 +90,10 @@ lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("boots
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay27,
-    copySources(bootstrapCommonPlay26)
+    Compile / unmanagedSourceDirectories   += baseDirectory.value / "../bootstrap-common/src/main/scala",
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "../bootstrap-common/src/main/resources",
+    Test    / unmanagedSourceDirectories   += baseDirectory.value / "../bootstrap-common/src/test/scala",
+    Test    / unmanagedResourceDirectories += baseDirectory.value / "../bootstrap-common/src/test/resources"
   )
 
 lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap-test-play-27"))
@@ -134,7 +141,10 @@ lazy val bootstrapCommonPlay28 = Project("bootstrap-common-play-28", file("boots
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay28,
-    copySources(bootstrapCommonPlay26)
+    Compile / unmanagedSourceDirectories   += baseDirectory.value / "../bootstrap-common/src/main/scala",
+    Compile / unmanagedResourceDirectories += baseDirectory.value / "../bootstrap-common/src/main/resources",
+    Test    / unmanagedSourceDirectories   += baseDirectory.value / "../bootstrap-common/src/test/scala",
+    Test    / unmanagedResourceDirectories += baseDirectory.value / "../bootstrap-common/src/test/resources"
   )
 
 lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap-test-play-28"))
