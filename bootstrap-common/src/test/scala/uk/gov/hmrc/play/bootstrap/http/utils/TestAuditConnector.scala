@@ -19,16 +19,29 @@ package uk.gov.hmrc.play.bootstrap.http.utils
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import play.api.inject.{ApplicationLifecycle, DefaultApplicationLifecycle}
+import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, AuditCounter}
 
 class TestAuditConnector(appName: String) extends AuditConnector {
-  override val auditingConfig: AuditingConfig = AuditingConfig(
-    consumer         = None,
-    enabled          = false,
-    auditSource      = appName,
+  private val _auditingConfig = AuditingConfig(
+    consumer = None,
+    enabled = false,
+    auditSource = appName,
     auditSentHeaders = false
   )
-  override def materializer: Materializer = ActorMaterializer()(ActorSystem())
-  override def lifecycle: ApplicationLifecycle = new DefaultApplicationLifecycle()
+  override val auditingConfig: AuditingConfig = _auditingConfig
+
+  override def auditChannel: AuditChannel = new AuditChannel {
+    override def auditingConfig: AuditingConfig = _auditingConfig
+
+    override def materializer: Materializer = ActorMaterializer()(ActorSystem())
+
+    override def lifecycle: ApplicationLifecycle = new DefaultApplicationLifecycle()
+  }
+
+  override def auditCounter: AuditCounter = new AuditCounter {
+    override def createMetadata(): JsObject = Json.obj()
+  }
+
 }

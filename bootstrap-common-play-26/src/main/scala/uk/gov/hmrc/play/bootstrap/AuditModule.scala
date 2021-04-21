@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.audit
+package uk.gov.hmrc.play.bootstrap
 
-import play.api.inject.ApplicationLifecycle
-import uk.gov.hmrc.play.audit.http.config.AuditingConfig
+import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, AuditCounter}
+import uk.gov.hmrc.play.bootstrap.audit.{DefaultAuditChannel, DefaultAuditConnector, DefaultAuditCounter}
 
-import javax.inject.Inject
+class AuditModule extends Module {
 
-class DefaultAuditConnector @Inject()(
-                                       val auditingConfig: AuditingConfig,
-                                       val auditChannel: AuditChannel,
-                                       val auditCounter: AuditCounter,
-                                       val lifecycle: ApplicationLifecycle) extends AuditConnector {
-
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
+    bind[AuditChannel].to[DefaultAuditChannel],
+    bind[AuditCounter].to[DefaultAuditCounter],
+    bind[AuditConnector].to[DefaultAuditConnector]
+  )
 }

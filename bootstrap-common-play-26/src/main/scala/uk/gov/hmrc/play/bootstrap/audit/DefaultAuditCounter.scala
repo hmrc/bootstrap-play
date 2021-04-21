@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.play.bootstrap.audit
 
-import play.api.inject.ApplicationLifecycle
-import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, AuditCounter}
+import javax.inject.{Inject, Singleton}
+import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.play.audit.http.connector.AuditCounter
 
-import javax.inject.Inject
-
-class DefaultAuditConnector @Inject()(
-                                       val auditingConfig: AuditingConfig,
-                                       val auditChannel: AuditChannel,
-                                       val auditCounter: AuditCounter,
-                                       val lifecycle: ApplicationLifecycle) extends AuditConnector {
-
+// audit counters are disable for play-26 because audit counters
+// rely on CoordinatedShutdown to publish the final counters at the right time
+// during shutdown and this class can not be used in play-26
+@Singleton
+class DefaultAuditCounter @Inject() extends AuditCounter {
+  override def createMetadata(): JsObject = Json.obj()
 }
