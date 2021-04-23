@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap
+package uk.gov.hmrc.play.bootstrap.audit
 
-import play.api.inject.{Binding, Module}
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, AuditCounter}
-import uk.gov.hmrc.play.bootstrap.audit.{DefaultAuditChannel, DefaultAuditConnector, DefaultAuditCounter}
 
-class AuditModule extends Module {
+import akka.stream.Materializer
+import javax.inject.{Inject, Singleton}
+import play.api.inject.ApplicationLifecycle
+import uk.gov.hmrc.play.audit.http.config.AuditingConfig
+import uk.gov.hmrc.play.audit.http.connector.AuditChannel
 
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
-    bind[AuditChannel].to[DefaultAuditChannel],
-    bind[AuditCounter].to[DefaultAuditCounter],
-    bind[AuditConnector].to[DefaultAuditConnector]
-  )
-}
+@Singleton
+class DefaultAuditChannel @Inject()(
+  val auditingConfig: AuditingConfig,
+  val materializer  : Materializer,
+  val lifecycle     : ApplicationLifecycle
+) extends AuditChannel
