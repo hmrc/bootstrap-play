@@ -8,7 +8,7 @@ val silencerVersion = "1.7.1"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
-  majorVersion := 4,
+  majorVersion := 5,
   scalaVersion := scala2_12,
   makePublicallyAvailableOnBintray := true,
   scalacOptions ++= Seq("-feature"),
