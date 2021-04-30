@@ -153,6 +153,12 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Migrations
 
+### Version 5.0.0
+
+#### auth-client
+
+Added Identity Verification (IV) CL250 support via auth-client 5.6, see [May 2021 Tech Blog Post](https://confluence.tools.tax.service.gov.uk/display/TEC/2021/05) on this.
+
 ### Version 4.0.0
 
 #### http-verbs
