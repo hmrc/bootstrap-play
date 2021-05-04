@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.audit
 
 import com.codahale.metrics.{MetricFilter, MetricRegistry}
-import com.kenshoo.play.metrics.Metrics
+import com.kenshoo.play.metrics.{DisabledMetrics, Metrics}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -34,6 +34,11 @@ class DefaultAuditCounterMetricsSpec
 
     "map None to null" in {
       valueFor(None) shouldBe (null)
+    }
+
+    "tolerate disabled metrics" in {
+      val metrics = new DefaultAuditCounterMetrics(new DisabledMetrics)
+      metrics.registerMetric("mymetric", () => Some(1))
     }
   }
 
