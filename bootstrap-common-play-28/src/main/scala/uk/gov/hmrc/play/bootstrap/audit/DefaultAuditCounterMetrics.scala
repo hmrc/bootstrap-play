@@ -22,12 +22,14 @@ import com.kenshoo.play.metrics.Metrics
 import javax.inject.Inject
 import uk.gov.hmrc.play.audit.http.connector.AuditCounterMetrics
 
-class DefaultAuditCounterMetrics @Inject()(metrics:Metrics) extends AuditCounterMetrics {
+class DefaultAuditCounterMetrics @Inject()(metrics: Metrics) extends AuditCounterMetrics {
 
-  def registerMetric(name:String, read:()=>Long):Unit = {
+  def registerMetric(name: String, read: () => Option[Long]): Unit = {
     metrics.defaultRegistry.gauge(name, new MetricSupplier[Gauge[_]] {
-      override def newMetric(): Gauge[_] = new Gauge[Long] {
-        override def getValue: Long = read()
+      override def newMetric(): Gauge[_] = new Gauge[java.lang.Long] {
+        override def getValue: java.lang.Long = {
+          read().map(java.lang.Long.valueOf).orNull
+        }
       }
     })
   }
