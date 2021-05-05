@@ -181,7 +181,7 @@ The motivation for this is to allow configuration of default Play filters via `p
 
 If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters`, you will only need to remove this setting, since backend.conf has defined `play.filters.enabled` to the same filters.
 
-If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.backend.filters.FrontendFilters`, you will need to remove this setting, but also change the following configurations:
+If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters`, you will need to remove this setting, but also change the following configurations:
 
 | Deprecated config key                   | Change
 | --- | --- |
