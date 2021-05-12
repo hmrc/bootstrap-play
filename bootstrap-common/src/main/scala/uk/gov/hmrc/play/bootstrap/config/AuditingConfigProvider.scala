@@ -44,10 +44,11 @@ class AuditingConfigProvider @Inject()(
                               )
                             ),
         auditSource       = appName,
-        auditSentHeaders  = c.get[Boolean]("auditSentHeaders")
+        auditSentHeaders  = c.get[Boolean]("auditSentHeaders"),
+        publishCountersToLogs = c.getOptional[Boolean]("publishCountersToLogs").getOrElse(true)
       )
     } else
-      AuditingConfig(consumer = None, enabled = false, auditSource = "auditing disabled", auditSentHeaders = false)
+      AuditingConfig(consumer = None, enabled = false, auditSource = "auditing disabled", auditSentHeaders = false, publishCountersToLogs = false)
   }
 
   private def getRequired[T: play.api.ConfigLoader](config: Configuration, key: String, errMsg: => String): T =

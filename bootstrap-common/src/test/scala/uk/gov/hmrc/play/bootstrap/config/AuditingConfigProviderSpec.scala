@@ -41,7 +41,8 @@ class AuditingConfigProviderSpec extends AnyWordSpec with Matchers with MockitoS
         consumer         = Some(Consumer(BaseUri("localhost", 8100, "http"))),
         enabled          = true,
         auditSource      = appName,
-        auditSentHeaders = false
+        auditSentHeaders = false,
+        publishCountersToLogs = true
       )
     }
 
@@ -54,7 +55,27 @@ class AuditingConfigProviderSpec extends AnyWordSpec with Matchers with MockitoS
         consumer         = None,
         enabled          = false,
         auditSource      = "auditing disabled",
-        auditSentHeaders = false
+        auditSentHeaders = false,
+        publishCountersToLogs = false
+      )
+    }
+
+    "allow publishCountersToLogs to be disabled" in {
+      val configuration = Configuration(
+        "auditing.enabled"               -> "true",
+        "auditing.traceRequests"         -> "true",
+        "auditing.consumer.baseUri.host" -> "localhost",
+        "auditing.consumer.baseUri.port" -> "8100",
+        "auditing.auditSentHeaders"      -> "false",
+        "auditing.publishCountersToLogs" -> "false"
+      )
+
+      new AuditingConfigProvider(configuration, appName).get() shouldBe AuditingConfig(
+        consumer         = Some(Consumer(BaseUri("localhost", 8100, "http"))),
+        enabled          = true,
+        auditSource      = appName,
+        auditSentHeaders = false,
+        publishCountersToLogs = false
       )
     }
   }

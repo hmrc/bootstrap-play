@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.audit
 
 import akka.actor.{ActorSystem, CoordinatedShutdown}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditCounterMetrics, PublishedAuditCounter}
+import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditCounterLogs, AuditCounterMetrics, PublishedAuditCounter}
 import javax.inject.{Inject, Singleton}
 
 import scala.concurrent.ExecutionContext
@@ -29,4 +29,5 @@ class DefaultAuditCounter @Inject()(val actorSystem: ActorSystem,
                                     val auditingConfig: AuditingConfig,
                                     val auditChannel: AuditChannel,
                                     val auditMetrics: AuditCounterMetrics,
+                                    val auditCounterLogs: AuditCounterLogs,
                                     ec: ExecutionContext) extends PublishedAuditCounter(actorSystem, coordinatedShutdown)(ec)
