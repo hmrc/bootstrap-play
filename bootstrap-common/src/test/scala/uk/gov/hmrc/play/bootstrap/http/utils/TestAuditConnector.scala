@@ -28,7 +28,8 @@ class TestAuditConnector(appName: String) extends AuditConnector {
     consumer = None,
     enabled = false,
     auditSource = appName,
-    auditSentHeaders = false
+    auditSentHeaders = false,
+    publishCountersToLogs = false
   )
   override val auditingConfig: AuditingConfig = _auditingConfig
 
