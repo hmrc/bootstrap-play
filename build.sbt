@@ -1,16 +1,13 @@
-
 import sbt.Keys._
 import sbt._
-
-val scala2_12 = "2.12.12"
 
 val silencerVersion = "1.7.1"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
   majorVersion := 5,
-  scalaVersion := scala2_12,
-  makePublicallyAvailableOnBintray := true,
+  scalaVersion := "2.12.12",
+  isPublicArtefact := true,
   scalacOptions ++= Seq("-feature"),
   libraryDependencies ++= Seq(
     compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
@@ -19,11 +16,9 @@ lazy val commonSettings = Seq(
 )
 
 lazy val library = (project in file("."))
-  .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning, SbtArtifactory)
   .settings(
     commonSettings,
-    publish := {},
-    publishAndDistribute := {}
+    publish / skip := true
   )
   .aggregate(
     bootstrapCommonPlay26, bootstrapTestPlay26, bootstrapBackendPlay26, bootstrapFrontendPlay26, bootstrapHealthPlay26,
@@ -32,7 +27,6 @@ lazy val library = (project in file("."))
   )
 
 lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("bootstrap-common-play-26"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay26,
@@ -43,14 +37,12 @@ lazy val bootstrapCommonPlay26 = Project("bootstrap-common-play-26", file("boots
   )
 
 lazy val bootstrapTestPlay26 = Project("bootstrap-test-play-26", file("bootstrap-test-play-26"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.testPlay26
   ).dependsOn(bootstrapCommonPlay26)
 
 lazy val bootstrapBackendPlay26 = Project("bootstrap-backend-play-26", file("bootstrap-backend-play-26"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay26
@@ -61,7 +53,6 @@ lazy val bootstrapBackendPlay26 = Project("bootstrap-backend-play-26", file("boo
   )
 
 lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("bootstrap-frontend-play-26"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.frontendCommonPlay26
@@ -72,7 +63,6 @@ lazy val bootstrapFrontendPlay26 = Project("bootstrap-frontend-play-26", file("b
   )
 
 lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("bootstrap-health-play-26"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.healthPlay26
@@ -86,7 +76,6 @@ lazy val bootstrapHealthPlay26 = Project("bootstrap-health-play-26", file("boots
   )
 
 lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("bootstrap-common-play-27"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay27,
@@ -97,7 +86,6 @@ lazy val bootstrapCommonPlay27 = Project("bootstrap-common-play-27", file("boots
   )
 
 lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap-test-play-27"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.testPlay27,
@@ -105,7 +93,6 @@ lazy val bootstrapTestPlay27 = Project("bootstrap-test-play-27", file("bootstrap
   ).dependsOn(bootstrapCommonPlay27)
 
 lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("bootstrap-backend-play-27"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay27,
@@ -117,7 +104,6 @@ lazy val bootstrapBackendPlay27 = Project("bootstrap-backend-play-27", file("boo
   )
 
 lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("bootstrap-frontend-play-27"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.frontendCommonPlay27,
@@ -129,7 +115,6 @@ lazy val bootstrapFrontendPlay27 = Project("bootstrap-frontend-play-27", file("b
   )
 
 lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("bootstrap-health-play-27"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.healthPlay27,
@@ -137,7 +122,6 @@ lazy val bootstrapHealthPlay27 = Project("bootstrap-health-play-27", file("boots
   )
 
 lazy val bootstrapCommonPlay28 = Project("bootstrap-common-play-28", file("bootstrap-common-play-28"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay28,
@@ -148,7 +132,6 @@ lazy val bootstrapCommonPlay28 = Project("bootstrap-common-play-28", file("boots
   )
 
 lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap-test-play-28"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.testPlay28
@@ -156,7 +139,6 @@ lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap
   .dependsOn(bootstrapCommonPlay28)
 
 lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("bootstrap-backend-play-28"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay28,
@@ -168,7 +150,6 @@ lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("boo
   )
 
 lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("bootstrap-frontend-play-28"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.frontendCommonPlay28,
@@ -180,7 +161,6 @@ lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("b
   )
 
 lazy val bootstrapHealthPlay28 = Project("bootstrap-health-play-28", file("bootstrap-health-play-28"))
-  .enablePlugins(SbtAutoBuildPlugin, SbtArtifactory)
   .settings(
     commonSettings,
     libraryDependencies ++= LibDependencies.healthPlay28,
