@@ -110,7 +110,7 @@ class DefaultHttpClientSpec
       myHttpClient
         .GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/400.json")
         .recover {
-          case UpstreamErrorResponse.WithStatusCode(400, e) => // handle here a bad request
+          case UpstreamErrorResponse.WithStatusCode(400) => // handle here a bad request
         }
         .futureValue
     }
