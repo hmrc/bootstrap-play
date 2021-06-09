@@ -14,9 +14,9 @@ object LibDependencies {
   val frontendCommonPlay27: Seq[ModuleID] = frontendCommon(play27Version, "play-27")
   val frontendCommonPlay28: Seq[ModuleID] = frontendCommon(play28Version, "play-28")
 
-  val testPlay26: Seq[ModuleID] = test(play26Version)
-  val testPlay27: Seq[ModuleID] = test(play27Version)
-  val testPlay28: Seq[ModuleID] = test(play28Version)
+  val testPlay26: Seq[ModuleID] = test(play26Version, "play-26")
+  val testPlay27: Seq[ModuleID] = test(play27Version, "play-27")
+  val testPlay28: Seq[ModuleID] = test(play28Version, "play-28")
 
   val healthPlay26: Seq[ModuleID] = health(play26Version, "play-26")
   val healthPlay27: Seq[ModuleID] = health(play27Version, "play-27")
@@ -44,10 +44,7 @@ object LibDependencies {
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.35.10"      % Test,
       "org.scalacheck"          %% "scalacheck"                 % "1.15.2"       % Test,
       "org.scalatestplus"       %% "scalatestplus-mockito"      % "1.0.0-M2"     % Test,
-      "org.scalatestplus.play"  %% "scalatestplus-play"         % (if      (playVersion == play26Version) "3.1.3"
-                                                                   else if (playVersion == play27Version) "4.0.3"
-                                                                   else                                   "5.1.0"
-                                                                  )              % Test,
+      "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVerson(playVersion) % Test,
       "org.scalatestplus"       %% "scalatestplus-scalacheck"   % "3.1.0.0-RC2"  % Test
     )
 
@@ -60,17 +57,20 @@ object LibDependencies {
        else Nil
       )
 
-  private def test(playVersion: String) =
+  private def test(playVersion: String, playSuffix: String) =
     Seq(
-      "com.typesafe.play"       %% "play-test"                   % playVersion,
-      // test dependencies
-      "org.scalatest"           %% "scalatest"                   % "3.2.3"       % Test,
-      "com.vladsch.flexmark"    %  "flexmark-all"                % "0.35.10"     % Test
+      "com.typesafe.play"       %% "play-test"                    % playVersion,
+      "uk.gov.hmrc"             %% s"http-verbs-test-$playSuffix" % "13.8.0-SNAPSHOT",
+      "org.scalatestplus.play"  %% "scalatestplus-play"           % scalaTestPlusPlayVerson(playVersion),
+      // we use the same version of scalatest across play versions for simplicity for internal testing
+      // but most clients probably just want to use the one provided transitively by scalatestplus-play
+      "org.scalatest"           %% "scalatest"                    % "3.2.3"       % Test,
+      "com.vladsch.flexmark"    %  "flexmark-all"                 % "0.35.10"     % Test
     ) ++
       (if (playVersion == play28Version)
         Seq(
-          "com.typesafe.akka"   %% "akka-stream-testkit"         % "2.6.10"      % Test,
-          "com.typesafe.play"   %% "play-akka-http-server"       % "2.8.7"       % Test
+          "com.typesafe.akka"   %% "akka-stream-testkit"          % "2.6.10"      % Test,
+          "com.typesafe.play"   %% "play-akka-http-server"        % "2.8.7"       % Test
         )
        else Nil
       )
@@ -81,9 +81,11 @@ object LibDependencies {
       // test dependencies
       "org.scalatest"           %% "scalatest"                  % "3.2.3"        % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.35.10"      % Test,
-      "org.scalatestplus.play"  %% "scalatestplus-play"         % (if      (playVersion == play26Version) "3.1.3"
-                                                                   else if (playVersion == play27Version) "4.0.3"
-                                                                   else                                   "5.1.0"
-                                                                  )              % Test
+      "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVerson(playVersion) % Test
     )
+
+    private def scalaTestPlusPlayVerson(playVersion: String): String =
+      if      (playVersion == play26Version) "3.1.3"
+      else if (playVersion == play27Version) "4.0.3"
+      else                                   "5.1.0"
 }

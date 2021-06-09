@@ -13,14 +13,23 @@ This library implements basic functionality required by the platform frontend/mi
 In your SBT build add:
 
 ```scala
-resolvers += Resolver.bintrayRepo("hmrc", "releases")
+resolvers += MavenRepository("HMRC-open-artefacts-maven2", "https://open.artefacts.tax.service.gov.uk/maven2")
 
 // for frontends:
-libraryDependencies += "uk.gov.hmrc" %% "bootstrap-frontend-play-26" % "x.x.x"
+libraryDependencies += "uk.gov.hmrc" %% "bootstrap-frontend-play-xx" % "x.x.x"
 
 // for backends:
-libraryDependencies += "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "x.x.x"
+libraryDependencies += "uk.gov.hmrc" %% "bootstrap-backend-play-xx" % "x.x.x"
 ```
+Where `play-xx` is `play-26`, `play-27` or `play-28` depending on your version of Play.
+
+You can also add the test module
+
+```scala
+libraryDependencies += "uk.gov.hmrc" %% "bootstrap-test-play-xx" % "x.x.x" % Test
+```
+which will provide the appropriate version of other test dependencies like `http-verbs-test` and `scalatestplus-play`.
+
 
 ## Configure as a frontend microservice
 
