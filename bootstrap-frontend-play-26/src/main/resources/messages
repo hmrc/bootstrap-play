@@ -7,3 +7,6 @@ global.error.pageNotFound404.message=Please check that you have entered the corr
 global.error.InternalServerError500.title=Sorry, we are experiencing technical difficulties - 500
 global.error.InternalServerError500.heading=Sorry, we’re experiencing technical difficulties
 global.error.InternalServerError500.message=Please try again in a few minutes.
+global.error.fallbackClientError4xx.title=Sorry, there is a problem with the service
+global.error.fallbackClientError4xx.heading=Sorry, there is a problem with the service
+global.error.fallbackClientError4xx.message=Try again later.
