@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.frontend.http
 
 import akka.stream.Materializer
+import org.scalatest.Inspectors.forAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
@@ -33,11 +34,26 @@ class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceO
 
   object TestFrontendErrorHandler extends FrontendErrorHandler {
     override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: Request[_]): Html =
-       Html("error")
+       Html(s"$pageTitle\n$heading\n$message")
     override def messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
   }
 
   import TestFrontendErrorHandler._
+
+  "resolving a client error" should {
+    "fall back to a standardErrorTemplate based result" in {
+      val explicitlyHandledClientErrors = List(400, 404)
+      val clientErrorsHandledByFallback = (400 to 499) diff explicitlyHandledClientErrors
+      
+      forAll(clientErrorsHandledByFallback) { statusCode =>
+        val result = onClientError(FakeRequest(), statusCode)
+
+        contentAsString(result) shouldBe """Sorry, there is a problem with the service
+                                           |Sorry, there is a problem with the service
+                                           |Try again later.""".stripMargin
+      }
+    }
+  }
 
   "resolving an error" should {
     "return a generic InternalServerError result" in {
