@@ -6,6 +6,8 @@ object LibDependencies {
   private val play27Version  = "2.7.9"
   private val play28Version  = "2.8.7"
 
+  private val httpVerbsVersion = "13.8.0"
+
   val commonPlay26: Seq[ModuleID] = common(play26Version, "play-26")
   val commonPlay27: Seq[ModuleID] = common(play27Version, "play-27")
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
@@ -30,7 +32,7 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
       "uk.gov.hmrc"             %% "auth-client"                % s"5.6.0-$playSuffix",
       "uk.gov.hmrc"             %% "crypto"                     % "6.0.0",
-      "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % "13.6.0",
+      "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.3.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
@@ -60,7 +62,7 @@ object LibDependencies {
   private def test(playVersion: String, playSuffix: String) =
     Seq(
       "com.typesafe.play"       %% "play-test"                    % playVersion,
-      "uk.gov.hmrc"             %% s"http-verbs-test-$playSuffix" % "13.8.0-SNAPSHOT",
+      "uk.gov.hmrc"             %% s"http-verbs-test-$playSuffix" % httpVerbsVersion,
       "org.scalatestplus.play"  %% "scalatestplus-play"           % scalaTestPlusPlayVerson(playVersion),
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
