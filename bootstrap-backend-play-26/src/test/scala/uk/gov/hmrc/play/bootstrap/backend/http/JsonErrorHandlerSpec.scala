@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.http
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import akka.util.ByteString
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
@@ -24,12 +27,16 @@ import org.mockito.Mockito._
 import org.scalatest.LoneElement
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.{Configuration, Logger, LoggerLike}
+import play.api.http.{HttpErrorHandler, MimeTypes}
 import play.api.libs.json.Json
+import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.{Configuration, Logger, LoggerLike}
+import play.core.routing.RouteParams
 import uk.gov.hmrc.auth.core.AuthorisationException
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -37,6 +44,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
@@ -46,6 +54,7 @@ class JsonErrorHandlerSpec
      with ScalaFutures
      with MockitoSugar
      with LoneElement
+     with TableDrivenPropertyChecks
      with Eventually {
 
   import ExecutionContext.Implicits.global
@@ -231,22 +240,37 @@ class JsonErrorHandlerSpec
   "onClientError" should {
 
     "audit an error and return json response for 400" in new Setup {
-      val createdDataEvent = DataEvent("auditSource", "auditType")
-      when(
-        httpAuditEvent.dataEvent(
-          eventType       = is("ServerValidationError"),
-          transactionName = is("Request bad format exception"),
-          request         = is(requestHeader),
-          detail          = is(Map.empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
 
-      val result = jsonErrorHandler.onClientError(requestHeader, BAD_REQUEST, "some message we want to override")
+      val errorScenarios = Table(
+        ("errorMessage", "expectedResponseMessage"),
+        ("Invalid Json: No content to map due to end-of-input\n at [Source", "Invalid Json: No content to map due to end-of-input\n at [Source"),
+        ("Invalid Json: Unrecognized token 'blah': was expecting", "Invalid Json: Unrecognized token 'REDACTED': was expecting"),
+        ("Json validation error List((obj.greeting,List(JsonValidationError(List(error.path.missing),WrappedArray()))))", "Json validation error List((obj.greeting,List(JsonValidationError(List(error.path.missing),WrappedArray()))))"),
+        ("Cannot parse parameter aBoolean as Boolean: should be true, false, 0 or 1", "Cannot parse parameter aBoolean as Boolean: should be true, false, 0 or 1"),
+        ("Missing parameter: otherId", "Missing parameter: otherId"),
+        ("Cannot parse parameter id as Int: For input string: \"blah\"", "Cannot parse parameter id as Int: For input string: \"REDACTED\""),
+        ("Cannot parse parameter aChar with value '123' as Char: aChar must be exactly one digit in length.", "Cannot parse parameter aChar with value 'REDACTED' as Char: aChar must be exactly one digit in length."),
+        ("some unknown message", "bad request, cause: REDACTED")
+      )
 
-      status(result)        shouldEqual BAD_REQUEST
-      contentAsJson(result) shouldEqual Json.obj("statusCode" -> BAD_REQUEST, "message" -> "bad request")
+      forAll(errorScenarios) { (errorMessage, expectedResponseMessage) =>
+        val createdDataEvent = DataEvent("auditSource", "auditType")
+        when(
+          httpAuditEvent.dataEvent(
+            eventType = is("ServerValidationError"),
+            transactionName = is("Request bad format exception"),
+            request = is(requestHeader),
+            detail = is(Map.empty)
+          )(any[HeaderCarrier]))
+          .thenReturn(createdDataEvent)
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+        val result = jsonErrorHandler.onClientError(requestHeader, BAD_REQUEST, errorMessage)
+
+        status(result) shouldEqual BAD_REQUEST
+        contentAsJson(result) shouldEqual Json.obj("statusCode" -> BAD_REQUEST, "message" -> expectedResponseMessage)
+
+        verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      }
     }
 
     "audit an error and return json response for 404 including requested path" in new Setup {
@@ -291,6 +315,67 @@ class JsonErrorHandlerSpec
         verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
     }
+  }
+
+  "play" should {
+    implicit val mat: ActorMaterializer = {
+      implicit val system = ActorSystem()
+      ActorMaterializer()
+    }
+
+    val errorHandler = new HttpErrorHandler {
+      override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = Future.successful(Results.Status(statusCode)(message))
+      override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = Future.successful(Results.InternalServerError(exception.getMessage))
+    }
+
+    "return Invalid Json error when an empty body is provided" in new JsonSetup {
+      errorResponse(parsers.json, "") should startWith("Invalid Json:")
+    }
+
+    "return Invalid Json error when an invalid json is provided" in new JsonSetup {
+      errorResponse(parsers.json, "blah") should startWith("Invalid Json:")
+    }
+
+    "return Json validation error when a json with wrong schema is provided" in new JsonSetup {
+      val request = fakeRequest.withBody(Json.obj())
+      case class Test(greeting: String)
+      errorResponse(parsers.json[Test](Json.reads[Test]), "{}")  should startWith("Json validation error")
+    }
+
+    "return Json validation error without original values" in new JsonSetup {
+      val request = fakeRequest.withBody(Json.obj())
+      case class User(id: Int)
+      val id = UUID.randomUUID().toString
+      val errorMessage = errorResponse(parsers.json[User](Json.reads[User]), s"""{"id": "$id"}""")
+      errorMessage should startWith("Json validation error")
+      errorMessage should not include id
+    }
+
+    "return error for missing query param" in {
+      RouteParams(Map.empty, Map.empty).fromQuery("key")(QueryStringBindable.bindableInt).value shouldBe Left("Missing parameter: key")
+    }
+
+    "return error for boolean parsing" in {
+      PathBindable.bindableBoolean.bind("key", "value") shouldBe Left("Cannot parse parameter key as Boolean: should be true, false, 0 or 1")
+      QueryStringBindable.bindableBoolean.bind("key", Map("key" -> Seq("value"))) shouldBe Some(Left("Cannot parse parameter key as Boolean: should be true, false, 0 or 1"))
+    }
+
+    "return error for char parsing" in {
+      PathBindable.bindableChar.bind("key", "value") shouldBe Left("Cannot parse parameter key with value 'value' as Char: key must be exactly one digit in length.")
+      QueryStringBindable.bindableChar.bind("key", Map("key" -> Seq("value"))) shouldBe Some(Left("Cannot parse parameter key with value 'value' as Char: key must be exactly one digit in length."))
+    }
+
+    "return error for other data types parsing" in {
+      PathBindable.bindableInt.bind("key", "value") shouldBe Left("Cannot parse parameter key as Int: For input string: \"value\"")
+      QueryStringBindable.bindableInt.bind("key", Map("key" -> Seq("value"))) shouldBe Some(Left("Cannot parse parameter key as Int: For input string: \"value\""))
+    }
+
+    trait JsonSetup {
+      val fakeRequest = FakeRequest().withHeaders(play.api.http.HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      val parsers = PlayBodyParsers(eh = errorHandler)
+      def errorResponse[A](parser: BodyParser[A], body: String): String = parser(fakeRequest).run(ByteString(body)).futureValue.left.get.body.dataStream.runReduce(_ ++ _).futureValue.utf8String
+    }
+
   }
 
   private trait Setup {
