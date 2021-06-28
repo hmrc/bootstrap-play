@@ -17,40 +17,83 @@
 package uk.gov.hmrc.play.bootstrap.frontend.http
 
 import akka.stream.Materializer
+import org.scalatest.AppendedClues.convertToClueful
 import org.scalatest.Inspectors.forAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
+import play.api.Application
 import play.api.http.HttpEntity
-import play.api.i18n.MessagesApi
+import play.api.i18n.Messages.Attrs.CurrentLang
+import play.api.i18n.{Lang, MessagesApi}
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.typedmap.TypedMap
 import play.api.mvc._
-import play.api.test.FakeRequest
+import play.api.test.{FakeHeaders, FakeRequest}
 import play.api.test.Helpers._
+import play.mvc.Http.HeaderNames
 import play.twirl.api.Html
 
+import scala.concurrent.Future
+
 class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerTest {
+
+  override def fakeApplication(): Application  =
+    new GuiceApplicationBuilder().configure(Map("play.i18n.langs" -> List("en", "cy"))).build()
 
   implicit lazy val materializer: Materializer = app.materializer
 
   object TestFrontendErrorHandler extends FrontendErrorHandler {
-    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: Request[_]): Html =
-       Html(s"$pageTitle\n$heading\n$message")
+    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit
+      rh: Request[_]
+    ): Html                               =
+      Html(s"$pageTitle\n$heading\n$message")
     override def messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
   }
 
   import TestFrontendErrorHandler._
 
+  val welshRequest = FakeRequest(
+    method = "GET",
+    uri = "/",
+    headers = FakeHeaders(Seq(HeaderNames.HOST -> "localhost")),
+    body = AnyContentAsEmpty,
+    attrs = TypedMap(CurrentLang -> Lang("cy"))
+  )
+
+  val englishRequest = FakeRequest(
+    method = "GET",
+    uri = "/",
+    headers = FakeHeaders(Seq(HeaderNames.HOST -> "localhost")),
+    body = AnyContentAsEmpty,
+    attrs = TypedMap(CurrentLang -> Lang("en"))
+  )
+
   "resolving a client error" should {
     "fall back to a standardErrorTemplate based result" in {
       val explicitlyHandledClientErrors = List(400, 404)
       val clientErrorsHandledByFallback = (400 to 499) diff explicitlyHandledClientErrors
-      
+
       forAll(clientErrorsHandledByFallback) { statusCode =>
         val result = onClientError(FakeRequest(), statusCode)
 
         contentAsString(result) shouldBe """Sorry, there is a problem with the service
                                            |Sorry, there is a problem with the service
                                            |Try again later.""".stripMargin
+      }
+    }
+
+    "provide welsh translations for messages" in {
+      val clientErrors = 400 to 499
+
+      forAll(clientErrors) { statusCode =>
+        val englishResult = onClientError(englishRequest, statusCode)
+        val welshResult   = onClientError(welshRequest, statusCode)
+
+        for {
+          englishMessage <- contentAsString(englishResult).split("\n")
+          welshMessage   <- contentAsString(welshResult).split("\n")
+        } englishMessage shouldNot be(welshMessage) withClue ", missing global.error translation"
       }
     }
   }
@@ -60,23 +103,23 @@ class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceO
       val exception = new Exception("Runtime exception")
       val result    = resolveError(FakeRequest(), exception)
 
-      result.header.status  shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers  should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return a generic InternalServerError result if the exception cause is null" in {
       val exception = new Exception("Runtime exception", null)
       val result    = resolveError(FakeRequest(), exception)
 
-      result.header.status  shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
+      result.header.status shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers  should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return 303 (See Other) result for an application error" in {
 
       val responseCode = SEE_OTHER
       val location     = "http://some.test.location/page"
-      val theResult = Result(
+      val theResult    = Result(
         ResponseHeader(responseCode, Map("Location" -> location)),
         HttpEntity.NoEntity
       )
@@ -86,6 +129,17 @@ class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceO
       val result = resolveError(FakeRequest(), appException)
 
       result shouldBe theResult
+    }
+
+    "provide welsh translations for messages" in {
+      val exception     = new Exception("Runtime exception")
+      val englishResult = resolveError(englishRequest, exception)
+      val welshResult   = resolveError(welshRequest, exception)
+
+      for {
+        englishMessage <- contentAsString(Future.successful(englishResult)).split("\n")
+        welshMessage   <- contentAsString(Future.successful(welshResult)).split("\n")
+      } englishMessage shouldNot be(welshMessage) withClue ", missing global.error translation"
     }
   }
 }
