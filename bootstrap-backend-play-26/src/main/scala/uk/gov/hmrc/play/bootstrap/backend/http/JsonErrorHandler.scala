@@ -57,42 +57,58 @@ class JsonErrorHandler @Inject()(
     */
   protected val upstreamWarnStatuses: Seq[Int] = configuration.get[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes")
 
-  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
-    Future.successful {
-      implicit val headerCarrier: HeaderCarrier = hc(request)
-      statusCode match {
-        case NOT_FOUND =>
-          auditConnector.sendEvent(
-            dataEvent(
-              eventType       = "ResourceNotFound",
-              transactionName = "Resource Endpoint Not Found",
-              request         = request,
-              detail          = Map.empty
-            )
+  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
+    implicit val headerCarrier: HeaderCarrier = hc(request)
+    val result = statusCode match {
+      case NOT_FOUND =>
+        auditConnector.sendEvent(
+          dataEvent(
+            eventType = "ResourceNotFound",
+            transactionName = "Resource Endpoint Not Found",
+            request = request,
+            detail = Map.empty
           )
-          NotFound(toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path))))
-        case BAD_REQUEST =>
-          auditConnector.sendEvent(
-            dataEvent(
-              eventType       = "ServerValidationError",
-              transactionName = "Request bad format exception",
-              request         = request,
-              detail          = Map.empty
-            )
+        )
+        NotFound(toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path))))
+      case BAD_REQUEST =>
+        auditConnector.sendEvent(
+          dataEvent(
+            eventType = "ServerValidationError",
+            transactionName = "Request bad format exception",
+            request = request,
+            detail = Map.empty
           )
-          BadRequest(toJson(ErrorResponse(BAD_REQUEST, "bad request")))
-        case _ =>
-          auditConnector.sendEvent(
-            dataEvent(
-              eventType       = "ClientError",
-              transactionName = s"A client error occurred, status: $statusCode",
-              request         = request,
-              detail          = Map.empty
-            )
+        )
+        def constructErrorMessage(input: String): String = {
+          val unrecognisedTokenJsonError = "^Invalid Json: Unrecognized token '(.*)':.*".r
+          val invalidJson = "^(?s)Invalid Json:.*".r
+          val jsonValidationError = "^Json validation error.*".r
+          val booleanParsingError = "^Cannot parse parameter .* as Boolean: should be true, false, 0 or 1$".r
+          val missingParameterError = "^Missing parameter:.*".r
+          val characterParseError = "^Cannot parse parameter .* with value '(.*)' as Char: .* must be exactly one digit in length.$".r
+          val parameterParseError = "^Cannot parse parameter .* as .*: For input string: \"(.*)\"$".r
+          input match {
+            case unrecognisedTokenJsonError(toBeRedacted) => input.replaceAllLiterally(toBeRedacted, "REDACTED")
+            case invalidJson() | jsonValidationError() | booleanParsingError() | missingParameterError() => input
+            case characterParseError(toBeRedacted) => input.replaceAllLiterally(toBeRedacted, "REDACTED")
+            case parameterParseError(toBeRedacted) => input.replaceAllLiterally(toBeRedacted, "REDACTED")
+            case _ => "bad request, cause: REDACTED"
+          }
+        }
+        BadRequest(toJson(ErrorResponse(BAD_REQUEST, constructErrorMessage(message))))
+      case _ =>
+        auditConnector.sendEvent(
+          dataEvent(
+            eventType = "ClientError",
+            transactionName = s"A client error occurred, status: $statusCode",
+            request = request,
+            detail = Map.empty
           )
-          Status(statusCode)(toJson(ErrorResponse(statusCode, message)))
-      }
+        )
+        Status(statusCode)(toJson(ErrorResponse(statusCode, message)))
     }
+    Future.successful(result)
+  }
 
   override def onServerError(request: RequestHeader, ex: Throwable): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
