@@ -1,12 +1,12 @@
 import sbt.Keys._
 import sbt._
 
-val silencerVersion = "1.7.1"
+val silencerVersion = "1.7.5"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
   majorVersion := 5,
-  scalaVersion := "2.12.12",
+  scalaVersion := "2.12.14",
   isPublicArtefact := true,
   scalacOptions ++= Seq("-feature"),
   libraryDependencies ++= Seq(
