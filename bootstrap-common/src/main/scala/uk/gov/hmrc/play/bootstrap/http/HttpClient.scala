@@ -20,7 +20,7 @@ import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import javax.inject.{Inject, Named, Singleton}
 import play.api.Configuration
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{WSClient, WSProxyServer}
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -38,6 +38,9 @@ class DefaultHttpClient @Inject()(
   override lazy val configuration: Config = config.underlying
 
   override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
+
+  override def wsProxyServer: Option[WSProxyServer] =
+    WSProxyConfiguration("proxy", config)
 }
 
 class DefaultHttpAuditing @Inject()(
