@@ -6,7 +6,7 @@ object LibDependencies {
   private val play27Version  = "2.7.9"
   private val play28Version  = "2.8.7"
 
-  private val httpVerbsVersion = "13.9.0-SNAPSHOT"
+  private val httpVerbsVersion = "13.8.1-RC1"
 
   val commonPlay26: Seq[ModuleID] = common(play26Version, "play-26")
   val commonPlay27: Seq[ModuleID] = common(play27Version, "play-27")

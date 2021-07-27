@@ -93,8 +93,7 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.backend.BackendModule"
 ## Default HTTP client
 
 A default http client with pre-configured auditing hook can be injected into any connector. The http client uses http-verbs
-For more http-verbs examples see https://github.com/hmrc/http-verbs-example
-
+For more http-verbs examples see https://github.com/hmrc/http-verbs
 
 Make sure you have the following modules in your application.conf file:
 
@@ -103,6 +102,12 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 ```
 
+### Proxy Support
+The default Http Client supports Proxy configuration.  If you used a previous version of Bootstrap you would have 
+had to create a separate Proxy Client, this is no longer required.  The Proxy is applied to the call depending on the 
+`proxy.nonProxyHosts` configuration.  You can delete the extra Http Client. 
+
+### Example Usage
 
 ```scala
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
