@@ -40,7 +40,7 @@ class DefaultHttpClient @Inject()(
   override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
 
   override def wsProxyServer: Option[WSProxyServer] =
-    WSProxyConfiguration("proxy", config)
+    WSProxyConfiguration.buildWsProxyServer(config)
 }
 
 class DefaultHttpAuditing @Inject()(
