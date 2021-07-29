@@ -2,7 +2,7 @@
 # bootstrap-play
 
 
-![](https://img.shields.io/github/v/release/hmrc/http-verbs)
+![](https://img.shields.io/github/v/release/hmrc/bootstrap-play)
 
 
 This library implements basic functionality required by the platform frontend/microservices.
