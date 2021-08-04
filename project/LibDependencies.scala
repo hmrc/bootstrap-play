@@ -33,7 +33,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% "auth-client"                % s"5.6.0-$playSuffix",
       "uk.gov.hmrc"             %% "crypto"                     % "6.0.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.3.0",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.7.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.1.0",
