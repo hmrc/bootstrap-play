@@ -21,6 +21,8 @@ import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
 import com.kenshoo.play.metrics._
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
+import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
+import uk.gov.hmrc.play.bootstrap.audit.{DisabledDatastreamMetricsProvider, EnabledDatastreamMetricsProvider}
 
 class GraphiteMetricsModule extends Module {
 
@@ -46,10 +48,12 @@ class GraphiteMetricsModule extends Module {
             GraphiteReporterProviderConfig.fromConfig(configuration, graphiteConfiguration)),
           bind[Graphite].toProvider[GraphiteProvider],
           bind[GraphiteReporter].toProvider[GraphiteReporterProvider],
+          bind[DatastreamMetrics].toProvider[EnabledDatastreamMetricsProvider],
           bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly
         )
       else
         Seq(
+          bind[DatastreamMetrics].toProvider[DisabledDatastreamMetricsProvider],
           bind[GraphiteReporting].to[DisabledGraphiteReporting].eagerly
         )
 
