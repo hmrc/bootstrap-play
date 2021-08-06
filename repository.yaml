@@ -2,6 +2,10 @@ repoVisibility: public_0C3F0CE3E6E6448FAD341E7BFA50FCD333E06A20CFF05FCACE61154DD
 type: library
 
 leakDetectionExemptions:
+ - ruleId: 'play_http_secret_key'
+   filePaths:
+     - '/bootstrap-frontend-play-26/src/main/resources/frontend.conf'
+     - '/bootstrap-backend-play-26/src/main/resources/backend.conf'
  - ruleId: 'play_crypto_secret'
    filePaths:
       - '/bootstrap-backend-play-26/src/main/resources/backend.conf'
