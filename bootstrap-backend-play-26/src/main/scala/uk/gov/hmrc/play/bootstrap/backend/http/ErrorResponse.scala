@@ -21,28 +21,12 @@ import play.api.libs.json.{Json, OFormat, OWrites, Reads}
 
 case class ErrorResponse(
   statusCode: Int,
+  code: String,
   message: String,
   xStatusCode: Option[String] = None,
   requested: Option[String]   = None
-) {
-  val code: String = statusCode match {
-    case clientError if Status.isClientError(clientError) =>
-      "CLIENT_ERROR"
-    case _ =>
-      "SERVER_ERROR"
-  }
-}
+)
 
 object ErrorResponse {
-  implicit val reads: Reads[ErrorResponse] =
-    Json.reads[ErrorResponse]
-
-  implicit val writes: OWrites[ErrorResponse] =
-    OWrites.transform(Json.writes[ErrorResponse]) {
-      case (err, jsObject) =>
-        jsObject ++ Json.obj("code" -> err.code)
-    }
-
-  implicit val format: OFormat[ErrorResponse] =
-    OFormat(reads, writes)
+  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }

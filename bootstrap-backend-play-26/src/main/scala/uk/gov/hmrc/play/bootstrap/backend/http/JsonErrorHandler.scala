@@ -57,6 +57,32 @@ class JsonErrorHandler @Inject()(
     */
   protected val upstreamWarnStatuses: Seq[Int] = configuration.get[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes")
 
+  /**
+    * This method is used to derive the `code` field of JSON error responses
+    * based upon the `statusCode` and error `message` provided.
+    *
+    * You can override this method to return error codes that are specific to your API.
+    *
+    * @param statusCode The status code that will be returned in the response
+    * @param message The `message` that will be returned in the response
+    * @return An error code string that will be used in the `code` field of the response
+    */
+  protected def errorCodeFor(statusCode: Int, message: String): String =
+    statusCode match {
+      case BAD_REQUEST                   => ErrorCodes.BAD_REQUEST
+      case UNAUTHORIZED                  => ErrorCodes.UNAUTHORIZED
+      case FORBIDDEN                     => ErrorCodes.FORBIDDEN
+      case NOT_FOUND                     => ErrorCodes.MATCHING_RESOURCE_NOT_FOUND
+      case METHOD_NOT_ALLOWED            => ErrorCodes.METHOD_NOT_ALLOWED
+      case NOT_ACCEPTABLE                => ErrorCodes.ACCEPT_HEADER_INVALID
+      case TOO_MANY_REQUESTS             => ErrorCodes.MESSAGE_THROTTLED_OUT
+      case INTERNAL_SERVER_ERROR         => ErrorCodes.INTERNAL_SERVER_ERROR
+      case NOT_IMPLEMENTED               => ErrorCodes.NOT_IMPLEMENTED
+      case GATEWAY_TIMEOUT               => ErrorCodes.GATEWAY_TIMEOUT
+      case other if isClientError(other) => ErrorCodes.CLIENT_ERROR
+      case other if isServerError(other) => ErrorCodes.SERVER_ERROR
+    }
+
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
     val result = statusCode match {
@@ -69,7 +95,9 @@ class JsonErrorHandler @Inject()(
             detail = Map.empty
           )
         )
-        NotFound(toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path))))
+        val notFoundMessage = "URI not found"
+        val errorCode = errorCodeFor(statusCode, notFoundMessage)
+        NotFound(toJson(ErrorResponse(NOT_FOUND, errorCode, notFoundMessage, requested = Some(request.path))))
       case BAD_REQUEST =>
         auditConnector.sendEvent(
           dataEvent(
@@ -95,7 +123,9 @@ class JsonErrorHandler @Inject()(
             case _ => "bad request, cause: REDACTED"
           }
         }
-        BadRequest(toJson(ErrorResponse(BAD_REQUEST, constructErrorMessage(message))))
+        val errorMessage = constructErrorMessage(message)
+        val errorCode = errorCodeFor(BAD_REQUEST, errorMessage)
+        BadRequest(toJson(ErrorResponse(BAD_REQUEST, errorCode, errorMessage)))
       case _ =>
         auditConnector.sendEvent(
           dataEvent(
@@ -105,7 +135,7 @@ class JsonErrorHandler @Inject()(
             detail = Map.empty
           )
         )
-        Status(statusCode)(toJson(ErrorResponse(statusCode, message)))
+        Status(statusCode)(toJson(ErrorResponse(statusCode, errorCodeFor(statusCode, message), message)))
     }
     Future.successful(result)
   }
@@ -124,16 +154,20 @@ class JsonErrorHandler @Inject()(
     val errorResponse = ex match {
       case e: AuthorisationException =>
         logger.error(message, e)
-        ErrorResponse(401, e.getMessage)
+        val errorCode = errorCodeFor(401, e.getMessage)
+        ErrorResponse(401, errorCode, e.getMessage)
       case e: HttpException =>
         logException(e, e.responseCode)
-        ErrorResponse(e.responseCode, e.getMessage)
+        val errorCode = errorCodeFor(e.responseCode, e.getMessage)
+        ErrorResponse(e.responseCode, errorCode, e.getMessage)
       case e: UpstreamErrorResponse =>
         logException(e, e.statusCode)
-        ErrorResponse(e.reportAs, e.getMessage)
+        val errorCode = errorCodeFor(e.reportAs, e.getMessage)
+        ErrorResponse(e.reportAs, errorCode, e.getMessage)
       case e: Throwable =>
         logger.error(message, e)
-        ErrorResponse(INTERNAL_SERVER_ERROR, e.getMessage)
+        val errorCode = errorCodeFor(INTERNAL_SERVER_ERROR, e.getMessage)
+        ErrorResponse(INTERNAL_SERVER_ERROR, errorCode, e.getMessage)
     }
 
     auditConnector.sendEvent(

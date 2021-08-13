@@ -25,7 +25,7 @@ import ch.qos.logback.core.read.ListAppender
 import org.mockito.ArgumentMatchers.{any, eq => is}
 import org.mockito.Mockito._
 import org.scalatest.LoneElement
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.concurrent.{Eventually, ScalaFutures, IntegrationPatience}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
@@ -52,6 +52,7 @@ class JsonErrorHandlerSpec
   extends AnyWordSpec
      with Matchers
      with ScalaFutures
+     with IntegrationPatience
      with MockitoSugar
      with LoneElement
      with TableDrivenPropertyChecks
@@ -76,7 +77,12 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, notFoundException)
 
       status(result)        shouldEqual NOT_FOUND
-      contentAsJson(result) shouldEqual Json.obj("statusCode" -> NOT_FOUND, "code" -> "CLIENT_ERROR", "message" -> "test")
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> NOT_FOUND,
+        "code"       -> ErrorCodes.MATCHING_RESOURCE_NOT_FOUND,
+        "message"    -> "test"
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -96,8 +102,12 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, authorisationException)
 
       status(result) shouldEqual UNAUTHORIZED
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> UNAUTHORIZED, "code" -> "CLIENT_ERROR", "message" -> authorisationException.getMessage)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> UNAUTHORIZED,
+        "code"       -> ErrorCodes.UNAUTHORIZED,
+        "message"    -> authorisationException.getMessage
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -117,8 +127,12 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "code" -> "SERVER_ERROR", "message" -> exception.getMessage)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> INTERNAL_SERVER_ERROR,
+        "code"       -> ErrorCodes.INTERNAL_SERVER_ERROR,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -138,8 +152,12 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "code" -> "SERVER_ERROR", "message" -> exception.getMessage)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> INTERNAL_SERVER_ERROR,
+        "code"       -> ErrorCodes.INTERNAL_SERVER_ERROR,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -160,8 +178,10 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual responseCode
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> responseCode, "code" -> "SERVER_ERROR", "message" -> exception.getMessage)
+
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe responseCode
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -183,8 +203,10 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual responseCode
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> responseCode, "code" -> "CLIENT_ERROR", "message" -> exception.getMessage)
+
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe responseCode
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -206,8 +228,9 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual reportAs
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> reportAs, "code" -> "SERVER_ERROR", "message" -> exception.getMessage)
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe reportAs
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -228,8 +251,10 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual reportAs
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> reportAs, "code" -> "CLIENT_ERROR", "message" -> exception.getMessage)
+
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe reportAs
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -314,7 +339,12 @@ class JsonErrorHandlerSpec
         val result = jsonErrorHandler.onClientError(requestHeader, BAD_REQUEST, errorMessage)
 
         status(result) shouldEqual BAD_REQUEST
-        contentAsJson(result) shouldEqual Json.obj("statusCode" -> BAD_REQUEST, "code" -> "CLIENT_ERROR", "message" -> expectedResponseMessage)
+
+        contentAsJson(result) shouldEqual Json.obj(
+          "statusCode" -> BAD_REQUEST,
+          "code"       -> ErrorCodes.BAD_REQUEST,
+          "message"    -> expectedResponseMessage
+        )
 
         verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
@@ -334,8 +364,13 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onClientError(requestHeader, NOT_FOUND, "some message we want to override")
 
       status(result) shouldEqual NOT_FOUND
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> NOT_FOUND, "code" -> "CLIENT_ERROR", "message" -> "URI not found", "requested" -> uri)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> NOT_FOUND,
+        "code"       -> ErrorCodes.MATCHING_RESOURCE_NOT_FOUND,
+        "message"    -> "URI not found",
+        "requested"  -> uri
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -356,8 +391,11 @@ class JsonErrorHandlerSpec
 
         val result = jsonErrorHandler.onClientError(requestHeader, statusCode, errorMessage)
 
-        status(result)        shouldEqual statusCode
-        contentAsJson(result) shouldEqual Json.obj("statusCode" -> statusCode, "code" -> "CLIENT_ERROR", "message" -> errorMessage)
+        status(result) shouldEqual statusCode
+
+        val jsonResult = contentAsJson(result)
+        (jsonResult \ "statusCode").as[Int] shouldBe statusCode
+        (jsonResult \ "message").as[String] shouldBe errorMessage
 
         verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
