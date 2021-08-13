@@ -18,14 +18,12 @@ package uk.gov.hmrc.play.bootstrap.audit
 
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, AuditCounter}
+import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, DatastreamMetrics}
 
 import javax.inject.Inject
 
 class DefaultAuditConnector @Inject()(
                                        val auditingConfig: AuditingConfig,
                                        val auditChannel: AuditChannel,
-                                       val auditCounter: AuditCounter,
-                                       val lifecycle: ApplicationLifecycle) extends AuditConnector {
-
-}
+                                       val lifecycle: ApplicationLifecycle,
+                                       val datastreamMetrics: DatastreamMetrics) extends AuditConnector
