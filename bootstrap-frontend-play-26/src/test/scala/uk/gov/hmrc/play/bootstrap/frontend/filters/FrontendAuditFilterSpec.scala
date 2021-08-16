@@ -21,18 +21,17 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
-import controllers.Assets
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TestData}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
-import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.{Application, Configuration}
+import play.api.http.{HttpChunk, HttpEntity}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
@@ -49,16 +48,17 @@ import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationLong
 
 class FrontendAuditFilterSpec
-    extends AnyWordSpec
-    with FrontendAuditFilterInstance
-    with Matchers
-    with Eventually
-    with ScalaFutures
-    with MockitoSugar
-    with GuiceOneAppPerTest
-    with BeforeAndAfterEach {
+  extends AnyWordSpec
+     with FrontendAuditFilterInstance
+     with Matchers
+     with Eventually
+     with ScalaFutures
+     with MockitoSugar
+     with GuiceOneAppPerTest
+     with BeforeAndAfterEach {
 
   private val Action = stubControllerComponents().actionBuilder
 
@@ -88,7 +88,7 @@ class FrontendAuditFilterSpec
       .build()
   }
 
-  val fiveSecondsPatience = PatienceConfig(Span(5, Seconds), Span(200, Millis))
+  val fiveSecondsPatience = PatienceConfig(5.seconds, 200.millis)
 
   "A password" should {
     "be obfuscated with the password at the beginning" in {
@@ -132,7 +132,6 @@ class FrontendAuditFilterSpec
   }
 
   "The Filter" should {
-
     "generate audit events without passwords" when {
       val body = "csrfToken=acb" +
         "&userId=113244018119" +
@@ -162,7 +161,6 @@ class FrontendAuditFilterSpec
     }
 
     "generate audit events with the device finger print when it is supplied in a request cookie" when {
-
       val encryptedFingerprint = "eyJ1c2VyQWdlbnQiOiJNb3ppbGxhLzUuMCAoTWFjaW50b3NoOyBJbnRlbCBNYWMgT1MgWCAxMF84XzUpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGx" +
         "pa2UgR2Vja28pIENocm9tZS8zMS4wLjE2NTAuNDggU2FmYXJpLzUzNy4zNiIsImxhbmd1YWdlIjoiZW4tVVMiLCJjb2xvckRlcHRoIjoyNCwicmVzb2x1dGlvbiI6IjgwMHgxMj" +
         "gwIiwidGltZXpvbmUiOjAsInNlc3Npb25TdG9yYWdlIjp0cnVlLCJsb2NhbFN0b3JhZ2UiOnRydWUsImluZGV4ZWREQiI6dHJ1ZSwicGxhdGZvcm0iOiJNYWNJbnRlbCIsImRvT" +
@@ -241,7 +239,6 @@ class FrontendAuditFilterSpec
     }
 
     "use the session to read Authorization, session Id" when {
-
       "the request succeeds" in {
         val request = FakeRequest("GET", "/foo").withSession(
           "authToken" -> "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=",
@@ -332,11 +329,9 @@ class FrontendAuditFilterSpec
         event.detail    should contain("deviceID" -> deviceID)
       }
     }
-
   }
 
   "Get query string for audit" should {
-
     "handle a simple querystring" in {
       filter.getQueryString(FakeRequest("GET", "/foo?action=frog").queryString) should be("action:frog")
     }
@@ -391,15 +386,12 @@ class FrontendAuditFilterSpec
     "remove the port and keep host name when the host contains the port" in {
       filter.getHost(FakeRequest().withHeaders("Host" -> "localhost:9000")) should be("localhost")
     }
-
   }
 
   "Retrieve port from play configuration" should {
-
     "retrieve the port when it is specified in the configuration" in {
       filter.getPort should be("80")
     }
-
   }
 
   "A frontend response" should {
@@ -459,14 +451,15 @@ class FrontendAuditFilterSpec
 }
 
 class FrontendAuditFilterServerSpec
-    extends AnyWordSpec
-    with FrontendAuditFilterInstance
-    with Matchers
-    with Eventually
-    with MockitoSugar
-    with GuiceOneServerPerTest
-    with BeforeAndAfterEach
-    with BeforeAndAfterAll {
+  extends AnyWordSpec
+     with FrontendAuditFilterInstance
+     with Matchers
+     with Eventually
+     with IntegrationPatience
+     with MockitoSugar
+     with GuiceOneServerPerTest
+     with BeforeAndAfterEach
+     with BeforeAndAfterAll {
 
   override def beforeEach() {
     reset(auditConnector)
@@ -483,13 +476,9 @@ class FrontendAuditFilterServerSpec
   val largeContent: String    = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize * 3)
   val standardContent: String = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize - 1)
 
-  val pc = PatienceConfig(Span(5, Seconds), Span(15, Millis))
-
   // Generate a random string of length n from the given alphabet
   def randomString(alphabet: String)(n: Int): String =
     Stream.continually(random.nextInt(alphabet.length)).map(alphabet).take(n).mkString
-
-  val assets: Assets = new GuiceApplicationBuilder().injector().instanceOf[Assets]
 
   val Action = stubControllerComponents().actionBuilder
 
@@ -505,6 +494,25 @@ class FrontendAuditFilterServerSpec
           case GET(p"/longresponse") =>
             filter.apply(Action {
               Results.Ok(largeContent)
+            })
+          case GET(p"/streamedresponse") =>
+            filter.apply(Action {
+              Results.Ok.sendEntity(
+                HttpEntity.Streamed(
+                  Source.single(ByteString(standardContent)),
+                  contentLength = None,
+                  contentType = None
+                )
+              )
+            })
+          case GET(p"/chunkedresponse") =>
+            filter.apply(Action {
+              Results.Ok.sendEntity(
+                HttpEntity.Chunked(
+                  Source.single(HttpChunk.Chunk(ByteString(standardContent))),
+                  contentType = None
+                )
+              )
             })
           case POST(p"/longrequest") =>
             filter.apply(Action {
@@ -527,6 +535,26 @@ class FrontendAuditFilterServerSpec
 
   "Attempting to audit a standard in-memory response" in {
     val url      = s"http://localhost:$port/standardresponse"
+    val response = await(client.url(url).get())
+
+    eventually {
+      response.body.length should equal(standardContent.length)
+      verifyDetailPropertyLength(EventKeys.ResponseMessage, standardContent.length)
+    }
+  }
+
+  "Attempting to audit a standard streamed response" in {
+    val url      = s"http://localhost:$port/streamedresponse"
+    val response = await(client.url(url).get())
+
+    eventually {
+      response.body.length should equal(standardContent.length)
+      verifyDetailPropertyLength(EventKeys.ResponseMessage, standardContent.length)
+    }
+  }
+
+  "Attempting to audit a standard chunked response" in {
+    val url      = s"http://localhost:$port/chunkedresponse"
     val response = await(client.url(url).get())
 
     eventually {

@@ -21,6 +21,8 @@ import akka.stream.stage._
 import akka.util.ByteString
 import play.api.Logger
 
+// based on play.filters.csrf.CSRFAction#BodyHandler
+
 protected[filters] class RequestBodyCaptor(
   val loggingContext: String,
   val maxBodyLength: Int,
@@ -69,8 +71,8 @@ protected[filters] class RequestBodyCaptor(
 protected[filters] class ResponseBodyCaptor(
   val loggingContext: String,
   val maxBodyLength: Int,
-  performAudit: (String) => Unit)
-    extends GraphStage[SinkShape[ByteString]] {
+  performAudit: (String) => Unit
+) extends GraphStage[SinkShape[ByteString]] {
   val in             = Inlet[ByteString]("RespBodyCaptor.in")
   override val shape = SinkShape.of(in)
 

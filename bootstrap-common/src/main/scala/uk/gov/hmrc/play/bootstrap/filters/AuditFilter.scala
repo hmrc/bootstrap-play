@@ -33,6 +33,7 @@ import uk.gov.hmrc.play.audit.model.DataEvent
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
+import play.api.http.HttpChunk
 
 trait AuditFilter extends EssentialFilter
 
@@ -121,25 +122,38 @@ trait CommonAuditFilter extends AuditFilter {
       requestBodyPromise.success(requestBody)
     }
 
-    //grabbed from plays csrf filter
-    val wrappedAcc: Accumulator[ByteString, Result] = Accumulator(
-      Flow[ByteString]
-        .via(new RequestBodyCaptor(loggingContext, maxBodySize, callback))
-        .splitWhen(_ => false)
-        .prefixAndTail(0)
-        .map(_._2)
-        .concatSubstreams
-        .toMat(Sink.head[Source[ByteString, _]])(Keep.right)
-    ).mapFuture(next.run)
+    //grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody)
+    val wrappedAcc: Accumulator[ByteString, Result] =
+      Accumulator(
+        Flow[ByteString]
+          .via(new RequestBodyCaptor(loggingContext, maxBodySize, callback))
+          .splitWhen(_ => false)
+          .prefixAndTail(0)
+          .map(_._2)
+          .concatSubstreams
+          .toMat(Sink.head[Source[ByteString, _]])(Keep.right)
+      ).mapFuture(next.run)
 
     wrappedAcc
       .mapFuture { result =>
+        lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
+          Sink.fromGraph(new ResponseBodyCaptor(
+            loggingContext,
+            maxBodySize,
+            performAudit = handler(requestBody, Success(result))
+          ))
+
         requestBodyFuture.flatMap { res =>
           val auditedBody = result.body match {
             case str: HttpEntity.Streamed =>
-              val auditFlow = Flow[ByteString].alsoTo(
-                new ResponseBodyCaptor(loggingContext, maxBodySize, handler(requestBody, Success(result))))
-              str.copy(data = str.data.via(auditFlow))
+              str.copy(data = str.data.alsoTo(responseBodyCaptor))
+            case str: HttpEntity.Chunked =>
+              val chunkedResponseBodyCaptor: Sink[HttpChunk, akka.NotUsed] =
+                responseBodyCaptor.contramap {
+                  case HttpChunk.Chunk(data)  => data
+                  case HttpChunk.LastChunk(_) => ByteString()
+                }
+              str.copy(chunks = str.chunks.alsoTo(chunkedResponseBodyCaptor))
             case h: HttpEntity =>
               h.consumeData.map { rb =>
                 val auditString =
