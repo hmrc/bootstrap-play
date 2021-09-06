@@ -26,6 +26,8 @@ import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.ws._
 
+import scala.util.matching.Regex
+
 @Singleton
 class DefaultHttpClient @Inject()(
   config: Configuration,
@@ -40,7 +42,12 @@ class DefaultHttpClient @Inject()(
   override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
 }
 
-class DefaultHttpAuditing @Inject()(
+@Singleton
+class DefaultHttpAuditing @Inject() (
   val auditConnector: AuditConnector,
-  @Named("appName") val appName: String
-) extends HttpAuditing
+  @Named("appName") val appName: String,
+  config: Configuration
+) extends HttpAuditing {
+  override def auditDisabledForPattern: Regex =
+    config.get[String]("auditing.httpclient.disabled-for").r // TODO update/remove comment about `http-client.audit.disabled-for` in play-auditing
+}
