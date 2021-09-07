@@ -24,21 +24,17 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.Logger
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
+import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
 
-class AppNameSpec extends AnyWordSpec with Matchers {
+class DatastreamMetricsProviderSpec extends AnyWordSpec with Matchers {
 
   "DisabledDatastreamMetricsProvider" should {
-
     class TestDisabledDatastreamMetricsProvider extends DisabledDatastreamMetricsProvider {
       override val logger = mock[Logger]
     }
 
     "return a fully-disabled DatastreamMetrics" in {
-      val datastreamMetrics = new TestDisabledDatastreamMetricsProvider().get()
-      datastreamMetrics.metricsKey shouldBe None
-      datastreamMetrics.successCounter shouldBe DisabledCounter
-      datastreamMetrics.successCounter shouldBe DisabledCounter
-      datastreamMetrics.successCounter shouldBe DisabledCounter
+      new TestDisabledDatastreamMetricsProvider().get() shouldBe DatastreamMetrics.disabled
     }
 
     "log a warning" in {
@@ -50,14 +46,12 @@ class AppNameSpec extends AnyWordSpec with Matchers {
   }
 
   "EnabledDatastreamMetricsProvider" should {
-
     "register the correct metrics key and counters" in {
-
-      val configuration = GraphiteReporterProviderConfig(prefix = "play.service", None, None)
+      val configuration  = GraphiteReporterProviderConfig(prefix = "play.service", None, None)
       val metricRegistry = mock[MetricRegistry]
-      val metrics = mock[Metrics]
+      val metrics        = mock[Metrics]
       val successCounter = mock[Counter]
-      val rejectCounter = mock[Counter]
+      val rejectCounter  = mock[Counter]
       val failureCounter = mock[Counter]
 
       when(metrics.defaultRegistry).thenReturn(metricRegistry)
@@ -68,6 +62,7 @@ class AppNameSpec extends AnyWordSpec with Matchers {
       val datastreamMetrics = new EnabledDatastreamMetricsProvider(configuration, metrics).get
 
       datastreamMetrics.metricsKey shouldBe Some("play.service")
+
       datastreamMetrics.successCounter.inc()
       verify(successCounter).inc()
 

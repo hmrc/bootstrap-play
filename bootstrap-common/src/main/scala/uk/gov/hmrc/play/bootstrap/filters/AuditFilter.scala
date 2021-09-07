@@ -157,7 +157,6 @@ trait CommonAuditFilter extends AuditFilter {
             case h: HttpEntity =>
               h.consumeData.map { rb =>
                 val auditString =
-                  // TODO should there be a way to disable auditing of payload only? for particular endpoints?
                   if (rb.size > maxBodySize) {
                     logger.warn(
                       s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength $maxBodySize - do you need to be auditing this payload?")

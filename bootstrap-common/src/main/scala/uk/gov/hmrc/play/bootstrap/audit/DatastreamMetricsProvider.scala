@@ -16,39 +16,39 @@
 
 package uk.gov.hmrc.play.bootstrap.audit
 
-import com.codahale.metrics.{Counter => CodahaleCounter}
 import com.kenshoo.play.metrics.Metrics
 import org.slf4j.LoggerFactory
 import uk.gov.hmrc.play.audit.http.connector.{Counter, DatastreamMetrics}
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
 
-import javax.inject.{Inject, Provider}
+import javax.inject.{Inject, Provider, Singleton}
 
-
-class EnabledCounter(counter: CodahaleCounter) extends Counter {
-  def inc() = counter.inc()
-}
-class EnabledDatastreamMetricsProvider @Inject()(reporter: GraphiteReporterProviderConfig, metrics: Metrics) extends Provider[DatastreamMetrics] {
-  def get() = DatastreamMetrics(
-    successCounter = new EnabledCounter(metrics.defaultRegistry.counter("audit.success")),
-    rejectCounter = new EnabledCounter(metrics.defaultRegistry.counter("audit.reject")),
-    failureCounter = new EnabledCounter(metrics.defaultRegistry.counter("audit.failure")),
-    metricsKey = Some(reporter.prefix)
-  )
-}
-
-
-case object DisabledCounter extends Counter {
-  def inc() = ()
-}
-
-class DisabledDatastreamMetricsProvider extends Provider[DatastreamMetrics] {
-  val logger = LoggerFactory.getLogger(getClass)
-
-  def get() = {
-    logger.warn("DatastreamMetrics have been disabled since metrics are disabled: ENABLE IN ALL TESTING + PRODUCTION ENVIRONMENTS")
+@Singleton
+class EnabledDatastreamMetricsProvider @Inject()(
+  reporter: GraphiteReporterProviderConfig,
+  metrics : Metrics
+) extends Provider[DatastreamMetrics] {
+  private lazy val datastreamMetrics =
     DatastreamMetrics(
-      DisabledCounter, DisabledCounter, DisabledCounter, None
+      prefix    = reporter.prefix,
+      mkCounter = (name: String) =>
+                    new Counter {
+                      private val counter = metrics.defaultRegistry.counter(name)
+                      def inc() = counter.inc()
+                    }
     )
+  override def get(): DatastreamMetrics =
+    datastreamMetrics
+}
+
+@Singleton
+class DisabledDatastreamMetricsProvider extends Provider[DatastreamMetrics] {
+  private[audit] val logger = LoggerFactory.getLogger(getClass)
+  private lazy val datastreamMetrics = {
+    logger.warn("DatastreamMetrics have been disabled since metrics are disabled: ENABLE IN ALL TESTING + PRODUCTION ENVIRONMENTS")
+    DatastreamMetrics.disabled
   }
+
+  override def get(): DatastreamMetrics =
+    datastreamMetrics
 }

@@ -27,7 +27,6 @@ import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
-import uk.gov.hmrc.play.bootstrap.audit.{DisabledCounter, EnabledCounter}
 
 class GraphiteMetricsModuleSpec
     extends AnyFreeSpec
@@ -107,12 +106,8 @@ class GraphiteMetricsModuleSpec
           //there is an enabled graphite reporter
           injector.instanceOf[GraphiteReporting] mustBe a[EnabledGraphiteReporting]
 
-          //there is a binding to disabled DatastreamMetrics
-          val datastreamMetrics = injector.instanceOf[DatastreamMetrics]
-          datastreamMetrics.metricsKey mustBe Some(injector.instanceOf[GraphiteReporterProviderConfig].prefix)
-          datastreamMetrics.successCounter mustBe an[EnabledCounter]
-          datastreamMetrics.failureCounter mustBe an[EnabledCounter]
-          datastreamMetrics.rejectCounter mustBe an[EnabledCounter]
+          //there is a binding to enabled DatastreamMetrics
+          injector.instanceOf[DatastreamMetrics] must not be DatastreamMetrics.disabled
         }
 
         if (!kenshooEnabled || !graphiteEnabled) {
@@ -120,11 +115,7 @@ class GraphiteMetricsModuleSpec
           injector.instanceOf[GraphiteReporting] mustBe a[DisabledGraphiteReporting]
 
           //there is a binding to disabled DatastreamMetrics
-          val datastreamMetrics = injector.instanceOf[DatastreamMetrics]
-          datastreamMetrics.metricsKey mustBe None
-          datastreamMetrics.successCounter mustBe DisabledCounter
-          datastreamMetrics.failureCounter mustBe DisabledCounter
-          datastreamMetrics.rejectCounter mustBe DisabledCounter
+          injector.instanceOf[DatastreamMetrics] mustBe DatastreamMetrics.disabled
         }
       }
     }

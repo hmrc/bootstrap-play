@@ -49,5 +49,5 @@ class DefaultHttpAuditing @Inject() (
   config: Configuration
 ) extends HttpAuditing {
   override def auditDisabledForPattern: Regex =
-    config.get[String]("auditing.httpclient.disabled-for").r // TODO update/remove comment about `http-client.audit.disabled-for` in play-auditing
+    config.get[String]("httpclient.audit.disabledFor").r
 }

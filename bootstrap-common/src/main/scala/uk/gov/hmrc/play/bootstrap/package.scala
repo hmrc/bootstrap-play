@@ -39,11 +39,11 @@ package bootstrap {
     }
   }
 
-  @deprecated("Use uk.gov.hmrc.play.audit.AuditModule instead", "5.13.0")
-  class AuditModule extends uk.gov.hmrc.play.audit.AuditModule // TODO or should Modules stay?
+  @deprecated("Use uk.gov.hmrc.play.audit.AuditModule instead", "5.14.0")
+  class AuditModule extends uk.gov.hmrc.play.audit.AuditModule
 
   package audit {
-    @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.13.0")
+    @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.14.0")
     @Singleton
     class DefaultAuditChannel @Inject()(
       auditingConfig   : AuditingConfig,
@@ -57,7 +57,7 @@ package bootstrap {
       datastreamMetrics
     )
 
-    @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.13.0")
+    @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.14.0")
     class DefaultAuditConnector @Inject()(
       auditingConfig   : AuditingConfig,
       auditChannel     : uk.gov.hmrc.play.audit.http.connector.AuditChannel,
@@ -69,12 +69,10 @@ package bootstrap {
       lifecycle,
       datastreamMetrics
     )
-
-    // TODO move DatastreamMetricsProvider.scala into play-auditing
   }
 
   package config {
-    @deprecated("Use uk.gov.hmrc.play.audit.http.config.AuditingConfig.fromConfig instead", "5.13.0")
+    @deprecated("Use uk.gov.hmrc.play.audit.http.config.AuditingConfig.fromConfig instead", "5.14.0")
     class AuditingConfigProvider @Inject()(
       configuration: play.api.Configuration,
       @Named("appName") appName: String
