@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.play
 
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Named, Provider, Singleton}
+import uk.gov.hmrc.play.audit.http.config.AuditingConfig
+
 import scala.concurrent.{ExecutionContext, Future}
 
 package bootstrap {
@@ -44,7 +46,7 @@ package bootstrap {
     @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.13.0")
     @Singleton
     class DefaultAuditChannel @Inject()(
-      auditingConfig   : uk.gov.hmrc.play.audit.http.config.AuditingConfig,
+      auditingConfig   : AuditingConfig,
       materializer     : akka.stream.Materializer,
       lifecycle        : play.api.inject.ApplicationLifecycle,
       datastreamMetrics: uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
@@ -57,7 +59,7 @@ package bootstrap {
 
     @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.13.0")
     class DefaultAuditConnector @Inject()(
-      auditingConfig   : uk.gov.hmrc.play.audit.http.config.AuditingConfig,
+      auditingConfig   : AuditingConfig,
       auditChannel     : uk.gov.hmrc.play.audit.http.connector.AuditChannel,
       lifecycle        : play.api.inject.ApplicationLifecycle,
       datastreamMetrics: uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
@@ -72,14 +74,14 @@ package bootstrap {
   }
 
   package config {
-    @deprecated("Use uk.gov.hmrc.play.audit.http.config.AuditingConfigProvider instead", "5.13.0")
+    @deprecated("Use uk.gov.hmrc.play.audit.http.config.AuditingConfig.fromConfig instead", "5.13.0")
     class AuditingConfigProvider @Inject()(
       configuration: play.api.Configuration,
       @Named("appName") appName: String
-    ) extends uk.gov.hmrc.play.audit.http.config.AuditingConfigProvider(
-      configuration,
-      appName
-    )
+    ) extends Provider[AuditingConfig] {
+      override def get(): AuditingConfig =
+        AuditingConfig.fromConfig(configuration)
+    }
   }
 }
 
