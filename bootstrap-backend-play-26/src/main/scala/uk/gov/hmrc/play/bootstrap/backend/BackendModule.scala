@@ -27,6 +27,12 @@ class BackendModule extends BootstrapModule {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     super.bindings(environment, configuration) ++ Seq(
       bind[AuditFilter].to[DefaultBackendAuditFilter],
-      bind[DeprecatedConfigChecker].toInstance(new DeprecatedConfigChecker(configuration, deprecatedClasses)).eagerly
+      bind[DeprecatedConfigChecker]
+        .toInstance(
+          new DeprecatedConfigChecker(
+            configuration,
+            deprecatedClasses ++ uk.gov.hmrc.play.bootstrap.deprecatedClasses
+          )
+        ).eagerly
     )
 }
