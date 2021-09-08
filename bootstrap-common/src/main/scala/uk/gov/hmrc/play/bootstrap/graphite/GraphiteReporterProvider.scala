@@ -26,34 +26,34 @@ import com.typesafe.config.ConfigException
 import play.api.Configuration
 
 case class GraphiteReporterProviderConfig(
-  prefix: String,
-  rates: Option[TimeUnit],
+  prefix   : String,
+  rates    : Option[TimeUnit],
   durations: Option[TimeUnit]
 )
 
 object GraphiteReporterProviderConfig {
+  def fromConfig(config: Configuration): GraphiteReporterProviderConfig = {
+    lazy val appName = config.getOptional[String]("appName")
 
-  def fromConfig(config: Configuration, graphiteConfiguration: Configuration): GraphiteReporterProviderConfig = {
-
-    val appName: Option[String]     = config.getOptional[String]("appName")
-    val rates: Option[TimeUnit]     = graphiteConfiguration.getOptional[String]("rates").map(TimeUnit.valueOf)
-    val durations: Option[TimeUnit] = graphiteConfiguration.getOptional[String]("durations").map(TimeUnit.valueOf)
-
-    val prefix: String = graphiteConfiguration
-      .getOptional[String]("prefix")
+    val prefix: String = config
+      .getOptional[String]("microservice.metrics.graphite.prefix")
       .orElse(appName.map(name => s"tax.$name"))
       .getOrElse(
-        throw new ConfigException.Generic("`metrics.graphite.prefix` in config or `appName` as parameter required"))
+        throw new ConfigException.Generic("`microservice.metrics.graphite.prefix` in config or `appName` as parameter required"))
 
-    GraphiteReporterProviderConfig(prefix, rates, durations)
+    GraphiteReporterProviderConfig(
+      prefix    = prefix,
+      rates     = config.getOptional[String]("microservice.metrics.graphite.rates").map(TimeUnit.valueOf),
+      durations = config.getOptional[String]("microservice.metrics.graphite.durations").map(TimeUnit.valueOf)
+    )
   }
 }
 
 class GraphiteReporterProvider @Inject()(
-  config: GraphiteReporterProviderConfig,
-  metrics: Metrics,
+  config  : GraphiteReporterProviderConfig,
+  metrics : Metrics,
   graphite: Graphite,
-  filter: MetricFilter
+  filter  : MetricFilter
 ) extends Provider[GraphiteReporter] {
 
   override def get(): GraphiteReporter =

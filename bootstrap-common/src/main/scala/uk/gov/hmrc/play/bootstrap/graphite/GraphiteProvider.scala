@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.codahale.metrics.graphite.Graphite
-import com.typesafe.config.Config
+import com.github.ghik.silencer.silent
 import javax.inject.{Inject, Provider}
 import play.api.Configuration
 
@@ -28,14 +28,21 @@ case class GraphiteProviderConfig(
 
 object GraphiteProviderConfig {
 
-  def fromConfig(graphiteConfiguration: Configuration): GraphiteProviderConfig = {
+  // changing this to take the root configuration will break two clients..
+  @deprecated("Use fromRootConfig", "5.13.0")
+  def fromConfig(graphiteConfiguration: Configuration): GraphiteProviderConfig =
+    GraphiteProviderConfig(
+      host = graphiteConfiguration.get[String]("host"),
+      port = graphiteConfiguration.get[Int]("port")
+    )
 
-    val graphite: Config = graphiteConfiguration.underlying
-    val host: String     = graphite.getString("host")
-    val port: Int        = graphite.getInt("port")
-
-    GraphiteProviderConfig(host, port)
-  }
+  @silent("deprecated")
+  def fromRootConfig(config: Configuration): GraphiteProviderConfig =
+    fromConfig(
+      config
+        .getOptional[Configuration]("microservice.metrics.graphite")
+        .getOrElse(Configuration())
+    )
 }
 
 class GraphiteProvider @Inject()(
