@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.play.bootstrap.graphite
 
-import com.codahale.metrics.MetricFilter
+import com.codahale.metrics.{Metric, MetricFilter, MetricRegistry, MetricSet}
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
-import com.kenshoo.play.metrics._
+import com.kenshoo.play.metrics.{DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
+import javax.inject.Singleton
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
@@ -32,8 +33,8 @@ class GraphiteMetricsModule extends Module {
       bind[MetricFilter].toInstance(MetricFilter.ALL).eagerly
     )
 
-    val kenshooMetricsEnabled    = configuration.get[Boolean]("metrics.enabled")
-    val graphitePublisherEnabled = configuration.get[Boolean]("microservice.metrics.graphite.enabled")
+    val kenshooMetricsEnabled    = configuration.get[Boolean]("metrics.enabled") // metrics collection
+    val graphitePublisherEnabled = configuration.get[Boolean]("microservice.metrics.graphite.enabled") // metrics publishing
 
     val kenshooBindings: Seq[Binding[_]] =
       if (kenshooMetricsEnabled)
@@ -65,4 +66,18 @@ class GraphiteMetricsModule extends Module {
 
     defaultBindings ++ graphiteBindings ++ kenshooBindings
   }
+}
+
+/** An alternative to com.kenshoo.play.metrics.DisabledMetrics, this implementation
+  * will not generate `MetricsDisabledException` if the injected metrics is used
+  * (we do not expect clients to check metrics.enabled before using the injected metrics)
+  */
+@Singleton
+class DisabledMetrics extends Metrics {
+  override def defaultRegistry: MetricRegistry = new MetricRegistry {
+    override def register[T <: Metric](name: String, metric: T): T = metric
+    override def registerAll(metrics: MetricSet): Unit = ()
+  }
+
+  override def toJson: String = "null"
 }
