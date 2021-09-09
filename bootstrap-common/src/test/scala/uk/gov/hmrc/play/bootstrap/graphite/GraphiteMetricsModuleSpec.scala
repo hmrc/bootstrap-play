@@ -51,7 +51,6 @@ class GraphiteMetricsModuleSpec
   }
 
   "if 'metrics.enabled' set to false" in {
-    SharedMetricRegistries.clear()
     withInjector(Configuration("metrics.enabled" -> false)) { injector =>
       Then("kenshoo metrics are disabled")
       injector.instanceOf[MetricsFilter] mustBe a[DisabledMetricsFilter]
@@ -59,7 +58,6 @@ class GraphiteMetricsModuleSpec
   }
 
   "if missing kenshoo metrics enabled, but 'microservice.metrics.graphite.enabled' missing" in {
-    SharedMetricRegistries.clear()
     withInjector(Configuration("metrics.enabled" -> "true")) { injector =>
       Then("kensho metrics are enabled")
       injector.instanceOf[MetricsFilter] mustBe a[MetricsFilterImpl]
@@ -71,7 +69,6 @@ class GraphiteMetricsModuleSpec
   }
 
   "property testing" in {
-
     forAll { (kenshooEnabled: Boolean, graphiteEnabled: Boolean) =>
       SharedMetricRegistries.clear()
 

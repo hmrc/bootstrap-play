@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.play.bootstrap.graphite
 
-import com.codahale.metrics.MetricFilter
+import com.codahale.metrics.{Metric, MetricFilter, MetricRegistry, MetricSet}
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
-import com.kenshoo.play.metrics._
+import com.kenshoo.play.metrics.{DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
+import javax.inject.Singleton
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
@@ -32,20 +33,26 @@ class GraphiteMetricsModule extends Module {
       bind[MetricFilter].toInstance(MetricFilter.ALL).eagerly
     )
 
-    val kenshooBindings: Seq[Binding[_]] =
-      if (kenshooMetricsEnabled(configuration))
-        Seq(bind[MetricsFilter].to[MetricsFilterImpl].eagerly, bind[Metrics].to[MetricsImpl].eagerly)
-      else
-        Seq(bind[MetricsFilter].to[DisabledMetricsFilter].eagerly, bind[Metrics].to[DisabledMetrics].eagerly)
+    val kenshooMetricsEnabled    = configuration.get[Boolean]("metrics.enabled") // metrics collection
+    val graphitePublisherEnabled = configuration.get[Boolean]("microservice.metrics.graphite.enabled") // metrics publishing
 
-    val graphiteConfiguration = extractGraphiteConfiguration(configuration)
+    val kenshooBindings: Seq[Binding[_]] =
+      if (kenshooMetricsEnabled)
+        Seq(
+          bind[MetricsFilter].to[MetricsFilterImpl].eagerly,
+          bind[Metrics].to[MetricsImpl].eagerly
+        )
+      else
+        Seq(
+          bind[MetricsFilter].to[DisabledMetricsFilter].eagerly,
+          bind[Metrics].to[DisabledMetrics].eagerly
+        )
 
     val graphiteBindings: Seq[Binding[_]] =
-      if (kenshooMetricsEnabled(configuration) && graphitePublisherEnabled(graphiteConfiguration))
+      if (kenshooMetricsEnabled && graphitePublisherEnabled)
         Seq(
-          bind[GraphiteProviderConfig].toInstance(GraphiteProviderConfig.fromConfig(graphiteConfiguration)),
-          bind[GraphiteReporterProviderConfig].toInstance(
-            GraphiteReporterProviderConfig.fromConfig(configuration, graphiteConfiguration)),
+          bind[GraphiteProviderConfig].toInstance(GraphiteProviderConfig.fromRootConfig(configuration)),
+          bind[GraphiteReporterProviderConfig].toInstance(GraphiteReporterProviderConfig.fromConfig(configuration)),
           bind[Graphite].toProvider[GraphiteProvider],
           bind[GraphiteReporter].toProvider[GraphiteReporterProvider],
           bind[DatastreamMetrics].toProvider[EnabledDatastreamMetricsProvider],
@@ -59,15 +66,18 @@ class GraphiteMetricsModule extends Module {
 
     defaultBindings ++ graphiteBindings ++ kenshooBindings
   }
+}
 
-  private def kenshooMetricsEnabled(rootConfiguration: Configuration) =
-    rootConfiguration.getOptional[Boolean]("metrics.enabled").getOrElse(false)
+/** An alternative to com.kenshoo.play.metrics.DisabledMetrics, this implementation
+  * will not generate `MetricsDisabledException` if the injected metrics is used
+  * (we do not expect clients to check metrics.enabled before using the injected metrics)
+  */
+@Singleton
+class DisabledMetrics extends Metrics {
+  override def defaultRegistry: MetricRegistry = new MetricRegistry {
+    override def register[T <: Metric](name: String, metric: T): T = metric
+    override def registerAll(metrics: MetricSet): Unit = ()
+  }
 
-  private def graphitePublisherEnabled(graphiteConfiguration: Configuration) =
-    graphiteConfiguration.getOptional[Boolean]("enabled").getOrElse(false)
-
-  private def extractGraphiteConfiguration(configuration: Configuration): Configuration =
-    configuration
-      .getOptional[Configuration]("microservice.metrics.graphite")
-      .getOrElse(Configuration())
+  override def toJson: String = "null"
 }

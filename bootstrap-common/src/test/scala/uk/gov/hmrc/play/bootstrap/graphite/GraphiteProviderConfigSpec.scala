@@ -17,45 +17,28 @@
 package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.typesafe.config.ConfigException
-import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers
 
-class GraphiteProviderSpec extends AnyWordSpec with Matchers {
+class GraphiteProviderConfigSpec extends AnyWordSpec with Matchers {
 
-  "GraphiteProviderConfigSpec.fromConfig" must {
-
-    val configuration: Map[String, String] = Map(
-      "host" -> "localhost",
-      "port" -> "9999"
+  "GraphiteProviderConfig.fromConfig" should {
+    val configuration = Map(
+      "microservice.metrics.graphite.host" -> "localhost",
+      "microservice.metrics.graphite.port" -> "9999"
     )
 
     "return a valid `GraphiteProviderConfig`" in {
-      val app = new GuiceApplicationBuilder()
-        .configure(configuration)
-        .build()
-
-      Helpers.running(app) {
-        val config: GraphiteProviderConfig =
-          GraphiteProviderConfig.fromConfig(app.injector.instanceOf[Configuration])
-
-        config.host mustEqual "localhost"
-        config.port mustEqual 9999
-      }
+      GraphiteProviderConfig.fromRootConfig(Configuration.from(configuration)) shouldBe GraphiteProviderConfig(
+        host = "localhost",
+        port = 9999
+      )
     }
     configuration.keys.foreach { key =>
       s"throw a configuration exception when config key: $key, is missing" in {
-
-        val app = new GuiceApplicationBuilder()
-          .configure(configuration - key)
-          .build()
-
-        Helpers.running(app) {
-          intercept[ConfigException.Missing] {
-            GraphiteProviderConfig.fromConfig(app.injector.instanceOf[Configuration])
-          }
+        intercept[ConfigException.Missing] {
+          GraphiteProviderConfig.fromRootConfig(Configuration.from(configuration - key))
         }
       }
     }
