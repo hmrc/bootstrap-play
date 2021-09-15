@@ -19,8 +19,7 @@ package uk.gov.hmrc.play.bootstrap
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment, Mode}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
-import uk.gov.hmrc.play.audit.http.config.AuditingConfig
-import uk.gov.hmrc.play.bootstrap.config.{AppName, AuditingConfigProvider, ControllerConfigs}
+import uk.gov.hmrc.play.bootstrap.config.{AppName, ControllerConfigs}
 import uk.gov.hmrc.play.bootstrap.filters.{CacheControlConfig, DefaultLoggingFilter, LoggingFilter}
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpAuditing
 
@@ -31,7 +30,6 @@ abstract class BootstrapModule extends Module {
     bind[ControllerConfigs].toInstance(ControllerConfigs.fromConfig(configuration)),
     bind[LoggingFilter].to[DefaultLoggingFilter],
     bind[String].qualifiedWith("appName").toInstance(AppName.fromConfiguration(configuration)),
-    bind[AuditingConfig].toProvider[AuditingConfigProvider],
     bind[HttpAuditing].to[DefaultHttpAuditing],
     bind[Mode].toInstance(environment.mode)
   )

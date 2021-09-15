@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.play
 
+import javax.inject.{Inject, Named, Provider, Singleton}
+import uk.gov.hmrc.play.audit.http.config.AuditingConfig
+
 import scala.concurrent.{ExecutionContext, Future}
 
 package bootstrap {
@@ -35,4 +38,54 @@ package bootstrap {
         AbsoluteWithHostnameFromAllowlist.apply(allowedHostsFn)
     }
   }
+
+  @deprecated("Use uk.gov.hmrc.play.audit.AuditModule instead", "5.14.0")
+  class AuditModule extends uk.gov.hmrc.play.audit.AuditModule
+
+  package audit {
+    @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.14.0")
+    @Singleton
+    class DefaultAuditChannel @Inject()(
+      auditingConfig   : AuditingConfig,
+      materializer     : akka.stream.Materializer,
+      lifecycle        : play.api.inject.ApplicationLifecycle,
+      datastreamMetrics: uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
+    ) extends uk.gov.hmrc.play.audit.DefaultAuditChannel(
+      auditingConfig,
+      materializer,
+      lifecycle,
+      datastreamMetrics
+    )
+
+    @deprecated("Use uk.gov.hmrc.play.audit.DefaultAuditChannel instead", "5.14.0")
+    class DefaultAuditConnector @Inject()(
+      auditingConfig   : AuditingConfig,
+      auditChannel     : uk.gov.hmrc.play.audit.http.connector.AuditChannel,
+      lifecycle        : play.api.inject.ApplicationLifecycle,
+      datastreamMetrics: uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
+    ) extends uk.gov.hmrc.play.audit.DefaultAuditConnector(
+      auditingConfig,
+      auditChannel,
+      lifecycle,
+      datastreamMetrics
+    )
+  }
+
+  package config {
+    @deprecated("Use uk.gov.hmrc.play.audit.http.config.AuditingConfig.fromConfig instead", "5.14.0")
+    class AuditingConfigProvider @Inject()(
+      configuration: play.api.Configuration,
+      @Named("appName") appName: String
+    ) extends Provider[AuditingConfig] {
+      override def get(): AuditingConfig =
+        AuditingConfig.fromConfig(configuration)
+    }
+  }
+}
+
+package object bootstrap {
+  val deprecatedClasses: Map[String, String] =
+    Map(
+      classOf[uk.gov.hmrc.play.bootstrap.AuditModule].getName -> classOf[uk.gov.hmrc.play.audit.AuditModule].getName,
+    )
 }

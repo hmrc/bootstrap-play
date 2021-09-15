@@ -37,6 +37,12 @@ class FrontendModule extends BootstrapModule {
       bind[DeviceIdFilter].to[DefaultDeviceIdFilter],
       bind[SessionTimeoutFilterConfig].toInstance(SessionTimeoutFilterConfig.fromConfig(configuration)),
       bind[CryptoValidation].toSelf.eagerly,
-      bind[DeprecatedConfigChecker].toInstance(new DeprecatedConfigChecker(configuration, deprecatedClasses)).eagerly
+      bind[DeprecatedConfigChecker]
+        .toInstance(
+          new DeprecatedConfigChecker(
+            configuration,
+            deprecatedClasses ++ uk.gov.hmrc.play.bootstrap.deprecatedClasses
+          )
+        ).eagerly
     )
 }

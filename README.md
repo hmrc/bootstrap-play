@@ -44,9 +44,9 @@ play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
 # Primary entry point for all HTTP requests on Play applications
 play.http.requestHandler = "uk.gov.hmrc.play.bootstrap.http.RequestHandler"
 
-# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.bootstrap.AuditModule` or create your own.
+# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.audit.AuditModule` or create your own.
 # An audit connector must be provided.
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 
 # Provides an implementation of MetricsFilter. Use `uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule` or create your own.
 # A metric filter must be provided
@@ -77,9 +77,9 @@ play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
 # Primary entry point for all HTTP requests on Play applications
 play.http.requestHandler = "uk.gov.hmrc.play.bootstrap.http.RequestHandler"
 
-# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.bootstrap.AuditModule` or create your own.
+# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.audit.AuditModule` or create your own.
 # An audit connector must be provided.
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 
 # Provides an implementation of MetricsFilter. Use `uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule` or create your own.
 # A metric filter must be provided
@@ -99,7 +99,7 @@ For more http-verbs examples see https://github.com/hmrc/http-verbs-example
 Make sure you have the following modules in your application.conf file:
 
 ```properties
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 ```
 
@@ -121,7 +121,7 @@ The library supports user authorisation on microservices
 Make sure you have the following modules in your application.conf file:
 
 ```
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuthModule"
 ```
