@@ -64,6 +64,7 @@ object LibDependencies {
       "com.typesafe.play"       %% "play-test"                    % playVersion,
       "uk.gov.hmrc"             %% s"http-verbs-test-$playSuffix" % httpVerbsVersion,
       "org.scalatestplus.play"  %% "scalatestplus-play"           % scalaTestPlusPlayVerson(playVersion),
+      testreport(playVersion),
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
       "org.scalatest"           %% "scalatest"                    % "3.2.3"       % Test,
@@ -90,4 +91,10 @@ object LibDependencies {
       if      (playVersion == play26Version) "3.1.3"
       else if (playVersion == play27Version) "4.0.3"
       else                                   "5.1.0"
+
+    // provides the optional dependency of scalatest as pulled in by scalatestplus-play
+    private def testreport(playVersion: String): ModuleID =
+      if      (playVersion == play26Version) "org.pegdown"          % "pegdown"      %  "1.4.2"
+      else if (playVersion == play27Version) "org.pegdown"          % "pegdown"      %  "1.4.2"
+      else                                   "com.vladsch.flexmark" % "flexmark-all" % "0.35.10"
 }
