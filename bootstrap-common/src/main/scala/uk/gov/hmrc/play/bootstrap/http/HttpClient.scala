@@ -20,7 +20,8 @@ import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import javax.inject.{Inject, Named, Singleton}
 import play.api.Configuration
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{DefaultWSProxyServer, WSClient, WSProxyServer}
+import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -34,12 +35,46 @@ class DefaultHttpClient @Inject()(
   val httpAuditing: HttpAuditing,
   override val wsClient: WSClient,
   override protected val actorSystem: ActorSystem
-) extends uk.gov.hmrc.http.HttpClient
+) extends HttpClient
      with WSHttp {
 
   override lazy val configuration: Config = config.underlying
 
   override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
+
+  override def withUserAgent(userAgent: String): DefaultHttpClient =
+    new DefaultHttpClient(
+      config = Configuration("appName" -> userAgent) ++ config,
+      httpAuditing,
+      wsClient,
+      actorSystem
+    )
+
+  override def withProxy(): DefaultHttpClient =
+    new DefaultHttpClient(
+      config,
+      httpAuditing,
+      wsClient,
+      actorSystem
+    ) {
+      override val wsProxyServer: Option[WSProxyServer] = {
+        if (config.get[Boolean]("proxy.proxyRequiredForThisEnvironment")) { // keep this check to avoid needing the following configuration for development? rename to `proxy.enabled`?
+          import scala.collection.JavaConverters.iterableAsScalaIterableConverter
+          Some(
+            DefaultWSProxyServer(
+              protocol  = Some(config.get[String]("proxy.protocol")),
+              host      = config.get[String]("proxy.host"),
+              port      = config.get[Int]("proxy.port"),
+              principal = config.getOptional[String]("proxy.username"),
+              password  = config.getOptional[String]("proxy.password"),
+              // following exists to be development friendly (necessary with `  proxy.proxyRequiredForThisEnvironment`?)
+              nonProxyHosts = Some(Seq("localhost"))
+              //nonProxyHosts = Some(configuration.underlying.getStringList("proxy.nonProxyHosts").asScala.toSeq)
+            )
+          )
+        } else None
+      }
+    }
 }
 
 @Singleton
