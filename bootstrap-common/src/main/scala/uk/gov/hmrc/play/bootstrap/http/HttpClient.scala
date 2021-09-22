@@ -17,27 +17,60 @@
 package uk.gov.hmrc.play.bootstrap.http
 
 import akka.actor.ActorSystem
-import javax.inject.{Inject, Named, Singleton}
+import com.typesafe.config.Config
+import javax.inject.{Inject, Named, Provider, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.http.HttpClientImpl
+import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.http.HttpClientImpl
+import uk.gov.hmrc.play.http.ws.WSHttp
+import play.api.libs.ws.WSRequest
 
 import scala.util.matching.Regex
 
+// This implementation is not final, to not break clients. It deliberately does not override
+// `withTransformRequest` since it would return an instance loosing any overrides.
+// `uk.gov.hmrc.http.HttpClientImpl` should be used instead.
+@deprecated("Use HttpClientProvider instead, which will provide an instance of `uk.gov.hmrc.http.HttpClientImpl", "13.9.0")
 @Singleton
 class DefaultHttpClient @Inject()(
   config      : Configuration,
   httpAuditing: HttpAuditing,
+  override val wsClient    : WSClient,
+  override val actorSystem : ActorSystem
+) extends HttpClient with WSHttp {
+
+  override val configuration: Config =
+    config.underlying
+
+  override val hooks: Seq[HttpHook] =
+    Seq(httpAuditing.AuditingHook)
+}
+
+@Singleton
+class HttpClientProvider @Inject()(
+  config      : Configuration,
+  httpAuditing: HttpAuditing,
   wsClient    : WSClient,
   actorSystem : ActorSystem
-) extends HttpClientImpl(
-  configuration = config.underlying,
-  hooks         = Seq(httpAuditing.AuditingHook),
-  wsClient,
-  actorSystem
-)
+) extends Provider[HttpClient] {
+
+  private lazy val instance = new HttpClientImpl(
+    configuration = config.underlying,
+    hooks         = Seq(httpAuditing.AuditingHook),
+    wsClient,
+    actorSystem,
+    transformRequest = identity
+  )
+
+  override def get(): HttpClient =
+    instance
+}
+
+
 
 @Singleton
 class DefaultHttpAuditing @Inject() (

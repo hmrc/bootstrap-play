@@ -20,13 +20,13 @@ import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
+import uk.gov.hmrc.play.bootstrap.http.HttpClientProvider
 
 class HttpClientModule extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
-    bind[HttpClient].to[DefaultHttpClient],
+    bind[HttpClient].toProvider[HttpClientProvider],
     // binding additional interfaces so that libraries that depend on http-verbs can be easily injected
-    bind[CoreGet].to[DefaultHttpClient]
+    bind[CoreGet].toProvider[HttpClientProvider]
   )
 }
