@@ -17,70 +17,32 @@
 package uk.gov.hmrc.play.bootstrap.http
 
 import akka.actor.ActorSystem
-import com.typesafe.config.Config
 import javax.inject.{Inject, Named, Singleton}
 import play.api.Configuration
-import play.api.libs.ws.{DefaultWSProxyServer, WSClient, WSProxyServer}
-import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.hooks.HttpHook
+import play.api.libs.ws.WSClient
+import uk.gov.hmrc.http.HttpClientImpl
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.http.ws._
 
 import scala.util.matching.Regex
 
 @Singleton
 class DefaultHttpClient @Inject()(
-  config: Configuration,
-  val httpAuditing: HttpAuditing,
-  override val wsClient: WSClient,
-  override protected val actorSystem: ActorSystem
-) extends HttpClient
-     with WSHttp {
-
-  override lazy val configuration: Config = config.underlying
-
-  override val hooks: Seq[HttpHook] = Seq(httpAuditing.AuditingHook)
-
-  override def withUserAgent(userAgent: String): DefaultHttpClient =
-    new DefaultHttpClient(
-      config = Configuration("appName" -> userAgent) ++ config,
-      httpAuditing,
-      wsClient,
-      actorSystem
-    )
-
-  override def withProxy(): DefaultHttpClient =
-    new DefaultHttpClient(
-      config,
-      httpAuditing,
-      wsClient,
-      actorSystem
-    ) {
-      override val wsProxyServer: Option[WSProxyServer] = {
-        if (config.get[Boolean]("proxy.proxyRequiredForThisEnvironment")) { // keep this check to avoid needing the following configuration for development? rename to `proxy.enabled`?
-          import scala.collection.JavaConverters.iterableAsScalaIterableConverter
-          Some(
-            DefaultWSProxyServer(
-              protocol  = Some(config.get[String]("proxy.protocol")),
-              host      = config.get[String]("proxy.host"),
-              port      = config.get[Int]("proxy.port"),
-              principal = config.getOptional[String]("proxy.username"),
-              password  = config.getOptional[String]("proxy.password"),
-              // following exists to be development friendly (necessary with `  proxy.proxyRequiredForThisEnvironment`?)
-              nonProxyHosts = Some(Seq("localhost"))
-              //nonProxyHosts = Some(configuration.underlying.getStringList("proxy.nonProxyHosts").asScala.toSeq)
-            )
-          )
-        } else None
-      }
-    }
-}
+  config      : Configuration,
+  httpAuditing: HttpAuditing,
+  wsClient    : WSClient,
+  actorSystem : ActorSystem
+) extends HttpClientImpl(
+  configuration = config.underlying,
+  hooks         = Seq(httpAuditing.AuditingHook),
+  wsClient,
+  actorSystem
+)
 
 @Singleton
 class DefaultHttpAuditing @Inject() (
-  val auditConnector: AuditConnector,
-  @Named("appName") val appName: String,
+  override val auditConnector: AuditConnector,
+  @Named("appName") override val appName: String,
   config: Configuration
 ) extends HttpAuditing {
   override def auditDisabledForPattern: Regex =
