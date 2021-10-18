@@ -25,7 +25,7 @@ import ch.qos.logback.core.read.ListAppender
 import org.mockito.ArgumentMatchers.{any, eq => is}
 import org.mockito.Mockito._
 import org.scalatest.LoneElement
-import org.scalatest.concurrent.{Eventually, ScalaFutures}
+import org.scalatest.concurrent.{Eventually, ScalaFutures, IntegrationPatience}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
@@ -52,6 +52,7 @@ class JsonErrorHandlerSpec
   extends AnyWordSpec
      with Matchers
      with ScalaFutures
+     with IntegrationPatience
      with MockitoSugar
      with LoneElement
      with TableDrivenPropertyChecks
@@ -76,7 +77,12 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, notFoundException)
 
       status(result)        shouldEqual NOT_FOUND
-      contentAsJson(result) shouldEqual Json.obj("statusCode" -> NOT_FOUND, "message" -> "test")
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> NOT_FOUND,
+        "code"       -> ErrorCodes.MATCHING_RESOURCE_NOT_FOUND,
+        "message"    -> "test"
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -96,8 +102,12 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, authorisationException)
 
       status(result) shouldEqual UNAUTHORIZED
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> UNAUTHORIZED, "message" -> authorisationException.getMessage)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> UNAUTHORIZED,
+        "code"       -> ErrorCodes.UNAUTHORIZED,
+        "message"    -> authorisationException.getMessage
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -117,8 +127,12 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> INTERNAL_SERVER_ERROR,
+        "code"       -> ErrorCodes.INTERNAL_SERVER_ERROR,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -138,14 +152,18 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> INTERNAL_SERVER_ERROR,
+        "code"       -> ErrorCodes.INTERNAL_SERVER_ERROR,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "convert a HttpException to responseCode from the exception and audit the error" in new Setup {
-      val responseCode     = randomErrorStatusCode()
+    "convert a server error HttpException to responseCode from the exception and audit the error" in new Setup {
+      val responseCode     = randomServerErrorCode()
       val exception        = new HttpException("error message", responseCode)
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
@@ -160,15 +178,43 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual responseCode
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> responseCode, "message" -> exception.getMessage)
+
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe responseCode
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "convert an UpstreamErrorResponse to reportAs from the exception and audit the error" in new Setup {
-      val reportAs         = randomErrorStatusCode()
-      val exception        = UpstreamErrorResponse("error message", randomErrorStatusCode(), reportAs)
+
+    "convert a client error HttpException to responseCode from the exception and audit the error" in new Setup {
+      val responseCode     = randomClientErrorCode()
+      val exception        = new HttpException("error message", responseCode)
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerInternalError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result) shouldEqual responseCode
+
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe responseCode
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+    }
+
+
+    "convert a server error UpstreamErrorResponse to reportAs from the exception and audit the error" in new Setup {
+      val reportAs         = randomServerErrorCode()
+      val exception        = UpstreamErrorResponse("error message", randomClientErrorCode(), reportAs)
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
@@ -182,11 +228,37 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
       status(result) shouldEqual reportAs
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> reportAs, "message" -> exception.getMessage)
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe reportAs
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
+
+    "convert a client error UpstreamErrorResponse to reportAs from the exception and audit the error" in new Setup {
+      val reportAs         = randomClientErrorCode()
+      val exception        = UpstreamErrorResponse("error message", randomServerErrorCode(), reportAs)
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(
+        httpAuditEvent.dataEvent(
+          eventType       = is("ServerInternalError"),
+          transactionName = is("Unexpected error"),
+          request         = is(requestHeader),
+          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+        )(any[HeaderCarrier]))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result) shouldEqual reportAs
+
+      val jsonResult = contentAsJson(result)
+      (jsonResult \ "statusCode").as[Int] shouldBe reportAs
+      (jsonResult \ "message").as[String] shouldBe exception.getMessage
+
+      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+    }
+
 
     "log a warning for upstream code in the warning list" when {
       class WarningSetup(upstreamWarnStatuses: Seq[Int]) extends Setup {
@@ -267,7 +339,12 @@ class JsonErrorHandlerSpec
         val result = jsonErrorHandler.onClientError(requestHeader, BAD_REQUEST, errorMessage)
 
         status(result) shouldEqual BAD_REQUEST
-        contentAsJson(result) shouldEqual Json.obj("statusCode" -> BAD_REQUEST, "message" -> expectedResponseMessage)
+
+        contentAsJson(result) shouldEqual Json.obj(
+          "statusCode" -> BAD_REQUEST,
+          "code"       -> ErrorCodes.BAD_REQUEST,
+          "message"    -> expectedResponseMessage
+        )
 
         verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
@@ -287,8 +364,13 @@ class JsonErrorHandlerSpec
       val result = jsonErrorHandler.onClientError(requestHeader, NOT_FOUND, "some message we want to override")
 
       status(result) shouldEqual NOT_FOUND
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> NOT_FOUND, "message" -> "URI not found", "requested" -> uri)
+
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> NOT_FOUND,
+        "code"       -> ErrorCodes.MATCHING_RESOURCE_NOT_FOUND,
+        "message"    -> "URI not found",
+        "requested"  -> uri
+      )
 
       verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -309,8 +391,11 @@ class JsonErrorHandlerSpec
 
         val result = jsonErrorHandler.onClientError(requestHeader, statusCode, errorMessage)
 
-        status(result)        shouldEqual statusCode
-        contentAsJson(result) shouldEqual Json.obj("statusCode" -> statusCode, "message" -> errorMessage)
+        status(result) shouldEqual statusCode
+
+        val jsonResult = contentAsJson(result)
+        (jsonResult \ "statusCode").as[Int] shouldBe statusCode
+        (jsonResult \ "message").as[String] shouldBe errorMessage
 
         verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
@@ -393,7 +478,9 @@ class JsonErrorHandlerSpec
       )
     lazy val jsonErrorHandler = new JsonErrorHandler(auditConnector, httpAuditEvent, configuration)
 
-    def randomErrorStatusCode(): Int =
-      400 + Random.nextInt(200)
+    def randomClientErrorCode(): Int =
+      400 + Random.nextInt(100)
+    def randomServerErrorCode(): Int =
+      500 + Random.nextInt(100)
   }
 }

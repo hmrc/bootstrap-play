@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.http
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.http.Status
+import play.api.libs.json.{Json, OFormat, OWrites, Reads}
 
 case class ErrorResponse(
   statusCode: Int,
+  code: String,
   message: String,
   xStatusCode: Option[String] = None,
   requested: Option[String]   = None

@@ -115,6 +115,7 @@ class BackwardCompatibilitySpec
     "preserve uk.gov.hmrc.play.bootstrap.http.ErrorResponse" in {
       new uk.gov.hmrc.play.bootstrap.http.ErrorResponse(
         statusCode  = 0,
+        code        = "",
         message     = "",
         xStatusCode = mock[Option[String]],
         requested   = mock[Option[String]]
