@@ -21,12 +21,12 @@ import play.api.mvc.EssentialFilter
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.util.ByteString
-import play.api.Logger
 import play.api.http.HttpEntity
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import play.api.routing.Router.Attrs
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.play.BodyCaptor
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
@@ -38,8 +38,6 @@ import play.api.http.HttpChunk
 trait AuditFilter extends EssentialFilter
 
 trait CommonAuditFilter extends AuditFilter {
-  private val logger = Logger(getClass)
-
   protected implicit def ec: ExecutionContext
 
   def config: Configuration
@@ -59,7 +57,7 @@ trait CommonAuditFilter extends AuditFilter {
 
   implicit def mat: Materializer
 
-  val maxBodySize = 32665
+  val maxBodySize = config.get[Int]("bootstrap.auditing.maxBodyLength")
 
   val requestReceived = "RequestReceived"
 
@@ -69,9 +67,9 @@ trait CommonAuditFilter extends AuditFilter {
     override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
 
-      val loggingContext = s"${requestHeader.method} ${requestHeader.uri}"
+      val loggingContext = s"incoming ${requestHeader.method} ${requestHeader.uri}"
 
-      def performAudit(requestBody: String, tryResult: Try[Result])(responseBody: String): Unit = {
+      def performAudit(requestBody: String, tryResult: Try[Result], responseBody: String): Unit = {
         val detail = tryResult match {
           case Success(result) =>
             val responseHeader = result.header
@@ -109,24 +107,27 @@ trait CommonAuditFilter extends AuditFilter {
 
   protected def onCompleteWithInput(
     loggingContext: String,
-    next: Accumulator[ByteString, Result],
-    handler: (String, Try[Result]) => String => Unit
+    next          : Accumulator[ByteString, Result],
+    handler       : (String, Try[Result], String) => Unit
   )(implicit ec: ExecutionContext
   ): Accumulator[ByteString, Result] = {
-    val requestBodyPromise = Promise[String]()
-    val requestBodyFuture  = requestBodyPromise.future
+    val requestBodyPromise  = Promise[String]()
 
-    var requestBody: String = ""
-    def callback(body: ByteString): Unit = {
-      requestBody = body.decodeString("UTF-8")
-      requestBodyPromise.success(requestBody)
-    }
+    def callHandler(result: Try[Result], reponseBodyFuture: Future[String]): Unit =
+      for {
+        auditRequestBody  <- requestBodyPromise.future
+        auditResponseBody <- reponseBodyFuture
+      } yield handler(auditRequestBody, result, auditResponseBody)
 
     //grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody)
     val wrappedAcc: Accumulator[ByteString, Result] =
       Accumulator(
         Flow[ByteString]
-          .via(new RequestBodyCaptor(loggingContext, maxBodySize, callback))
+          .via(BodyCaptor.flow(
+            loggingContext = s"$loggingContext request",
+            maxBodySize,
+            withCapturedBody = body => requestBodyPromise.success(body.decodeString("UTF-8"))
+          ))
           .splitWhen(_ => false)
           .prefixAndTail(0)
           .map(_._2)
@@ -135,44 +136,44 @@ trait CommonAuditFilter extends AuditFilter {
       ).mapFuture(next.run)
 
     wrappedAcc
-      .mapFuture { result =>
-        lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
-          Sink.fromGraph(new ResponseBodyCaptor(
-            loggingContext,
-            maxBodySize,
-            performAudit = handler(requestBody, Success(result))
-          ))
+      .map { result =>
+        val responseBodyPromise = Promise[String]()
+        val loggingContext = s"incoming $loggingContext response"
 
-        requestBodyFuture.flatMap { res =>
-          val auditedBody = result.body match {
-            case str: HttpEntity.Streamed =>
-              str.copy(data = str.data.alsoTo(responseBodyCaptor))
-            case str: HttpEntity.Chunked =>
-              val chunkedResponseBodyCaptor: Sink[HttpChunk, akka.NotUsed] =
-                responseBodyCaptor.contramap {
-                  case HttpChunk.Chunk(data)  => data
-                  case HttpChunk.LastChunk(_) => ByteString()
-                }
-              str.copy(chunks = str.chunks.alsoTo(chunkedResponseBodyCaptor))
-            case h: HttpEntity =>
-              h.consumeData.map { rb =>
-                val auditString =
-                  if (rb.size > maxBodySize) {
-                    logger.warn(
-                      s"txm play auditing: $loggingContext response body ${rb.size} exceeds maxLength $maxBodySize - do you need to be auditing this payload?")
-                    rb.take(maxBodySize).decodeString("UTF-8")
-                  } else
-                    rb.decodeString("UTF-8")
-                handler(res, Success(result))(auditString)
-              }
-              h
+        lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
+          BodyCaptor.sink(
+            loggingContext   = s"$loggingContext response",
+            maxBodySize,
+            withCapturedBody = body => responseBodyPromise.success(body.decodeString("UTF-8"))
+          ).recoverWith {
+            case e => responseBodyPromise.failure(e)
           }
-          Future(result.copy(body = auditedBody))
+
+        val auditedBody = result.body match {
+          case str: HttpEntity.Streamed =>
+            str.copy(data = str.data.alsoTo(responseBodyCaptor))
+          case str: HttpEntity.Chunked =>
+            val chunkedResponseBodyCaptor: Sink[HttpChunk, akka.NotUsed] =
+              responseBodyCaptor.contramap {
+                case HttpChunk.Chunk(data)  => data
+                case HttpChunk.LastChunk(_) => ByteString()
+              }
+            str.copy(chunks = str.chunks.alsoTo(chunkedResponseBodyCaptor))
+          case h: HttpEntity =>
+            h.consumeData.map { rb =>
+              val auditResponseString = BodyCaptor.bodyUpto(rb, maxBodySize, s"$loggingContext response").decodeString("UTF-8")
+              responseBodyPromise.success(auditResponseString)
+            }
+            h
         }
+
+        callHandler(Success(result), responseBodyPromise.future)
+
+        result.copy(body = auditedBody)
       }
       .recover[Result] {
         case ex: Throwable =>
-          handler(requestBody, Failure(ex))("")
+          callHandler(Failure(ex), Future.successful(""))
           throw ex
       }
   }

@@ -472,13 +472,9 @@ class FrontendAuditFilterServerSpec
     super.afterAll()
   }
 
-  val random                  = new scala.util.Random
-  val largeContent: String    = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize * 3)
-  val standardContent: String = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize - 1)
-
-  // Generate a random string of length n from the given alphabet
-  def randomString(alphabet: String)(n: Int): String =
-    Stream.continually(random.nextInt(alphabet.length)).map(alphabet).take(n).mkString
+  val random          = new scala.util.Random
+  val largeContent    = random.alphanumeric.take(filter.maxBodySize * 3).mkString
+  val standardContent = random.alphanumeric.take(filter.maxBodySize - 1).mkString
 
   val Action = stubControllerComponents().actionBuilder
 
@@ -588,7 +584,10 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   private implicit val system               = ActorSystem("FrontendAuditFilterInstance")
   protected implicit val mat: Materializer  = ActorMaterializer()
   private implicit val ec: ExecutionContext = system.dispatcher
-  val config                                = Configuration("auditing.enabled" -> true)
+  val config                                = Configuration(
+                                               "auditing.enabled"                 -> true,
+                                               "bootstrap.auditing.maxBodyLength" -> 32665
+                                               )
   val auditConnector                        = mock[AuditConnector]
   val controllerConfigs                     = mock[ControllerConfigs]
   val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
