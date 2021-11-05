@@ -21,6 +21,7 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import com.typesafe.config.ConfigFactory
 import org.mockito.captor.ArgCaptor
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TestData}
@@ -470,13 +471,9 @@ class FrontendAuditFilterServerSpec
     super.afterAll()
   }
 
-  val random                  = new scala.util.Random
-  val largeContent: String    = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize * 3)
-  val standardContent: String = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize - 1)
-
-  // Generate a random string of length n from the given alphabet
-  def randomString(alphabet: String)(n: Int): String =
-    Stream.continually(random.nextInt(alphabet.length)).map(alphabet).take(n).mkString
+  val random          = new scala.util.Random
+  val largeContent    = random.alphanumeric.take(filter.maxBodySize * 3).mkString
+  val standardContent = random.alphanumeric.take(filter.maxBodySize - 1).mkString
 
   val Action = stubControllerComponents().actionBuilder
 
@@ -584,12 +581,13 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   private val ms = new MockitoSugar {}
   import ms._
 
-  protected implicit val system: ActorSystem = ActorSystem("FrontendAuditFilterInstance")
-  private implicit val ec: ExecutionContext  = system.dispatcher
-  val config                                 = Configuration("auditing.enabled" -> true).withFallback(Configuration.reference)
-  val auditConnector                         = mock[AuditConnector]
-  val controllerConfigs                      = mock[ControllerConfigs]
-  val httpAuditEvent                         = new HttpAuditEvent { override val appName = "app" }
+  protected implicit val system             = ActorSystem("FrontendAuditFilterInstance")
+  private implicit val ec: ExecutionContext = system.dispatcher
+  val config                                = Configuration("auditing.enabled" -> true)
+                                                .withFallback(Configuration(ConfigFactory.load()))
+  val auditConnector                        = mock[AuditConnector]
+  val controllerConfigs                     = mock[ControllerConfigs]
+  val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
 
   when(controllerConfigs.controllerNeedsAuditing(any[String]))
     .thenReturn(false)

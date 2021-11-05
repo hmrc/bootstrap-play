@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import com.typesafe.config.ConfigFactory
 import org.mockito.captor.ArgCaptor
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterAll
@@ -80,6 +81,7 @@ class BackendAuditFilterSpec
     "audit a request and response with header information" in {
       val mockAuditConnector = mock[AuditConnector]
       val config             = Configuration("auditing.enabled" -> true)
+                                 .withFallback(Configuration(ConfigFactory.load()))
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
       when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
@@ -108,6 +110,7 @@ class BackendAuditFilterSpec
     "skip auditing when disabled" in {
       val mockAuditConnector = mock[AuditConnector]
       val config             = Configuration("auditing.enabled" -> false)
+                                 .withFallback(Configuration(ConfigFactory.load()))
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
       val result = await(auditFilter.apply(nextAction)(request).run())
@@ -122,6 +125,7 @@ class BackendAuditFilterSpec
     "audit a response even when an action further down the chain throws an exception" in {
       val mockAuditConnector = mock[AuditConnector]
       val config             = Configuration("auditing.enabled" -> true)
+                                 .withFallback(Configuration(ConfigFactory.load()))
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
       when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
