@@ -4,9 +4,9 @@ object LibDependencies {
 
   private val play26Version  = "2.6.25"
   private val play27Version  = "2.7.9"
-  private val play28Version  = "2.8.7"
+  private val play28Version  = "2.8.8"
 
-  private val httpVerbsVersion = "13.10.0"
+  private val httpVerbsVersion = "13.9.0-SNAPSHOT"
 
   val commonPlay26: Seq[ModuleID] = common(play26Version, "play-26")
   val commonPlay27: Seq[ModuleID] = common(play27Version, "play-27")
@@ -27,7 +27,7 @@ object LibDependencies {
   private def common(playVersion: String, playSuffix: String) =
     Seq(
       "ch.qos.logback"          %  "logback-core"               % "1.2.3",
-      "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2",
+      "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2", // this is compatible with play 2.8
       "com.typesafe.play"       %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
       "uk.gov.hmrc"             %% "auth-client"                % s"5.6.0-$playSuffix",
@@ -55,7 +55,7 @@ object LibDependencies {
       Seq(  "uk.gov.hmrc"       %% "play-allowlist-filter"      % s"1.0.0-$playSuffix") ++
       // test dependencies
       (if (playVersion == play28Version)
-         Seq("com.typesafe.akka" %% "akka-stream-testkit"       % "2.6.10"       % Test)
+         Seq("com.typesafe.akka" %% "akka-stream-testkit"       % "2.6.14"       % Test)
        else Nil
       )
 
@@ -72,8 +72,8 @@ object LibDependencies {
     ) ++
       (if (playVersion == play28Version)
         Seq(
-          "com.typesafe.akka"   %% "akka-stream-testkit"          % "2.6.10"      % Test,
-          "com.typesafe.play"   %% "play-akka-http-server"        % "2.8.7"       % Test
+          "com.typesafe.akka"   %% "akka-stream-testkit"          % "2.6.14"      % Test,
+          "com.typesafe.play"   %% "play-akka-http-server"        % playVersion   % Test
         )
        else Nil
       )
@@ -94,7 +94,7 @@ object LibDependencies {
 
     // provides the optional dependency of scalatest as pulled in by scalatestplus-play
     private def testreport(playVersion: String): ModuleID =
-      if      (playVersion == play26Version) "org.pegdown"          % "pegdown"      %  "1.4.2"
-      else if (playVersion == play27Version) "org.pegdown"          % "pegdown"      %  "1.4.2"
+      if      (playVersion == play26Version) "org.pegdown"          % "pegdown"      % "1.4.2"
+      else if (playVersion == play27Version) "org.pegdown"          % "pegdown"      % "1.4.2"
       else                                   "com.vladsch.flexmark" % "flexmark-all" % "0.35.10"
 }

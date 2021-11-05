@@ -18,13 +18,14 @@ package uk.gov.hmrc.play.bootstrap.http
 
 import akka.actor.ActorSystem
 import com.typesafe.config.Config
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Named, Provider, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http.hooks.HttpHook
+import uk.gov.hmrc.http.play.{HttpClient2, HttpClient2Impl}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.http.ws._
+import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.util.matching.Regex
 
@@ -44,10 +45,30 @@ class DefaultHttpClient @Inject()(
 
 @Singleton
 class DefaultHttpAuditing @Inject() (
-  val auditConnector: AuditConnector,
-  @Named("appName") val appName: String,
+  override val auditConnector: AuditConnector,
+  @Named("appName") override val appName: String,
   config: Configuration
 ) extends HttpAuditing {
-  override def auditDisabledForPattern: Regex =
+  override val auditDisabledForPattern: Regex =
     config.get[String]("httpclient.audit.disabledFor").r
+}
+
+
+@Singleton
+class HttpClient2Provider @Inject()(
+  config      : Configuration,
+  httpAuditing: HttpAuditing,
+  wsClient    : WSClient,
+  actorSystem : ActorSystem
+) extends Provider[HttpClient2] {
+
+  private lazy val instance = new HttpClient2Impl(
+    wsClient,
+    actorSystem,
+    config = config,
+    hooks  = Seq(httpAuditing.AuditingHook)
+  )
+
+  override def get(): HttpClient2 =
+    instance
 }

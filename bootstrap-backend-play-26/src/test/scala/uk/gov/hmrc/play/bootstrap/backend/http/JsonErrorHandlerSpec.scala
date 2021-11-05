@@ -30,12 +30,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.{HttpErrorHandler, MimeTypes}
+import play.api.{Configuration, Logger, LoggerLike}
+import play.api.http.{HeaderNames => PlayHeaderNames, HttpErrorHandler, MimeTypes}
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import play.api.{Configuration, Logger, LoggerLike}
 import play.core.routing.RouteParams
 import uk.gov.hmrc.auth.core.AuthorisationException
 import uk.gov.hmrc.http._
@@ -371,11 +371,10 @@ class JsonErrorHandlerSpec
     }
 
     trait JsonSetup {
-      val fakeRequest = FakeRequest().withHeaders(play.api.http.HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      val fakeRequest = FakeRequest().withHeaders(PlayHeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       val parsers = PlayBodyParsers(eh = errorHandler)
       def errorResponse[A](parser: BodyParser[A], body: String): String = parser(fakeRequest).run(ByteString(body)).futureValue.left.get.body.dataStream.runReduce(_ ++ _).futureValue.utf8String
     }
-
   }
 
   private trait Setup {
