@@ -60,8 +60,7 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.frontend.FrontendModule"
 And in your SBT build add:
 
 ```scala
-libraryDependencies += "uk.gov.hmrc" %% "play-ui" % "x.x.x"
-libraryDependencies += "uk.gov.hmrc" %% "govuk-template" % "x.x.x"
+libraryDependencies += "uk.gov.hmrc" %% "play-frontend-hmrc" % "x.x.x"
 ```
 
 ## Configure as a backend microservice
