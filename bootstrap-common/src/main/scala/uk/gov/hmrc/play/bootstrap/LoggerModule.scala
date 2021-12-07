@@ -21,25 +21,25 @@ import org.slf4j.LoggerFactory
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 
-import scala.collection.JavaConverters._
-
 class LoggerModule extends Module {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
-    System.getProperties.asScala
-      .collect { case (k, v) if k.startsWith("logger.") => (k.stripPrefix("logger."), v) }
-      .foreach { case (reqLogger, reqLevel) =>
-        logger.info(s"Configuring logger: $reqLogger, level: $reqLevel")
-        val level = {
-          val level = Level.toLevel(reqLevel, null)
-          if (level == null) throw new IllegalArgumentException(s"Cannot set logger '$reqLogger'. '$reqLevel' is not a valid log level")
-          level
-        }
+    (for {
+       config    <- configuration.getOptional[Configuration]("logger").toSet[Configuration]
+       reqLogger <- config.keys
+       reqLevel  =  config.get[String](reqLogger)
+       level     =  { val level = Level.toLevel(reqLevel, null)
+                      if (level == null) throw new IllegalArgumentException(s"Cannot set logger '$reqLogger'. '$reqLevel' is not a valid log level")
+                      level
+                    }
+     } yield (reqLogger, level)
+    ).foreach { case (reqLogger, level) =>
+      logger.info(s"Configuring logger $reqLogger to level $level")
+      LoggerFactory.getLogger(reqLogger).asInstanceOf[Logger].setLevel(level)
+    }
 
-        LoggerFactory.getLogger(reqLogger).asInstanceOf[Logger].setLevel(level)
-      }
     Seq.empty
   }
 }
