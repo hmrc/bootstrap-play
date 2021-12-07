@@ -20,7 +20,7 @@ import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.play.HttpClient2
+import uk.gov.hmrc.http.client2.HttpClient2
 import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient2Provider}
 
 class HttpClientModule extends Module {

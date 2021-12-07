@@ -26,10 +26,10 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import play.api.routing.Router.Attrs
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.play.BodyCaptor
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.http.BodyCaptor
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -124,7 +124,7 @@ trait CommonAuditFilter extends AuditFilter {
       Accumulator(
         Flow[ByteString]
           .via(BodyCaptor.flow(
-            loggingContext = s"$loggingContext request",
+            loggingContext = s"incoming $loggingContext request",
             maxBodySize,
             withCapturedBody = body => requestBodyPromise.success(body.decodeString("UTF-8"))
           ))
@@ -138,16 +138,13 @@ trait CommonAuditFilter extends AuditFilter {
     wrappedAcc
       .map { result =>
         val responseBodyPromise = Promise[String]()
-        val loggingContext = s"incoming $loggingContext response"
 
         lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
           BodyCaptor.sink(
-            loggingContext   = s"$loggingContext response",
+            loggingContext   = s"incoming $loggingContext response",
             maxBodySize,
             withCapturedBody = body => responseBodyPromise.success(body.decodeString("UTF-8"))
-          ).recoverWith {
-            case e => responseBodyPromise.failure(e)
-          }
+          )
 
         val auditedBody = result.body match {
           case str: HttpEntity.Streamed =>
@@ -161,7 +158,7 @@ trait CommonAuditFilter extends AuditFilter {
             str.copy(chunks = str.chunks.alsoTo(chunkedResponseBodyCaptor))
           case h: HttpEntity =>
             h.consumeData.map { rb =>
-              val auditResponseString = BodyCaptor.bodyUpto(rb, maxBodySize, s"$loggingContext response").decodeString("UTF-8")
+              val auditResponseString = BodyCaptor.bodyUpto(rb, maxBodySize, s"incoming $loggingContext response").decodeString("UTF-8")
               responseBodyPromise.success(auditResponseString)
             }
             h

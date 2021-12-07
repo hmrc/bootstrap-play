@@ -22,7 +22,7 @@ import javax.inject.{Inject, Named, Provider, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.WSClient
 import uk.gov.hmrc.http.hooks.HttpHook
-import uk.gov.hmrc.http.play.{HttpClient2, HttpClient2Impl}
+import uk.gov.hmrc.http.client2.{HttpClient2, HttpClient2Impl}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.ws.WSHttp
