@@ -28,16 +28,18 @@ class LoggerModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     (for {
        config    <- configuration.getOptional[Configuration]("logger").toSet[Configuration]
-       reqLogger <- config.keys
-       reqLevel  =  config.get[String](reqLogger)
-       level     =  { val level = Level.toLevel(reqLevel, null)
-                      if (level == null) throw new IllegalArgumentException(s"Cannot set logger '$reqLogger'. '$reqLevel' is not a valid log level")
-                      level
-                    }
-     } yield (reqLogger, level)
-    ).foreach { case (reqLogger, level) =>
-      logger.info(s"Configuring logger $reqLogger to level $level")
-      LoggerFactory.getLogger(reqLogger).asInstanceOf[Logger].setLevel(level)
+       (k, v)    <- config.entrySet.toMap
+                      .filterKeys(_ != "resource") // logger.resource configures logback location, not a level
+                      .mapValues(_.unwrapped)
+                      .map {
+                        case (k, v: String) => k -> Option(Level.toLevel(v, null))
+                        case (k, _        ) => k -> None
+                      }
+     } yield (k, v)
+    ).foreach {
+      case (reqLogger, Some(level)) => logger.info(s"Configuring logger $reqLogger to level $level")
+                                       LoggerFactory.getLogger(reqLogger).asInstanceOf[Logger].setLevel(level)
+      case (reqLogger, None       ) => logger.warn(s"Skipping 'logger.$reqLogger' - not a valid log level")
     }
 
     Seq.empty
