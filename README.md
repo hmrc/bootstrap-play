@@ -163,6 +163,25 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Migrations
 
+### Version 5.18.0
+
+Adds `uk.gov.hmrc.play.bootstrap.LoggerModule`.
+
+This has been enabled by default in `backend.conf` and `frontend.conf`, but it can be disabled with `play.modules.disabled += "uk.gov.hmrc.play.bootstrap.LoggerModule"` in your `application.conf` if required.
+
+The LoggerModule will pick up `logger.$loggername` configuration (e.g. `logger.uk.gov.hmrc = DEBUG`) in any configuration file, not just in `System.properties`. The configuration will be applied, regardless of whether they have been defined in your logback file.
+
+e.g. default values will suffice in your logback file without preping to use a System property:
+
+`<logger name="uk.gov" level="${logger.uk.gov:-WARN}"/>`
+
+can be replaced with
+
+`<logger name="uk.gov" level="WARN"/>`
+
+And to enable a bespoke logger, not present in the logback file, you can just turn on with configuration.
+e.g. `-Dlogger.uk.gov.test=DEBUG` will set logger `uk.gov.test` to `DEBUG` without having to make a new build with updated logback file first.
+
 ### Version 5.0.0
 
 #### auth-client
