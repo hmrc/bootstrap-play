@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
@@ -49,8 +49,7 @@ class BackendAuditFilterSpec
      with MockitoSugar
      with BeforeAndAfterAll {
 
-  implicit val system       = ActorSystem("BackendAuditFilterSpec")
-  implicit val materializer = ActorMaterializer()
+  implicit val system = ActorSystem("BackendAuditFilterSpec")
 
   override def afterAll(): Unit = {
     system.terminate()
@@ -78,7 +77,7 @@ class BackendAuditFilterSpec
     val httpAuditEvent = new HttpAuditEvent { override def appName = applicationName }
 
     def createAuditFilter(config: Configuration, connector: AuditConnector) =
-      new DefaultBackendAuditFilter(config, controllerConfigs, connector, httpAuditEvent, materializer)
+      new DefaultBackendAuditFilter(config, controllerConfigs, connector, httpAuditEvent, implicitly[Materializer])
 
     "audit a request and response with header information" in {
       val mockAuditConnector = mock[AuditConnector]

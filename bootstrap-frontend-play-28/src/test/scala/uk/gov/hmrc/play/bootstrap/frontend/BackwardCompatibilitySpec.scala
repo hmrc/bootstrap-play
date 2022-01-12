@@ -109,20 +109,22 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter {
-        override def ec           = mock[ExecutionContext]
-        override def mat          = mock[Materializer]
-        override def encrypter    = mock[uk.gov.hmrc.crypto.Encrypter]
-        override def decrypter    = mock[uk.gov.hmrc.crypto.Decrypter]
-        override def sessionBaker = mock[play.api.mvc.SessionCookieBaker]
+        override def ec                   = mock[ExecutionContext]
+        override def mat                  = mock[Materializer]
+        override def encrypter            = mock[uk.gov.hmrc.crypto.Encrypter]
+        override def decrypter            = mock[uk.gov.hmrc.crypto.Decrypter]
+        override def sessionBaker         = mock[play.api.mvc.SessionCookieBaker]
+        override def cookieHeaderEncoding = mock[play.api.mvc.CookieHeaderEncoding]
       }
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.DefaultSessionCookieCryptoFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.DefaultSessionCookieCryptoFilter(
-        sessionCookieCrypto = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCrypto],
-        sessionBaker        = mock[play.api.mvc.SessionCookieBaker]
-      )(mat                 = mock[Materializer],
-        ec                  = mock[ExecutionContext]
+        sessionCookieCrypto  = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCrypto],
+        sessionBaker         = mock[play.api.mvc.SessionCookieBaker],
+        cookieHeaderEncoding = mock[play.api.mvc.CookieHeaderEncoding]
+      )(mat                  = mock[Materializer],
+        ec                   = mock[ExecutionContext]
       )
     }
 

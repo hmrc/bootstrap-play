@@ -71,16 +71,19 @@ class GraphiteMetricsModuleSpec
     forAll { (kenshooEnabled: Boolean, graphiteEnabled: Boolean) =>
       SharedMetricRegistries.clear()
 
-      val configuration = Configuration("metrics.enabled" -> kenshooEnabled) ++
-        (if (graphiteEnabled)
-           Configuration(
-             "microservice.metrics.graphite.enabled" -> true,
-             "microservice.metrics.graphite.host"    -> "test",
-             "microservice.metrics.graphite.port"    -> "9999",
-             "appName"                               -> "test"
-           )
-         else
-           Configuration("microservice.metrics.graphite.enabled" -> false)
+      val configuration =
+         Configuration.from(
+           Map("metrics.enabled" -> kenshooEnabled) ++
+             (if (graphiteEnabled)
+                Map(
+                  "microservice.metrics.graphite.enabled" -> true,
+                  "microservice.metrics.graphite.host"    -> "test",
+                  "microservice.metrics.graphite.port"    -> "9999",
+                  "appName"                               -> "test"
+                )
+              else
+                Map("microservice.metrics.graphite.enabled" -> false)
+             )
         )
 
       withInjector(configuration) { injector =>

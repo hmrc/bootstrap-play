@@ -16,30 +16,34 @@
 
 package uk.gov.hmrc.play.bootstrap.http.utils
 
-import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import play.api.inject.{ApplicationLifecycle, DefaultApplicationLifecycle}
+import akka.stream.Materializer
+import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, DatastreamMetrics}
 
-class TestAuditConnector(appName: String) extends AuditConnector {
+import javax.inject.{Inject, Named}
+
+class TestAuditConnector @Inject() (
+  @Named("appName") appName: String,
+  lifecycle: ApplicationLifecycle,
+  mat: Materializer
+) extends AuditConnector { outer =>
+
   private val _auditingConfig = AuditingConfig(
-    consumer = None,
-    enabled = false,
-    auditSource = appName,
+    consumer         = None,
+    enabled          = false,
+    auditSource      = appName,
     auditSentHeaders = false
   )
+
   override val auditingConfig: AuditingConfig = _auditingConfig
 
   override def datastreamMetrics: DatastreamMetrics = ???
 
-  override def auditChannel: AuditChannel = new AuditChannel {
-    override def auditingConfig: AuditingConfig = _auditingConfig
-
-    override def materializer: Materializer = ActorMaterializer()(ActorSystem())
-
-    override def lifecycle: ApplicationLifecycle = new DefaultApplicationLifecycle()
-
-    override def datastreamMetrics: DatastreamMetrics = ???
+  override val auditChannel: AuditChannel = new AuditChannel {
+    override val auditingConfig   : AuditingConfig       = _auditingConfig
+    override val materializer     : Materializer         = mat
+    override val lifecycle        : ApplicationLifecycle = outer.lifecycle
+    override def datastreamMetrics: DatastreamMetrics    = ???
   }
 }

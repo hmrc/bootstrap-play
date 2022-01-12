@@ -50,7 +50,10 @@ trait SessionCookieCryptoFilter extends Filter with CryptoImplicits {
   protected def encrypter: Encrypter
   protected def decrypter: Decrypter
   protected def sessionBaker: SessionCookieBaker
-  protected val decodeCookieHeader: String => Seq[Cookie] = Cookies.decodeCookieHeader
+  protected def cookieHeaderEncoding: CookieHeaderEncoding
+
+  protected val decodeCookieHeader: String => Seq[Cookie] =
+    cookieHeaderEncoding.decodeCookieHeader
 
   private val logger = Logger(getClass)
 
@@ -105,7 +108,8 @@ trait SessionCookieCryptoFilter extends Filter with CryptoImplicits {
 
 class DefaultSessionCookieCryptoFilter @Inject()(
   sessionCookieCrypto: SessionCookieCrypto,
-  val sessionBaker: SessionCookieBaker
+  override val sessionBaker: SessionCookieBaker,
+  override val cookieHeaderEncoding: CookieHeaderEncoding
 )(implicit
   override val mat: Materializer,
   override val ec: ExecutionContext

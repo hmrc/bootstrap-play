@@ -51,7 +51,7 @@ class DefaultHttpClientSpec
         bind[String].qualifiedWith("appName").toInstance(appName),
         bind[HttpAuditing].to[DefaultHttpAuditing],
         bind[uk.gov.hmrc.http.HttpClient].to[DefaultHttpClient],
-        bind[AuditConnector].toInstance(new TestAuditConnector(appName))
+        bind[AuditConnector].to[TestAuditConnector]
       )
       .build()
 

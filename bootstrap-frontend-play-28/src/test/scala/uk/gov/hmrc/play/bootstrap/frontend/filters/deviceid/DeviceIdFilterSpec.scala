@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.Materializer
 import org.scalatest.matchers.should.Matchers
 import org.mockito.Mockito.{times, _}
 import org.mockito.{ArgumentCaptor, Mockito}
@@ -63,13 +63,13 @@ class DeviceIdFilterSpec
     }
 
     def makeFilter(secureCookie: Boolean) = new DeviceIdFilter {
-      implicit val mat: Materializer = ActorMaterializer()
-
       lazy val mdtpCookie = super.buildNewDeviceIdCookie()
 
       override def getTimeStamp = timestamp
 
       override def buildNewDeviceIdCookie() = mdtpCookie
+
+      override val mat             = implicitly[Materializer]
 
       override val secret          = "SOME_SECRET"
       override val previousSecrets = Seq("previous_key_1", "previous_key_2")

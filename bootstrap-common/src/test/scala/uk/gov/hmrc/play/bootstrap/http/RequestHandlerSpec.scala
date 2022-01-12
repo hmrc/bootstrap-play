@@ -22,21 +22,24 @@ import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.{HttpConfiguration, HttpFilters}
+import play.api.OptionalDevContext
+import play.api.http.{HttpConfiguration, HttpErrorHandler, HttpFilters}
 import play.api.mvc.{Handler, RequestHeader}
 import play.api.routing.Router
 import play.api.test.FakeRequest
+import play.core.DefaultWebCommands
 import org.mockito.Mockito.times
 
 class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   "Routing requests" should {
     "try passing a request with trailing slash removed if handler was not found" in new Setup {
-      val request        = FakeRequest("GET", "path/")
-      val requestHandler = new RequestHandler(mockedRouter, null, configuration, filters)
+      val request = FakeRequest("GET", "path/")
 
-      when(mockedRouter.handlerFor(any())).thenReturn(None)
-      val _ = requestHandler.routeRequest(request)
+      when(mockedRouter.handlerFor(any()))
+        .thenReturn(None)
+
+      requestHandler.routeRequest(request)
 
       val requestCaptor = ArgumentCaptor.forClass(classOf[RequestHeader])
 
@@ -46,11 +49,12 @@ class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
     }
 
     "not modify request if handler was found" in new Setup {
-      val request          = FakeRequest("GET", "path/")
-      val requestHandler   = new RequestHandler(mockedRouter, null, configuration, filters)
-      val handler: Handler = new Handler {}
+      val request = FakeRequest("GET", "path/")
+      val handler = new Handler {}
 
-      when(mockedRouter.handlerFor(request)).thenReturn(Some(handler))
+      when(mockedRouter.handlerFor(request))
+        .thenReturn(Some(handler))
+
       requestHandler.routeRequest(request) shouldBe Some(handler)
 
       verify(mockedRouter).handlerFor(request)
@@ -61,10 +65,24 @@ class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
   trait Setup {
     val mockedRouter = mock[Router]
 
-    val configuration = mock[HttpConfiguration]
-    when(configuration.context).thenReturn("context")
+    val mockedHttpErrorHandler = mock[HttpErrorHandler]
 
-    val filters = mock[HttpFilters]
-    when(filters.filters).thenReturn(Seq.empty)
+    val mockedConfiguration = mock[HttpConfiguration]
+    when(mockedConfiguration.context)
+      .thenReturn("context")
+
+    val mockedFilters = mock[HttpFilters]
+    when(mockedFilters.filters)
+      .thenReturn(Seq.empty)
+
+    val requestHandler =
+      new RequestHandler(
+        webCommands   = new DefaultWebCommands,
+        optDevContext = new OptionalDevContext(None),
+        router        = mockedRouter,
+        errorHandler  = mockedHttpErrorHandler,
+        configuration = mockedConfiguration,
+        filters       = mockedFilters
+      )
   }
 }

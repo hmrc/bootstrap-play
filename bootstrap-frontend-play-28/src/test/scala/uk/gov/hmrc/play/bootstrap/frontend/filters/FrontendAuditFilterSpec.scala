@@ -18,14 +18,14 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.Done
 import akka.actor.ActorSystem
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito._
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TestData}
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatestplus.mockito.MockitoSugar
@@ -62,7 +62,7 @@ class FrontendAuditFilterSpec
 
   private val Action = stubControllerComponents().actionBuilder
 
-  private def enumerateResponseBody(r: Result): Future[Done] =
+  private def enumerateResponseBody(r: Result)(implicit mat: Materializer): Future[Done] =
     r.body.dataStream.runForeach(_ => ())
 
   private def nextAction = Action(NotFound("404 Not Found"))
@@ -286,7 +286,7 @@ class FrontendAuditFilterSpec
 
     "generate audit events with the device ID when it is supplied in a request cookie" when {
       val deviceID      = "A_DEVICE_ID"
-      val encodedCookie = Cookies.encodeCookieHeader(List(Cookie(CookieNames.deviceID, deviceID)))
+      val encodedCookie = new DefaultCookieHeaderEncoding().encodeCookieHeader(List(Cookie(CookieNames.deviceID, deviceID)))
       val request       = FakeRequest("GET", "/foo").withHeaders(play.api.http.HeaderNames.COOKIE -> encodedCookie)
 
       "the request succeeds" in {
@@ -585,18 +585,17 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
 
   import MockitoSugar._
 
-  private implicit val system               = ActorSystem("FrontendAuditFilterInstance")
-  protected implicit val mat: Materializer  = ActorMaterializer()
-  private implicit val ec: ExecutionContext = system.dispatcher
-  val config                                = Configuration("auditing.enabled" -> true)
-  val auditConnector                        = mock[AuditConnector]
-  val controllerConfigs                     = mock[ControllerConfigs]
-  val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
+  protected implicit val system: ActorSystem = ActorSystem("FrontendAuditFilterInstance")
+  private implicit val ec: ExecutionContext  = system.dispatcher
+  val config                                 = Configuration("auditing.enabled" -> true)
+  val auditConnector                         = mock[AuditConnector]
+  val controllerConfigs                      = mock[ControllerConfigs]
+  val httpAuditEvent                         = new HttpAuditEvent { override val appName = "app" }
 
   when(controllerConfigs.controllerNeedsAuditing(anyString())).thenReturn(false)
 
   protected val filter: FrontendAuditFilter =
-    new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, mat) {
+    new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, implicitly[Materializer]) {
       override val maskedFormFields: Seq[String] = Seq("password")
       override val applicationPort: Option[Int]  = Some(80)
     }

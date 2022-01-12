@@ -31,6 +31,7 @@ import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText}
 
 import concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.mvc.CookieHeaderEncoding
 
 class SessionCookieCryptoFilterSpec
     extends AnyWordSpec
@@ -134,10 +135,11 @@ class SessionCookieCryptoFilterSpec
   }
 
   private trait Setup {
-    val mockedEncrypter: Encrypter                 = mock[Encrypter]
-    val mockedDecrypter: Decrypter                 = mock[Decrypter]
-    val mockedSessionBaker: SessionCookieBaker     = mock[SessionCookieBaker]
-    val mockedCookieDecoder: String => Seq[Cookie] = mock[String => Seq[Cookie]]
+    val mockedEncrypter           : Encrypter             = mock[Encrypter]
+    val mockedDecrypter           : Decrypter             = mock[Decrypter]
+    val mockedSessionBaker        : SessionCookieBaker    = mock[SessionCookieBaker]
+    val mockedCookieDecoder       : String => Seq[Cookie] = mock[String => Seq[Cookie]]
+    val mockedCookieHeaderEncoding: CookieHeaderEncoding  = mock[CookieHeaderEncoding]
 
     val filter: SessionCookieCryptoFilter = new SessionCookieCryptoFilter {
       protected implicit val ec: ExecutionContext    = global
@@ -146,6 +148,7 @@ class SessionCookieCryptoFilterSpec
       protected val sessionBaker: SessionCookieBaker = mockedSessionBaker
       implicit def mat: Materializer                 = ???
       override protected val decodeCookieHeader      = mockedCookieDecoder
+      override protected val cookieHeaderEncoding    = mockedCookieHeaderEncoding
     }
 
     val cookieName = "n/a"

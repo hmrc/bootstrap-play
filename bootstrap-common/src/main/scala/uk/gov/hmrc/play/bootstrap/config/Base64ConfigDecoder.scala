@@ -64,6 +64,7 @@ trait Base64ConfigDecoder {
         config.withoutPath(key.dropRight(suffix.length))
     }
 
-    Configuration(newConfig.toSeq: _*) ++ Configuration(nonBase64Conf)
+    Configuration(newConfig.toSeq: _*)
+      .withFallback(Configuration(nonBase64Conf))
   }
 }

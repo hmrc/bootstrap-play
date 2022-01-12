@@ -17,7 +17,6 @@
 package uk.gov.hmrc.play.bootstrap.backend.http
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.util.ByteString
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -318,10 +317,7 @@ class JsonErrorHandlerSpec
   }
 
   "play" should {
-    implicit val mat: ActorMaterializer = {
-      implicit val system = ActorSystem()
-      ActorMaterializer()
-    }
+    implicit val system = ActorSystem()
 
     val errorHandler = new HttpErrorHandler {
       override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = Future.successful(Results.Status(statusCode)(message))
@@ -337,13 +333,11 @@ class JsonErrorHandlerSpec
     }
 
     "return Json validation error when a json with wrong schema is provided" in new JsonSetup {
-      val request = fakeRequest.withBody(Json.obj())
       case class Test(greeting: String)
       errorResponse(parsers.json[Test](Json.reads[Test]), "{}")  should startWith("Json validation error")
     }
 
     "return Json validation error without original values" in new JsonSetup {
-      val request = fakeRequest.withBody(Json.obj())
       case class User(id: Int)
       val id = UUID.randomUUID().toString
       val errorMessage = errorResponse(parsers.json[User](Json.reads[User]), s"""{"id": "$id"}""")
