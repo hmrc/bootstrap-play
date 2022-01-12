@@ -21,7 +21,7 @@ libraryDependencies += "uk.gov.hmrc" %% "bootstrap-frontend-play-xx" % "x.x.x"
 // for backends:
 libraryDependencies += "uk.gov.hmrc" %% "bootstrap-backend-play-xx" % "x.x.x"
 ```
-Where `play-xx` is `play-26`, `play-27` or `play-28` depending on your version of Play.
+Where `play-xx` is your version of Play (e.g. `play-28`).
 
 You can also add the test module
 
@@ -162,6 +162,10 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
 ## Migrations
+
+### Version 5.19.0
+
+Drops support for Play 2.6 and Play 2.7. Only Play 2.8 is supported.
 
 ### Version 5.18.0
 
