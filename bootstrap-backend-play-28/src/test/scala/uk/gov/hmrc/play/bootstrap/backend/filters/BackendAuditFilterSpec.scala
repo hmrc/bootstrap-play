@@ -18,14 +18,12 @@ package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.Mockito._
+import org.mockito.captor.ArgCaptor
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.mvc.Results.NotFound
 import play.api.mvc.{Action, AnyContent}
@@ -71,7 +69,7 @@ class BackendAuditFilterSpec
       "Akamai-Reputation" -> akamaiReputation)
 
     val controllerConfigs = mock[ControllerConfigs]
-    when(controllerConfigs.controllerNeedsAuditing(anyString()))
+    when(controllerConfigs.controllerNeedsAuditing(any[String]))
       .thenReturn(true)
 
     val httpAuditEvent = new HttpAuditEvent { override def appName = applicationName }
@@ -92,10 +90,10 @@ class BackendAuditFilterSpec
       await(result.body.dataStream.runForeach { i => })
 
       eventually {
-        val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-        verify(mockAuditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
+        val captor = ArgCaptor[DataEvent]
+        verify(mockAuditConnector).sendEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
-        val event = captor.getValue
+        val event = captor.value
 
         event.auditSource               shouldBe applicationName
         event.auditType                 shouldBe requestReceived
@@ -111,9 +109,6 @@ class BackendAuditFilterSpec
       val mockAuditConnector = mock[AuditConnector]
       val config             = Configuration("auditing.enabled" -> false)
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
-
-      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(Success))
 
       val result = await(auditFilter.apply(nextAction)(request).run)
 
@@ -135,10 +130,10 @@ class BackendAuditFilterSpec
       a[RuntimeException] should be thrownBy await(auditFilter.apply(exceptionThrowingAction)(request).run)
 
       eventually {
-        val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-        verify(mockAuditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
+        val captor = ArgCaptor[DataEvent]
+        verify(mockAuditConnector).sendEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
-        val event = captor.getValue
+        val event = captor.value
 
         event.auditSource               shouldBe applicationName
         event.auditType                 shouldBe requestReceived

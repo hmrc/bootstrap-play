@@ -17,11 +17,11 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import javax.inject.Inject
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{LoneElement, OptionValues}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.http.{DefaultHttpFilters, HttpFilters}

@@ -20,12 +20,11 @@ import java.util.{Date, TimeZone}
 
 import akka.stream.Materializer
 import org.apache.commons.lang3.time.FastDateFormat
-import org.mockito.Mockito.when
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
 import play.api.mvc.{RequestHeader, Results}
@@ -94,7 +93,7 @@ class LoggingFilterSpec
       val now                             = mock[() => Long]
       when(now.apply())
         .thenReturn(expectedRequestStartMillis)
-        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
+        .andThen(expectedRequestStartMillis + expectedRequestDurationInMillis)
 
       val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
 
@@ -114,7 +113,7 @@ class LoggingFilterSpec
       val now                             = mock[() => Long]
       when(now.apply())
         .thenReturn(expectedRequestStartMillis)
-        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
+        .andThen(expectedRequestStartMillis + expectedRequestDurationInMillis)
 
       val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
       val ex            = new Exception("test-exception")
@@ -140,8 +139,9 @@ class LoggingFilterSpec
 
     val testReqToResp = (_: RequestHeader) => Future.successful(Results.NoContent)
 
-    val handlerDef = mock[HandlerDef]
-    when(handlerDef.controller).thenReturn("controller-name")
+    val handlerDef = mock[HandlerDef](withSettings.lenient)
+    when(handlerDef.controller)
+      .thenReturn("controller-name")
 
     val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
 

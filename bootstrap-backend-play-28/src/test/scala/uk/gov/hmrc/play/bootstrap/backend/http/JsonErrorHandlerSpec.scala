@@ -21,14 +21,12 @@ import akka.util.ByteString
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
-import org.mockito.ArgumentMatchers.{any, eq => is}
-import org.mockito.Mockito._
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.LoneElement
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.{HttpErrorHandler, MimeTypes}
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -65,10 +63,10 @@ class JsonErrorHandlerSpec
       val createdDataEvent  = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
-          eventType       = is("ResourceNotFound"),
-          transactionName = is("Unexpected error"),
-          request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> notFoundException.getMessage))
+          eventType       = eqTo("ResourceNotFound"),
+          transactionName = eqTo("Unexpected error"),
+          request         = eqTo(requestHeader),
+          detail          = eqTo(Map("transactionFailureReason" -> notFoundException.getMessage))
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -77,7 +75,7 @@ class JsonErrorHandlerSpec
       status(result)        shouldEqual NOT_FOUND
       contentAsJson(result) shouldEqual Json.obj("statusCode" -> NOT_FOUND, "message" -> "test")
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "convert an AuthorisationException to Unauthorized response and audit the error" in new Setup {
@@ -85,10 +83,10 @@ class JsonErrorHandlerSpec
       val createdDataEvent       = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
-          eventType       = is("ClientError"),
-          transactionName = is("Unexpected error"),
-          request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> authorisationException.getMessage))
+          eventType       = eqTo("ClientError"),
+          transactionName = eqTo("Unexpected error"),
+          request         = eqTo(requestHeader),
+          detail          = eqTo(Map("transactionFailureReason" -> authorisationException.getMessage))
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -98,7 +96,7 @@ class JsonErrorHandlerSpec
       contentAsJson(result) shouldEqual Json
         .obj("statusCode" -> UNAUTHORIZED, "message" -> authorisationException.getMessage)
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "convert an Exception to InternalServerError and audit the error" in new Setup {
@@ -106,10 +104,10 @@ class JsonErrorHandlerSpec
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
-          eventType       = is("ServerInternalError"),
-          transactionName = is("Unexpected error"),
-          request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          eventType       = eqTo("ServerInternalError"),
+          transactionName = eqTo("Unexpected error"),
+          request         = eqTo(requestHeader),
+          detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage))
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -119,7 +117,7 @@ class JsonErrorHandlerSpec
       contentAsJson(result) shouldEqual Json
         .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "convert a JsValidationException to InternalServerError and audit the error" in new Setup {
@@ -127,10 +125,10 @@ class JsonErrorHandlerSpec
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
-          eventType       = is("ServerValidationError"),
-          transactionName = is("Unexpected error"),
-          request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          eventType       = eqTo("ServerValidationError"),
+          transactionName = eqTo("Unexpected error"),
+          request         = eqTo(requestHeader),
+          detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage))
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -140,7 +138,7 @@ class JsonErrorHandlerSpec
       contentAsJson(result) shouldEqual Json
         .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "convert a HttpException to responseCode from the exception and audit the error" in new Setup {
@@ -149,10 +147,10 @@ class JsonErrorHandlerSpec
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
-          eventType       = is("ServerInternalError"),
-          transactionName = is("Unexpected error"),
-          request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          eventType       = eqTo("ServerInternalError"),
+          transactionName = eqTo("Unexpected error"),
+          request         = eqTo(requestHeader),
+          detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage))
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -162,7 +160,7 @@ class JsonErrorHandlerSpec
       contentAsJson(result) shouldEqual Json
         .obj("statusCode" -> responseCode, "message" -> exception.getMessage)
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "convert an UpstreamErrorResponse to reportAs from the exception and audit the error" in new Setup {
@@ -171,10 +169,10 @@ class JsonErrorHandlerSpec
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
-          eventType       = is("ServerInternalError"),
-          transactionName = is("Unexpected error"),
-          request         = is(requestHeader),
-          detail          = is(Map("transactionFailureReason" -> exception.getMessage))
+          eventType       = eqTo("ServerInternalError"),
+          transactionName = eqTo("Unexpected error"),
+          request         = eqTo(requestHeader),
+          detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage))
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -184,7 +182,7 @@ class JsonErrorHandlerSpec
       contentAsJson(result) shouldEqual Json
         .obj("statusCode" -> reportAs, "message" -> exception.getMessage)
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "log a warning for upstream code in the warning list" when {
@@ -256,10 +254,10 @@ class JsonErrorHandlerSpec
         val createdDataEvent = DataEvent("auditSource", "auditType")
         when(
           httpAuditEvent.dataEvent(
-            eventType = is("ServerValidationError"),
-            transactionName = is("Request bad format exception"),
-            request = is(requestHeader),
-            detail = is(Map.empty)
+            eventType       = eqTo("ServerValidationError"),
+            transactionName = eqTo("Request bad format exception"),
+            request         = eqTo(requestHeader),
+            detail          = eqTo(Map.empty)
           )(any[HeaderCarrier]))
           .thenReturn(createdDataEvent)
 
@@ -268,7 +266,7 @@ class JsonErrorHandlerSpec
         status(result) shouldEqual BAD_REQUEST
         contentAsJson(result) shouldEqual Json.obj("statusCode" -> BAD_REQUEST, "message" -> expectedResponseMessage)
 
-        verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+        verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
@@ -276,10 +274,10 @@ class JsonErrorHandlerSpec
       val createdDataEvent = DataEvent("auditSource", "auditType")
       when(
         httpAuditEvent.dataEvent(
-          eventType       = is("ResourceNotFound"),
-          transactionName = is("Resource Endpoint Not Found"),
-          request         = is(requestHeader),
-          detail          = is(Map.empty)
+          eventType       = eqTo("ResourceNotFound"),
+          transactionName = eqTo("Resource Endpoint Not Found"),
+          request         = eqTo(requestHeader),
+          detail          = eqTo(Map.empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -289,7 +287,7 @@ class JsonErrorHandlerSpec
       contentAsJson(result) shouldEqual Json
         .obj("statusCode" -> NOT_FOUND, "message" -> "URI not found", "requested" -> uri)
 
-      verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+      verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
     "audit an error and return json response for 4xx except 404 and 400" in new Setup {
@@ -297,10 +295,10 @@ class JsonErrorHandlerSpec
         val createdDataEvent = DataEvent("auditSource", "auditType")
         when(
           httpAuditEvent.dataEvent(
-            eventType       = is("ClientError"),
-            transactionName = is(s"A client error occurred, status: $statusCode"),
-            request         = is(requestHeader),
-            detail          = is(Map.empty)
+            eventType       = eqTo("ClientError"),
+            transactionName = eqTo(s"A client error occurred, status: $statusCode"),
+            request         = eqTo(requestHeader),
+            detail          = eqTo(Map.empty)
           )(any[HeaderCarrier]))
           .thenReturn(createdDataEvent)
 
@@ -311,7 +309,7 @@ class JsonErrorHandlerSpec
         status(result)        shouldEqual statusCode
         contentAsJson(result) shouldEqual Json.obj("statusCode" -> statusCode, "message" -> errorMessage)
 
-        verify(auditConnector).sendEvent(is(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
+        verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
     }
   }
@@ -379,7 +377,7 @@ class JsonErrorHandlerSpec
     val auditConnector = mock[AuditConnector]
     when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(Success))
-    val httpAuditEvent = mock[HttpAuditEvent]
+    val httpAuditEvent = mock[HttpAuditEvent](withSettings.lenient)
 
     val configuration    = Configuration(
       "appName" -> "myApp",

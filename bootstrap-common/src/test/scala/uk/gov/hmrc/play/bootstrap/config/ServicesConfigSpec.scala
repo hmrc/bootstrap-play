@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.config
 
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.mockito.MockitoSugar
+import org.mockito.scalatest.MockitoSugar
 import play.api.Configuration
 
 import scala.concurrent.duration._

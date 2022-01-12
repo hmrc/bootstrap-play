@@ -19,13 +19,11 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import org.scalatest.matchers.should.Matchers
-import org.mockito.Mockito.{times, _}
-import org.mockito.{ArgumentCaptor, Mockito}
-import org.mockito.ArgumentMatchers.any
+import org.mockito.captor.ArgCaptor
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc._
 import play.api.mvc.request.RequestAttrKey
 import play.api.test.FakeRequest
@@ -36,12 +34,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls
 
 class DeviceIdFilterSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with ScalaFutures
-    with MockitoSugar
-    with BeforeAndAfterAll
-    with OptionValues {
+  extends AnyWordSpecLike
+     with Matchers
+     with ScalaFutures
+     with MockitoSugar
+     with BeforeAndAfterAll
+     with OptionValues {
 
   lazy val timestamp = System.currentTimeMillis()
   implicit val system = ActorSystem("DeviceIdFilterSpec")
@@ -58,7 +56,7 @@ class DeviceIdFilterSpec
     lazy val action = {
       val mockAction       = mock[(RequestHeader) => Future[Result]]
       val outgoingResponse = Future.successful(resultFromAction)
-      when(mockAction.apply(any())).thenReturn(outgoingResponse)
+      when(mockAction.apply(any)).thenReturn(outgoingResponse)
       mockAction
     }
 
@@ -77,7 +75,7 @@ class DeviceIdFilterSpec
 
       override val appName = "SomeAppName"
 
-      lazy val auditConnector = mock[AuditConnector]
+      lazy val auditConnector = mock[AuditConnector](withSettings.lenient)
 
       override protected implicit def ec: ExecutionContext = ExecutionContext.global
     }
@@ -85,19 +83,19 @@ class DeviceIdFilterSpec
 
     lazy val newFormatGoodCookieDeviceId = filter.mdtpCookie
 
-    def requestPassedToAction(time: Option[Int] = None): RequestHeader = {
-      val updatedRequest = ArgumentCaptor.forClass(classOf[RequestHeader])
-      verify(action, time.fold(times(1))(count => Mockito.atMost(count))).apply(updatedRequest.capture())
-      updatedRequest.getValue
+    def requestPassedToAction(): RequestHeader = {
+      val updatedRequest = ArgCaptor[RequestHeader]
+      verify(action, times(1)).apply(updatedRequest.capture)
+      updatedRequest.value
     }
 
     def mdtpdiSetCookie(result: Result): Cookie =
       result.newCookies.find(_.name == DeviceId.MdtpDeviceId).value
 
     def expectAuditIdEvent(badCookie: String, validCookie: String) = {
-      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-      verify(filter.auditConnector).sendEvent(captor.capture())(any(), any())
-      val event = captor.getValue
+      val captor = ArgCaptor[DataEvent]
+      verify(filter.auditConnector).sendEvent(captor)(any, any)
+      val event = captor.value
 
       event.auditType   shouldBe EventTypes.Failed
       event.auditSource shouldBe "SomeAppName"
@@ -106,12 +104,13 @@ class DeviceIdFilterSpec
       event.detail should contain("deviceID"         -> validCookie)
     }
 
-    def invokeFilter(filter: DeviceIdFilter)(cookies: Seq[Cookie], expectedResultCookie: Cookie, times: Option[Int] = None) = {
+    def invokeFilter(filter: DeviceIdFilter)(cookies: Seq[Cookie], expectedResultCookie: Cookie) = {
       val incomingRequest = FakeRequest().withCookies(cookies: _*)
-      val result          = filter(action)(incomingRequest).futureValue
+
+      val result = filter(action)(incomingRequest).futureValue
 
       val expectedCookie =
-        requestPassedToAction(times)
+        requestPassedToAction()
           .attrs(RequestAttrKey.Cookies)
           .value
           .find(_.name == DeviceId.MdtpDeviceId)
@@ -124,16 +123,17 @@ class DeviceIdFilterSpec
   }
 
   "The filter supporting multiple previous hash secrets" should {
-
     "successfully validate the hash of deviceId's built from more than one previous key" in new Setup {
-
       for (prevSecret <- filter.previousSecrets) {
+        reset(action)
+        when(action.apply(any)).thenReturn(Future.successful(resultFromAction))
+
         val uuid                    = filter.generateUUID
         val timestamp               = filter.getTimeStamp
         val deviceIdMadeFromPrevKey = DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, prevSecret))
         val cookie                  = filter.makeCookie(deviceIdMadeFromPrevKey)
 
-        val result = invokeFilter(filter)(Seq(cookie), cookie, Some(2))
+        val result = invokeFilter(filter)(Seq(cookie), cookie)
 
         val responseCookie = mdtpdiSetCookie(result)
         responseCookie.value  shouldBe deviceIdMadeFromPrevKey.value
@@ -143,7 +143,6 @@ class DeviceIdFilterSpec
   }
 
   "During request pre-processing, the filter" should {
-
     "create a new deviceId if the deviceId cookie received contains an empty value " in new Setup {
       val result = invokeFilter(filter)(Seq(newFormatGoodCookieDeviceId.copy(value = "")), newFormatGoodCookieDeviceId)
 
@@ -209,7 +208,6 @@ class DeviceIdFilterSpec
     }
 
     "identify new format deviceId cookie has invalid hash and create new deviceId cookie" in new Setup {
-
       val newFormatBadCookieDeviceId = {
         val deviceId = filter.generateDeviceId().copy(hash = "wrongvalue")
         Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears))
@@ -225,7 +223,6 @@ class DeviceIdFilterSpec
     }
 
     "identify new format deviceId cookie has invalid timestamp and create new deviceId cookie" in new Setup {
-
       val newFormatBadCookieDeviceId = {
         val deviceId = filter.generateDeviceId().copy(hash = "wrongvalue")
         Cookie(DeviceId.MdtpDeviceId, deviceId.value, Some(DeviceId.TenYears))
@@ -241,7 +238,6 @@ class DeviceIdFilterSpec
     }
 
     "identify new format deviceId cookie has invalid prefix and create new deviceId cookie" in new Setup {
-
       val newFormatBadCookieDeviceId = {
         val deviceId = filter.generateDeviceId()
         Cookie(

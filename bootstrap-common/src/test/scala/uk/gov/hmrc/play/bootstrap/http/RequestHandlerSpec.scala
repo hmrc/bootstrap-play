@@ -16,19 +16,16 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
+import org.mockito.captor.ArgCaptor
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.OptionalDevContext
 import play.api.http.{HttpConfiguration, HttpErrorHandler, HttpFilters}
 import play.api.mvc.{Handler, RequestHeader}
 import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.core.DefaultWebCommands
-import org.mockito.Mockito.times
 
 class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
@@ -36,16 +33,15 @@ class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
     "try passing a request with trailing slash removed if handler was not found" in new Setup {
       val request = FakeRequest("GET", "path/")
 
-      when(mockedRouter.handlerFor(any()))
+      when(mockedRouter.handlerFor(any))
         .thenReturn(None)
 
       requestHandler.routeRequest(request)
 
-      val requestCaptor = ArgumentCaptor.forClass(classOf[RequestHeader])
+      val requestCaptor = ArgCaptor[RequestHeader]
 
-      verify(mockedRouter, times(2)).handlerFor(requestCaptor.capture())
-      requestCaptor.getAllValues.get(0).path shouldBe "path/"
-      requestCaptor.getAllValues.get(1).path shouldBe "path"
+      verify(mockedRouter, times(2)).handlerFor(requestCaptor.capture)
+      requestCaptor.values.map(_.path) shouldBe List("path/", "path")
     }
 
     "not modify request if handler was found" in new Setup {

@@ -2,9 +2,9 @@ import sbt._
 
 object LibDependencies {
 
-  private val play28Version  = "2.8.7"
+  private val play28Version  = "2.8.8"
 
-  private val httpVerbsVersion = "13.10.0"
+  private val httpVerbsVersion = "13.12.0"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
 
@@ -17,11 +17,11 @@ object LibDependencies {
   private def common(playVersion: String, playSuffix: String) =
     Seq(
       "ch.qos.logback"          %  "logback-core"               % "1.2.3",
-      "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2",
+      "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2", // this is compatible with play 2.8
       "com.typesafe.play"       %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
-      "uk.gov.hmrc"             %% "auth-client"                % s"5.6.0-$playSuffix",
-      "uk.gov.hmrc"             %% "crypto"                     % "6.0.0",
+      "uk.gov.hmrc"             %% "auth-client"                % s"5.7.0-$playSuffix",
+      "uk.gov.hmrc"             %% "crypto"                     % "6.1.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.10.0",
       // the following are not used by bootstrap - but transitively added for clients
@@ -35,7 +35,7 @@ object LibDependencies {
       "org.mockito"             %% "mockito-scala-scalatest"    % "1.16.23"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.35.10"      % Test,
       "org.scalacheck"          %% "scalacheck"                 % "1.15.2"       % Test,
-      "org.scalatestplus"       %% "scalatestplus-mockito"      % "1.0.0-M2"     % Test,
+      "org.mockito"             %% "mockito-scala-scalatest"    % "1.16.49"      % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVerson(playVersion) % Test,
       "org.scalatestplus"       %% "scalatestplus-scalacheck"   % "3.1.0.0-RC2"  % Test
     )
@@ -44,7 +44,7 @@ object LibDependencies {
     common(playVersion, playSuffix) ++
       Seq(
         "uk.gov.hmrc"       %% "play-allowlist-filter" % s"1.0.0-$playSuffix",
-        "com.typesafe.akka" %% "akka-stream-testkit"   % "2.6.10"             % Test
+        "com.typesafe.akka" %% "akka-stream-testkit"   % "2.6.14"             % Test
       )
 
   private def test(playVersion: String, playSuffix: String) =
@@ -56,8 +56,8 @@ object LibDependencies {
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
       "org.scalatest"           %% "scalatest"                    % "3.2.3"       % Test,
-      "com.typesafe.akka"       %% "akka-stream-testkit"          % "2.6.10"      % Test,
-      "com.typesafe.play"       %% "play-akka-http-server"        % "2.8.7"       % Test
+      "com.typesafe.akka"       %% "akka-stream-testkit"          % "2.6.14"      % Test,
+      "com.typesafe.play"       %% "play-akka-http-server"        % playVersion   % Test
     )
 
   private def health(playVersion: String, playSuffix: String) =

@@ -21,14 +21,12 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.Mockito._
+import org.mockito.captor.ArgCaptor
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TestData}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.{Application, Configuration}
 import play.api.http.{HttpChunk, HttpEntity}
@@ -583,7 +581,8 @@ class FrontendAuditFilterServerSpec
 trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   this: Suite =>
 
-  import MockitoSugar._
+  private val ms = new MockitoSugar {}
+  import ms._
 
   protected implicit val system: ActorSystem = ActorSystem("FrontendAuditFilterInstance")
   private implicit val ec: ExecutionContext  = system.dispatcher
@@ -592,7 +591,8 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   val controllerConfigs                      = mock[ControllerConfigs]
   val httpAuditEvent                         = new HttpAuditEvent { override val appName = "app" }
 
-  when(controllerConfigs.controllerNeedsAuditing(anyString())).thenReturn(false)
+  when(controllerConfigs.controllerNeedsAuditing(any[String]))
+    .thenReturn(false)
 
   protected val filter: FrontendAuditFilter =
     new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, implicitly[Materializer]) {
@@ -601,9 +601,9 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
     }
 
   protected def verifyAndRetrieveEvent: DataEvent = {
-    val captor = ArgumentCaptor.forClass(classOf[DataEvent])
-    verify(auditConnector).sendEvent(captor.capture)(any[HeaderCarrier], any[ExecutionContext])
-    captor.getValue
+    val captor = ArgCaptor[DataEvent]
+    verify(auditConnector).sendEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
+    captor.value
   }
 
   override def afterAll(): Unit = {

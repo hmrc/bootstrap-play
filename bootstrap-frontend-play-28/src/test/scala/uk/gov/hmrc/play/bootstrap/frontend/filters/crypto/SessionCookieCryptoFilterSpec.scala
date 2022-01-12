@@ -18,11 +18,11 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters.crypto
 
 import akka.stream.Materializer
 import org.mockito.Mockito._
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.LoneElement
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames
 import play.api.mvc.Results._
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
@@ -44,6 +44,8 @@ class SessionCookieCryptoFilterSpec
     "decrypt session cookie and make values available as session on a request" in new Setup {
       val allCookies = "all cookies encoded as one string"
       val request    = FakeRequest().withHeaders(HeaderNames.COOKIE -> allCookies)
+
+      when(mockedSessionBaker.COOKIE_NAME).thenReturn(cookieName)
 
       val encryptedSessionCookie = Cookie(cookieName, "encrypted session cookie value")
       when(mockedCookieDecoder(allCookies)).thenReturn(Seq(encryptedSessionCookie))
@@ -152,6 +154,5 @@ class SessionCookieCryptoFilterSpec
     }
 
     val cookieName = "n/a"
-    when(mockedSessionBaker.COOKIE_NAME).thenReturn(cookieName)
   }
 }

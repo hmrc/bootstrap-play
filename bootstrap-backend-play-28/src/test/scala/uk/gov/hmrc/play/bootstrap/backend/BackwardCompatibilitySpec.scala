@@ -19,9 +19,9 @@ package uk.gov.hmrc.play.bootstrap.backend
 import akka.stream.Materializer
 import com.github.ghik.silencer.silent
 import com.typesafe.config.ConfigFactory
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.OFormat
 import play.api.mvc.{ControllerComponents, RequestHeader}

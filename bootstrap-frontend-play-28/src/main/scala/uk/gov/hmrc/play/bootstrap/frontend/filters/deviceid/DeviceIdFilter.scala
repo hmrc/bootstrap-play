@@ -35,7 +35,8 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
   override def apply(next: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
     val requestCookies = rh.attrs(RequestAttrKey.Cookies).value
 
-    def allCookiesApartFromDeviceId = requestCookies.filterNot(_.name == DeviceId.MdtpDeviceId)
+    def allCookiesApartFromDeviceId =
+      requestCookies.filterNot(_.name == DeviceId.MdtpDeviceId)
 
     val cookieResult = requestCookies
       .find(deviceIdCookie)
@@ -72,7 +73,8 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
     }
   }
 
-  private def deviceIdCookie(cookie: Cookie): Boolean = cookie.name == DeviceId.MdtpDeviceId && !cookie.value.isEmpty
+  private def deviceIdCookie(cookie: Cookie): Boolean =
+    cookie.name == DeviceId.MdtpDeviceId && !cookie.value.isEmpty
 
   private case class CookieResult(cookies: Seq[Cookie], newDeviceIdCookie: Cookie)
 
