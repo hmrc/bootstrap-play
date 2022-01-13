@@ -89,29 +89,60 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.backend.BackendModule"
 
 ```
 
-## Default HTTP client
+## Default HTTP clients
 
-A default http client with pre-configured auditing hook can be injected into any connector. The http client uses http-verbs
-For more http-verbs examples see https://github.com/hmrc/http-verbs-example
+Two http clients are available and can be injected into any connector by enabling the appropriate modules.
 
+### uk.gov.hmrc.http.HttpClient
 
-Make sure you have the following modules in your application.conf file:
+This is the original http client provided by http-verbs.
+
+To use, enable the following modules in your application.conf file:
 
 ```properties
 play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 ```
 
+example usage:
 
 ```scala
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 import javax.inject.Inject
 
-class SomeConnector @Inject() (client: HttpClient) {
+class SomeConnector @Inject() (httpClient: HttpClient) {
 
-  client.GET[Option[MyCaseClass]]("http://localhost/my-api")
+  httpClient.GET[Option[MyCaseClass]]("http://localhost/my-api")
 }
 ```
+
+### uk.gov.hmrc.http.client2.HttpClient2
+
+This is a new http client provided by http-verbs which supports streaming and has a more flexible API, making it simpler to enable Proxies etc.
+
+To use, enable the following modules in your application.conf file:
+
+```properties
+play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClient2Module"
+```
+
+example usage:
+
+```scala
+import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.client2.HttpClient2
+import javax.inject.Inject
+
+class SomeConnector @Inject() (httpClient: HttpClient2) {
+
+  httpClient.get(url"http://localhost/my-api").execute[Option[MyCaseClass]]
+}
+```
+
+Note, you can safely enable both http clients.
+
+For documentation and more usage examples see [http-verbs](https://github.com/hmrc/http-verbs)
 
 ## User Authorisation
 
@@ -162,6 +193,12 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
 ## Changes
+
+### Version 5.22.0
+
+#### http-verbs
+
+Http-verbs has been updated to version 13.13.0, which adds `HttpClient2`. See [http-verbs](https://github.com/hmrc/http-verbs) for details.
 
 ### Version 5.21.0
 
