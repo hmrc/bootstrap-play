@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,10 @@ package uk.gov.hmrc.play.bootstrap.graphite
 import java.util.concurrent.TimeUnit
 
 import com.codahale.metrics.graphite.GraphiteReporter
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers
 
@@ -33,7 +31,6 @@ class GraphiteReportingSpec extends AnyWordSpec with Matchers with MockitoSugar 
   val graphite: GraphiteReporter = mock[GraphiteReporter]
 
   def app: GuiceApplicationBuilder = {
-
     import play.api.inject._
 
     new GuiceApplicationBuilder()
@@ -45,13 +42,11 @@ class GraphiteReportingSpec extends AnyWordSpec with Matchers with MockitoSugar 
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    Mockito.reset(graphite)
+    reset(graphite)
   }
 
   "GraphiteReporting" must {
-
     "start the reporter when metrics are enabled with default interval" in {
-
       Helpers.running(app.build()) {
         verify(graphite).start(10L, TimeUnit.SECONDS)
       }
@@ -59,7 +54,6 @@ class GraphiteReportingSpec extends AnyWordSpec with Matchers with MockitoSugar 
     }
 
     "start the reporter when metrics are enabled with custom interval" in {
-
       Helpers.running(app.configure("microservice.metrics.graphite.interval" -> "11").build()) {
         verify(graphite).start(11L, TimeUnit.SECONDS)
       }

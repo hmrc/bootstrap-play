@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,16 +71,19 @@ class GraphiteMetricsModuleSpec
     forAll { (kenshooEnabled: Boolean, graphiteEnabled: Boolean) =>
       SharedMetricRegistries.clear()
 
-      val configuration = Configuration("metrics.enabled" -> kenshooEnabled) ++
-        (if (graphiteEnabled)
-           Configuration(
-             "microservice.metrics.graphite.enabled" -> true,
-             "microservice.metrics.graphite.host"    -> "test",
-             "microservice.metrics.graphite.port"    -> "9999",
-             "appName"                               -> "test"
-           )
-         else
-           Configuration("microservice.metrics.graphite.enabled" -> false)
+      val configuration =
+         Configuration.from(
+           Map("metrics.enabled" -> kenshooEnabled) ++
+             (if (graphiteEnabled)
+                Map(
+                  "microservice.metrics.graphite.enabled" -> true,
+                  "microservice.metrics.graphite.host"    -> "test",
+                  "microservice.metrics.graphite.port"    -> "9999",
+                  "appName"                               -> "test"
+                )
+              else
+                Map("microservice.metrics.graphite.enabled" -> false)
+             )
         )
 
       withInjector(configuration) { injector =>

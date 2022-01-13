@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,41 +16,41 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
+import org.mockito.captor.ArgCaptor
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.{HttpConfiguration, HttpFilters}
+import play.api.OptionalDevContext
+import play.api.http.{HttpConfiguration, HttpErrorHandler, HttpFilters}
 import play.api.mvc.{Handler, RequestHeader}
 import play.api.routing.Router
 import play.api.test.FakeRequest
-import org.mockito.Mockito.times
+import play.core.DefaultWebCommands
 
 class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   "Routing requests" should {
     "try passing a request with trailing slash removed if handler was not found" in new Setup {
-      val request        = FakeRequest("GET", "path/")
-      val requestHandler = new RequestHandler(mockedRouter, null, configuration, filters)
+      val request = FakeRequest("GET", "path/")
 
-      when(mockedRouter.handlerFor(any())).thenReturn(None)
-      val _ = requestHandler.routeRequest(request)
+      when(mockedRouter.handlerFor(any))
+        .thenReturn(None)
 
-      val requestCaptor = ArgumentCaptor.forClass(classOf[RequestHeader])
+      requestHandler.routeRequest(request)
 
-      verify(mockedRouter, times(2)).handlerFor(requestCaptor.capture())
-      requestCaptor.getAllValues.get(0).path shouldBe "path/"
-      requestCaptor.getAllValues.get(1).path shouldBe "path"
+      val requestCaptor = ArgCaptor[RequestHeader]
+
+      verify(mockedRouter, times(2)).handlerFor(requestCaptor.capture)
+      requestCaptor.values.map(_.path) shouldBe List("path/", "path")
     }
 
     "not modify request if handler was found" in new Setup {
-      val request          = FakeRequest("GET", "path/")
-      val requestHandler   = new RequestHandler(mockedRouter, null, configuration, filters)
-      val handler: Handler = new Handler {}
+      val request = FakeRequest("GET", "path/")
+      val handler = new Handler {}
 
-      when(mockedRouter.handlerFor(request)).thenReturn(Some(handler))
+      when(mockedRouter.handlerFor(request))
+        .thenReturn(Some(handler))
+
       requestHandler.routeRequest(request) shouldBe Some(handler)
 
       verify(mockedRouter).handlerFor(request)
@@ -61,10 +61,24 @@ class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
   trait Setup {
     val mockedRouter = mock[Router]
 
-    val configuration = mock[HttpConfiguration]
-    when(configuration.context).thenReturn("context")
+    val mockedHttpErrorHandler = mock[HttpErrorHandler]
 
-    val filters = mock[HttpFilters]
-    when(filters.filters).thenReturn(Seq.empty)
+    val mockedConfiguration = mock[HttpConfiguration]
+    when(mockedConfiguration.context)
+      .thenReturn("context")
+
+    val mockedFilters = mock[HttpFilters]
+    when(mockedFilters.filters)
+      .thenReturn(Seq.empty)
+
+    val requestHandler =
+      new RequestHandler(
+        webCommands   = new DefaultWebCommands,
+        optDevContext = new OptionalDevContext(None),
+        router        = mockedRouter,
+        errorHandler  = mockedHttpErrorHandler,
+        configuration = mockedConfiguration,
+        filters       = mockedFilters
+      )
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,16 +25,21 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.MDC
 import play.api.{Configuration, Logger}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Writes}
+import play.api.mvc.Results
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames}
 
-import play.api.mvc.Results
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-abstract class MDCLoggingSpec extends AnyWordSpec with Matchers with ScalaFutures with OptionValues with BeforeAndAfterEach {
+abstract class MDCLoggingSpec
+  extends AnyWordSpec
+     with Matchers
+     with ScalaFutures
+     with OptionValues
+     with BeforeAndAfterEach {
 
   private val Action = stubControllerComponents().actionBuilder
 
@@ -53,17 +58,20 @@ abstract class MDCLoggingSpec extends AnyWordSpec with Matchers with ScalaFuture
       import play.api.routing._
       import play.api.routing.sird._
 
+      //implicit val mw: Writes[Map[String, String]] =
+      //  Writes.genericMapWrites
+
       Router.from {
         case GET(p"/") =>
           Action {
             Logger(getClass).warn("bar")
-            Results.Ok {
-              Json.toJson {
+            Results.Ok(
+              Json.toJson(
                 Option(MDC.getCopyOfContextMap)
                   .map(_.asScala)
                   .getOrElse(Map.empty[String, String])
-              }
-            }
+              )(Writes.genericMapWrites)
+            )
           }
       }
     }

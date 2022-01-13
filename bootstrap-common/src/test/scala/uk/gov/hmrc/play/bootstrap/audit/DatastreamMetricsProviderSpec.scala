@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,21 @@ package uk.gov.hmrc.play.bootstrap.audit
 
 import com.codahale.metrics.{Counter, MetricRegistry}
 import com.kenshoo.play.metrics.Metrics
-import org.mockito.Mockito.{verify, when}
-import org.mockito.MockitoSugar.mock
+import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.Logger
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
 
-class DatastreamMetricsProviderSpec extends AnyWordSpec with Matchers {
+class DatastreamMetricsProviderSpec
+  extends AnyWordSpec
+     with Matchers
+     with MockitoSugar {
 
   "DisabledDatastreamMetricsProvider" should {
     class TestDisabledDatastreamMetricsProvider extends DisabledDatastreamMetricsProvider {
-      override val logger = mock[Logger]
+      override val logger = mock[Logger](withSettings.lenient)
     }
 
     "return a fully-disabled DatastreamMetrics" in {

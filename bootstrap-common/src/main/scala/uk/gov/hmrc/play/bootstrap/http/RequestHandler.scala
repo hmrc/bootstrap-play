@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,27 @@ package uk.gov.hmrc.play.bootstrap.http
 
 import javax.inject.Inject
 
+import play.core.WebCommands
+import play.api.OptionalDevContext
 import play.api.http.{DefaultHttpRequestHandler, HttpConfiguration, HttpErrorHandler, HttpFilters}
 import play.api.mvc.{Handler, RequestHeader}
 import play.api.routing.Router
 
 class RequestHandler @Inject()(
-  router: Router,
-  errorHandler: HttpErrorHandler,
+  webCommands  : WebCommands,
+  optDevContext: OptionalDevContext,
+  router       : Router,
+  errorHandler : HttpErrorHandler,
   configuration: HttpConfiguration,
-  filters: HttpFilters)
-    extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
+  filters      : HttpFilters
+) extends DefaultHttpRequestHandler(
+  webCommands   = webCommands,
+  optDevContext = optDevContext,
+  router        = router,
+  errorHandler  = errorHandler,
+  configuration = configuration,
+  filters       = filters
+) {
 
   // Play 2.0 doesn't support trailing slash
   override def routeRequest(request: RequestHeader): Option[Handler] = super.routeRequest(request).orElse {

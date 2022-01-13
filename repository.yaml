@@ -4,15 +4,15 @@ type: library
 leakDetectionExemptions:
  - ruleId: 'play_http_secret_key'
    filePaths:
-     - '/bootstrap-frontend-play-26/src/main/resources/frontend.conf'
-     - '/bootstrap-backend-play-26/src/main/resources/backend.conf'
+     - '/bootstrap-frontend-play-28/src/main/resources/frontend.conf'
+     - '/bootstrap-backend-play-28/src/main/resources/backend.conf'
  - ruleId: 'play_crypto_secret'
    filePaths:
-      - '/bootstrap-backend-play-26/src/main/resources/backend.conf'
-      - '/bootstrap-frontend-play-26/src/main/resources/frontend.conf'
+      - '/bootstrap-backend-play-28/src/main/resources/backend.conf'
+      - '/bootstrap-frontend-play-28/src/main/resources/frontend.conf'
  - ruleId: 'sso_encryption_key'
    filePaths:
-      - '/bootstrap-frontend-play-26/src/main/resources/frontend.conf'
+      - '/bootstrap-frontend-play-28/src/main/resources/frontend.conf'
  - ruleId: 'cookie_deviceId_secret'
    filePaths:
-      - '/bootstrap-frontend-play-26/src/main/resources/frontend.conf'
+      - '/bootstrap-frontend-play-28/src/main/resources/frontend.conf'

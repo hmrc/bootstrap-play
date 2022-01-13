@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ class DefaultHttpClientSpec
         bind[String].qualifiedWith("appName").toInstance(appName),
         bind[HttpAuditing].to[DefaultHttpAuditing],
         bind[uk.gov.hmrc.http.HttpClient].to[DefaultHttpClient],
-        bind[AuditConnector].toInstance(new TestAuditConnector(appName))
+        bind[AuditConnector].to[TestAuditConnector]
       )
       .build()
 

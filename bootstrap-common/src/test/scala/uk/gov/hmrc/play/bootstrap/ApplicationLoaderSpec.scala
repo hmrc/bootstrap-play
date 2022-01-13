@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ class ApplicationLoaderSpec extends Base64ConfigDecoderTests {
   override def decode(config: (String, Any)*): Configuration = {
 
     val context = {
-      val ctx = play.api.ApplicationLoader.createContext(Environment.simple())
-      ctx.copy(initialConfiguration = ctx.initialConfiguration ++ Configuration(config: _*))
+      val ctx = play.api.ApplicationLoader.Context.create(Environment.simple())
+      ctx.copy(initialConfiguration = ctx.initialConfiguration.withFallback(Configuration(config: _*)))
     }
 
     loader.load(context).configuration
