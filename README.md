@@ -161,7 +161,16 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
-## Migrations
+## Changes
+
+### Version 5.20.0
+
+Adds the following configuration for `JsonErrorHandler`:
+
+- `bootstrap.errorHandler.suppress4xxErrorMessages`
+- `bootstrap.errorHandler.suppress5xxErrorMessages`
+
+It is expected that these will be enabled for at least development but can be disabled if required.
 
 ### Version 5.19.0
 

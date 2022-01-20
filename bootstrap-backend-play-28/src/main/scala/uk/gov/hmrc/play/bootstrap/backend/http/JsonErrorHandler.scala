@@ -58,6 +58,12 @@ class JsonErrorHandler @Inject()(
   protected val upstreamWarnStatuses: Seq[Int] =
     configuration.get[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes")
 
+  protected val suppress4xxErrorMessages: Boolean =
+    configuration.get[Boolean]("bootstrap.errorHandler.suppress4xxErrorMessages")
+
+  protected val suppress5xxErrorMessages: Boolean =
+    configuration.get[Boolean]("bootstrap.errorHandler.suppress5xxErrorMessages")
+
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
     val result = statusCode match {
@@ -100,7 +106,11 @@ class JsonErrorHandler @Inject()(
             case _                                        => "bad request, cause: REDACTED"
           }
         }
-        BadRequest(toJson(ErrorResponse(BAD_REQUEST, constructErrorMessage(message))))
+        val msg =
+          if (suppress4xxErrorMessages) "Bad request"
+          else constructErrorMessage(message)
+
+        BadRequest(toJson(ErrorResponse(BAD_REQUEST, msg)))
 
       case _ =>
         auditConnector.sendEvent(
@@ -111,15 +121,18 @@ class JsonErrorHandler @Inject()(
             detail          = Map.empty
           )
         )
-        Status(statusCode)(toJson(ErrorResponse(statusCode, message)))
+
+        val msg =
+          if (suppress4xxErrorMessages) "Other error"
+          else message
+
+        Status(statusCode)(toJson(ErrorResponse(statusCode, msg)))
     }
     Future.successful(result)
   }
 
   override def onServerError(request: RequestHeader, ex: Throwable): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
-
-    val message = s"! Internal server error, for (${request.method}) [${request.uri}] -> "
 
     val eventType = ex match {
       case _: NotFoundException      => "ResourceNotFound"
@@ -130,17 +143,28 @@ class JsonErrorHandler @Inject()(
 
     val errorResponse = ex match {
       case e: AuthorisationException =>
-        logger.error(message, e)
+        logger.error(s"! Internal server error, for (${request.method}) [${request.uri}] -> ", e)
+        // message is not suppressed here since needs to be forwarded
         ErrorResponse(401, e.getMessage)
+
       case e: HttpException =>
         logException(e, e.responseCode)
+        // message is not suppressed here since HttpException exists to define returned message
         ErrorResponse(e.responseCode, e.getMessage)
+
       case e: UpstreamErrorResponse =>
         logException(e, e.statusCode)
-        ErrorResponse(e.reportAs, e.getMessage)
+        val msg =
+          if (suppress5xxErrorMessages) s"UpstreamErrorResponse: ${e.statusCode}"
+          else e.getMessage
+        ErrorResponse(e.reportAs, msg)
+
       case e: Throwable =>
-        logger.error(message, e)
-        ErrorResponse(INTERNAL_SERVER_ERROR, e.getMessage)
+        logger.error(s"! Internal server error, for (${request.method}) [${request.uri}] -> ", e)
+        val msg =
+          if (suppress5xxErrorMessages) "Other error"
+          else e.getMessage
+        ErrorResponse(INTERNAL_SERVER_ERROR, msg)
     }
 
     auditConnector.sendEvent(
