@@ -170,7 +170,7 @@ Adds the following configuration for `JsonErrorHandler`:
 - `bootstrap.errorHandler.suppress4xxErrorMessages`
 - `bootstrap.errorHandler.suppress5xxErrorMessages`
 
-It is expected that these will be enabled for at least development but can be disabled if required.
+It is expected that suppression will be disabled for at least development, since they provide valuable feedback, but verbose messages can be suppressed if required.
 
 ### Version 5.19.0
 
