@@ -55,7 +55,14 @@ class JsonErrorHandler @Inject()(
     * This is used to reduce the number of noise the number of duplicated alerts
     * for a microservice.
     */
-  protected val upstreamWarnStatuses: Seq[Int] = configuration.get[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes")
+  protected val upstreamWarnStatuses: Seq[Int] =
+    configuration.get[Seq[Int]]("bootstrap.errorHandler.warnOnly.statusCodes")
+
+  protected val suppress4xxErrorMessages: Boolean =
+    configuration.get[Boolean]("bootstrap.errorHandler.suppress4xxErrorMessages")
+
+  protected val suppress5xxErrorMessages: Boolean =
+    configuration.get[Boolean]("bootstrap.errorHandler.suppress5xxErrorMessages")
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
@@ -63,49 +70,63 @@ class JsonErrorHandler @Inject()(
       case NOT_FOUND =>
         auditConnector.sendEvent(
           dataEvent(
-            eventType = "ResourceNotFound",
+            eventType       = "ResourceNotFound",
             transactionName = "Resource Endpoint Not Found",
-            request = request,
-            detail = Map.empty
+            request         = request,
+            detail          = Map.empty
           )
         )
         NotFound(toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path))))
+
       case BAD_REQUEST =>
         auditConnector.sendEvent(
           dataEvent(
-            eventType = "ServerValidationError",
+            eventType       = "ServerValidationError",
             transactionName = "Request bad format exception",
-            request = request,
-            detail = Map.empty
+            request         = request,
+            detail          = Map.empty
           )
         )
         def constructErrorMessage(input: String): String = {
           val unrecognisedTokenJsonError = "^Invalid Json: Unrecognized token '(.*)':.*".r
-          val invalidJson = "^(?s)Invalid Json:.*".r
-          val jsonValidationError = "^Json validation error.*".r
-          val booleanParsingError = "^Cannot parse parameter .* as Boolean: should be true, false, 0 or 1$".r
-          val missingParameterError = "^Missing parameter:.*".r
-          val characterParseError = "^Cannot parse parameter .* with value '(.*)' as Char: .* must be exactly one digit in length.$".r
-          val parameterParseError = "^Cannot parse parameter .* as .*: For input string: \"(.*)\"$".r
+          val invalidJson                = "^(?s)Invalid Json:.*".r
+          val jsonValidationError        = "^Json validation error.*".r
+          val booleanParsingError        = "^Cannot parse parameter .* as Boolean: should be true, false, 0 or 1$".r
+          val missingParameterError      = "^Missing parameter:.*".r
+          val characterParseError        = "^Cannot parse parameter .* with value '(.*)' as Char: .* must be exactly one digit in length.$".r
+          val parameterParseError        = "^Cannot parse parameter .* as .*: For input string: \"(.*)\"$".r
           input match {
             case unrecognisedTokenJsonError(toBeRedacted) => input.replaceAllLiterally(toBeRedacted, "REDACTED")
-            case invalidJson() | jsonValidationError() | booleanParsingError() | missingParameterError() => input
-            case characterParseError(toBeRedacted) => input.replaceAllLiterally(toBeRedacted, "REDACTED")
-            case parameterParseError(toBeRedacted) => input.replaceAllLiterally(toBeRedacted, "REDACTED")
-            case _ => "bad request, cause: REDACTED"
+            case invalidJson()
+               | jsonValidationError()
+               | booleanParsingError()
+               | missingParameterError()                  => input
+            case characterParseError(toBeRedacted)        => input.replaceAllLiterally(toBeRedacted, "REDACTED")
+            case parameterParseError(toBeRedacted)        => input.replaceAllLiterally(toBeRedacted, "REDACTED")
+            case _                                        => "bad request, cause: REDACTED"
           }
         }
-        BadRequest(toJson(ErrorResponse(BAD_REQUEST, constructErrorMessage(message))))
+        val msg =
+          if (suppress4xxErrorMessages) "Bad request"
+          else constructErrorMessage(message)
+
+        BadRequest(toJson(ErrorResponse(BAD_REQUEST, msg)))
+
       case _ =>
         auditConnector.sendEvent(
           dataEvent(
-            eventType = "ClientError",
+            eventType       = "ClientError",
             transactionName = s"A client error occurred, status: $statusCode",
-            request = request,
-            detail = Map.empty
+            request         = request,
+            detail          = Map.empty
           )
         )
-        Status(statusCode)(toJson(ErrorResponse(statusCode, message)))
+
+        val msg =
+          if (suppress4xxErrorMessages) "Other error"
+          else message
+
+        Status(statusCode)(toJson(ErrorResponse(statusCode, msg)))
     }
     Future.successful(result)
   }
@@ -113,7 +134,6 @@ class JsonErrorHandler @Inject()(
   override def onServerError(request: RequestHeader, ex: Throwable): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
 
-    val message = s"! Internal server error, for (${request.method}) [${request.uri}] -> "
     val eventType = ex match {
       case _: NotFoundException      => "ResourceNotFound"
       case _: AuthorisationException => "ClientError"
@@ -123,17 +143,28 @@ class JsonErrorHandler @Inject()(
 
     val errorResponse = ex match {
       case e: AuthorisationException =>
-        logger.error(message, e)
+        logger.error(s"! Internal server error, for (${request.method}) [${request.uri}] -> ", e)
+        // message is not suppressed here since needs to be forwarded
         ErrorResponse(401, e.getMessage)
+
       case e: HttpException =>
         logException(e, e.responseCode)
+        // message is not suppressed here since HttpException exists to define returned message
         ErrorResponse(e.responseCode, e.getMessage)
+
       case e: UpstreamErrorResponse =>
         logException(e, e.statusCode)
-        ErrorResponse(e.reportAs, e.getMessage)
+        val msg =
+          if (suppress5xxErrorMessages) s"UpstreamErrorResponse: ${e.statusCode}"
+          else e.getMessage
+        ErrorResponse(e.reportAs, msg)
+
       case e: Throwable =>
-        logger.error(message, e)
-        ErrorResponse(INTERNAL_SERVER_ERROR, e.getMessage)
+        logger.error(s"! Internal server error, for (${request.method}) [${request.uri}] -> ", e)
+        val msg =
+          if (suppress5xxErrorMessages) "Other error"
+          else e.getMessage
+        ErrorResponse(INTERNAL_SERVER_ERROR, msg)
     }
 
     auditConnector.sendEvent(

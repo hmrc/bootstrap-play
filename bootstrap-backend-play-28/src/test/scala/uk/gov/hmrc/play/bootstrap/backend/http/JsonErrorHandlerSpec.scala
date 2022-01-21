@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.bootstrap.backend.http
 
 import akka.actor.ActorSystem
 import akka.util.ByteString
+import com.typesafe.config.ConfigFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
@@ -57,7 +58,6 @@ class JsonErrorHandlerSpec
   import ExecutionContext.Implicits.global
 
   "onServerError" should {
-
     "convert a NotFoundException to NotFound response and audit the error" in new Setup {
       val notFoundException = new NotFoundException("test")
       val createdDataEvent  = DataEvent("auditSource", "auditType")
@@ -92,9 +92,11 @@ class JsonErrorHandlerSpec
 
       val result = jsonErrorHandler.onServerError(requestHeader, authorisationException)
 
-      status(result) shouldEqual UNAUTHORIZED
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> UNAUTHORIZED, "message" -> authorisationException.getMessage)
+      status(result)        shouldEqual UNAUTHORIZED
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> UNAUTHORIZED,
+        "message"    -> authorisationException.getMessage
+      )
 
       verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -113,9 +115,11 @@ class JsonErrorHandlerSpec
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
+      status(result)        shouldEqual INTERNAL_SERVER_ERROR
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> INTERNAL_SERVER_ERROR,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -134,9 +138,11 @@ class JsonErrorHandlerSpec
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
-      status(result) shouldEqual INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> INTERNAL_SERVER_ERROR, "message" -> exception.getMessage)
+      status(result)        shouldEqual INTERNAL_SERVER_ERROR
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> INTERNAL_SERVER_ERROR,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -156,9 +162,11 @@ class JsonErrorHandlerSpec
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
-      status(result) shouldEqual responseCode
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> responseCode, "message" -> exception.getMessage)
+      status(result)        shouldEqual responseCode
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> responseCode,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
@@ -178,20 +186,107 @@ class JsonErrorHandlerSpec
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
-      status(result) shouldEqual reportAs
-      contentAsJson(result) shouldEqual Json
-        .obj("statusCode" -> reportAs, "message" -> exception.getMessage)
+      status(result)        shouldEqual reportAs
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> reportAs,
+        "message"    -> exception.getMessage
+      )
 
       verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
     }
 
+    "NOT suppress AuthorisationException error messages when suppression enabled" in new Setup(
+      config = Map(
+        "appName" -> "myApp",
+        "bootstrap.errorHandler.suppress5xxErrorMessages" -> true
+      )
+    ) {
+      val realMessage      = "real message"
+      val exception        = new AuthorisationException(realMessage) {}
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(httpAuditEvent.dataEvent(any, any, any, any)(any))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result)        shouldEqual UNAUTHORIZED
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> UNAUTHORIZED,
+        "message"    -> realMessage
+      )
+    }
+
+    "NOT suppress HttpException error messages when suppression enabled" in new Setup(
+      config = Map(
+        "appName" -> "myApp",
+        "bootstrap.errorHandler.suppress5xxErrorMessages" -> true
+      )
+    ) {
+      val realMessage      = "real message"
+      val realStatusCode   = 500
+      val exception        = new HttpException(realMessage, realStatusCode)
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(httpAuditEvent.dataEvent(any, any, any, any)(any))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result)        shouldEqual realStatusCode
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> realStatusCode,
+        "message"    -> realMessage
+      )
+    }
+
+    "suppress Upstream error messages when suppression enabled" in new Setup(
+      config = Map(
+        "appName" -> "myApp",
+        "bootstrap.errorHandler.suppress5xxErrorMessages" -> true
+      )
+    ) {
+      val reportAs         = randomErrorStatusCode()
+      val upstreamError    = randomErrorStatusCode()
+      val exception        = UpstreamErrorResponse("error message", upstreamError, reportAs)
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(httpAuditEvent.dataEvent(any, any, any, any)(any))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result)        shouldEqual reportAs
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> reportAs,
+        "message"    -> s"UpstreamErrorResponse: $upstreamError"
+      )
+    }
+
+    "suppress Other error messages when suppression enabled" in new Setup(
+      config = Map(
+        "appName" -> "myApp",
+        "bootstrap.errorHandler.suppress5xxErrorMessages" -> true
+      )
+    ) {
+      val exception        = new RuntimeException("real message")
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(httpAuditEvent.dataEvent(any, any, any, any)(any))
+        .thenReturn(createdDataEvent)
+
+      val result = jsonErrorHandler.onServerError(requestHeader, exception)
+
+      status(result)        shouldEqual INTERNAL_SERVER_ERROR
+      contentAsJson(result) shouldEqual Json.obj(
+        "statusCode" -> INTERNAL_SERVER_ERROR,
+        "message"    -> "Other error"
+      )
+    }
+
     "log a warning for upstream code in the warning list" when {
-      class WarningSetup(upstreamWarnStatuses: Seq[Int]) extends Setup {
-        override val configuration: Configuration = Configuration(
+      class WarningSetup(upstreamWarnStatuses: Seq[Int]) extends Setup(
+        config = Map(
           "appName" -> "myApp",
           "bootstrap.errorHandler.warnOnly.statusCodes" -> upstreamWarnStatuses
         )
-      }
+      )
 
       def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit) {
         import ch.qos.logback.classic.{Logger => LogbackLogger}
@@ -291,7 +386,7 @@ class JsonErrorHandlerSpec
     }
 
     "audit an error and return json response for 4xx except 404 and 400" in new Setup {
-      (401 to 403) ++ (405 to 499) foreach { statusCode =>
+      (401 to 499).filter(_ != 404).foreach { statusCode =>
         val createdDataEvent = DataEvent("auditSource", "auditType")
         when(
           httpAuditEvent.dataEvent(
@@ -312,14 +407,42 @@ class JsonErrorHandlerSpec
         verify(auditConnector).sendEvent(eqTo(createdDataEvent))(any[HeaderCarrier], any[ExecutionContext])
       }
     }
+
+    "suppress messages when suppression enabled" in new Setup(
+      config = Map(
+        "appName" -> "myApp",
+        "bootstrap.errorHandler.suppress4xxErrorMessages" -> true
+      )
+    ) {
+      val errorMessage = "real message"
+
+      val createdDataEvent = DataEvent("auditSource", "auditType")
+      when(httpAuditEvent.dataEvent(any, any, any, any)(any))
+        .thenReturn(createdDataEvent)
+
+      (400 to 499).filter(_ != 404).foreach { statusCode =>
+        val expectedMessage = if (statusCode == 400) "Bad request" else "Other error"
+
+        val result = jsonErrorHandler.onClientError(requestHeader, statusCode, errorMessage)
+
+        status(result)        shouldEqual statusCode
+        contentAsJson(result) shouldEqual Json.obj(
+          "statusCode" -> statusCode,
+          "message"    -> expectedMessage
+        )
+      }
+    }
   }
 
+  // these are the assumptions the redacting logic in JsonErrorHandler expects from plaexpectations on play, such that J
   "play" should {
     implicit val system = ActorSystem()
 
     val errorHandler = new HttpErrorHandler {
-      override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = Future.successful(Results.Status(statusCode)(message))
-      override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = Future.successful(Results.InternalServerError(exception.getMessage))
+      override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
+        Future.successful(Results.Status(statusCode)(message))
+      override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] =
+        Future.successful(Results.InternalServerError(exception.getMessage))
     }
 
     "return Invalid Json error when an empty body is provided" in new JsonSetup {
@@ -365,24 +488,27 @@ class JsonErrorHandlerSpec
     trait JsonSetup {
       val fakeRequest = FakeRequest().withHeaders(play.api.http.HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       val parsers = PlayBodyParsers(eh = errorHandler)
-      def errorResponse[A](parser: BodyParser[A], body: String): String = parser(fakeRequest).run(ByteString(body)).futureValue.left.get.body.dataStream.runReduce(_ ++ _).futureValue.utf8String
+      def errorResponse[A](parser: BodyParser[A], body: String): String =
+        parser(fakeRequest).run(ByteString(body)).futureValue.left.get.body.dataStream.runReduce(_ ++ _).futureValue.utf8String
     }
 
   }
 
-  private trait Setup {
+  private class Setup(
+    config: Map[String, Any] = Map("appName" -> "myApp")
+  ) {
     val uri           = "some-uri"
     val requestHeader = FakeRequest(GET, uri)
 
     val auditConnector = mock[AuditConnector]
     when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(Success))
+
     val httpAuditEvent = mock[HttpAuditEvent](withSettings.lenient)
 
-    val configuration    = Configuration(
-      "appName" -> "myApp",
-      "bootstrap.errorHandler.warnOnly.statusCodes" -> Seq.empty
-      )
+    val configuration    =
+      Configuration.from(config).withFallback(Configuration(ConfigFactory.load()))
+
     lazy val jsonErrorHandler = new JsonErrorHandler(auditConnector, httpAuditEvent, configuration)
 
     def randomErrorStatusCode(): Int =
