@@ -21,7 +21,7 @@ import com.typesafe.config.Config
 import javax.inject.{Inject, Named, Provider, Singleton}
 import play.api.Configuration
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.http.client2.{HttpClient2, HttpClient2Impl}
+import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -55,20 +55,20 @@ class DefaultHttpAuditing @Inject() (
 
 
 @Singleton
-class HttpClient2Provider @Inject()(
+class HttpClientV2Provider @Inject()(
   config      : Configuration,
   httpAuditing: HttpAuditing,
   wsClient    : WSClient,
   actorSystem : ActorSystem
-) extends Provider[HttpClient2] {
+) extends Provider[HttpClientV2] {
 
-  private lazy val instance = new HttpClient2Impl(
+  private lazy val instance = new HttpClientV2Impl(
     wsClient,
     actorSystem,
     config = config,
     hooks  = Seq(httpAuditing.AuditingHook)
   )
 
-  override def get(): HttpClient2 =
+  override def get(): HttpClientV2 =
     instance
 }

@@ -116,7 +116,7 @@ class SomeConnector @Inject() (httpClient: HttpClient) {
 }
 ```
 
-### uk.gov.hmrc.http.client2.HttpClient2
+### uk.gov.hmrc.http.client.HttpClientV2
 
 This is a new http client provided by http-verbs which supports streaming and has a more flexible API, making it simpler to enable Proxies etc.
 
@@ -124,19 +124,19 @@ To use, enable the following modules in your application.conf file:
 
 ```properties
 play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClient2Module"
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientV2Module"
 ```
 
 example usage:
 
 ```scala
 import uk.gov.hmrc.http.StringContextOps
-import uk.gov.hmrc.http.client2.HttpClient2
+import uk.gov.hmrc.http.client.HttpClientV2
 import javax.inject.Inject
 
-class SomeConnector @Inject() (httpClient: HttpClient2) {
+class SomeConnector @Inject() (httpClientV2: HttpClientV2) {
 
-  httpClient.get(url"http://localhost/my-api").execute[Option[MyCaseClass]]
+  httpClientV2.get(url"http://localhost/my-api").execute[Option[MyCaseClass]]
 }
 ```
 
@@ -198,7 +198,7 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 #### http-verbs
 
-Http-verbs has been updated to version 13.13.0, which adds `HttpClient2`. See [http-verbs](https://github.com/hmrc/http-verbs) for details.
+Http-verbs has been updated to version 13.13.0, which adds `HttpClientV2`. See [http-verbs](https://github.com/hmrc/http-verbs) for details.
 
 ### Version 5.21.0
 

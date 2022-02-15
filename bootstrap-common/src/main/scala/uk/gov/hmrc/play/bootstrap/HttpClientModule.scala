@@ -20,8 +20,8 @@ import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.http.CoreGet
 import uk.gov.hmrc.http.HttpClient
-import uk.gov.hmrc.http.client2.HttpClient2
-import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClient2Provider}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClientV2Provider}
 
 class HttpClientModule extends Module {
 
@@ -33,10 +33,10 @@ class HttpClientModule extends Module {
     )
 }
 
-class HttpClient2Module extends Module {
+class HttpClientV2Module extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     Seq(
-      bind[HttpClient2].toProvider[HttpClient2Provider]
+      bind[HttpClientV2].toProvider[HttpClientV2Provider]
     )
 }

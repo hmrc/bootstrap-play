@@ -158,7 +158,7 @@ trait CommonAuditFilter extends AuditFilter {
             str.copy(chunks = str.chunks.alsoTo(chunkedResponseBodyCaptor))
           case h: HttpEntity =>
             h.consumeData.map { rb =>
-              val auditResponseString = BodyCaptor.bodyUpto(rb, maxBodySize, s"incoming $loggingContext response").decodeString("UTF-8")
+              val auditResponseString = BodyCaptor.bodyUpto(rb, maxBodySize, s"incoming $loggingContext response", isStream = false).decodeString("UTF-8")
               responseBodyPromise.success(auditResponseString)
             }
             h
