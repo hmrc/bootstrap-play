@@ -119,7 +119,8 @@ trait CommonAuditFilter extends AuditFilter {
         auditResponseBody <- reponseBodyFuture
       } yield handler(auditRequestBody, result, auditResponseBody)
 
-    //grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody)
+    //grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody https://github.com/playframework/playframework/blob/2.8.13/web/play-filters-helpers/src/main/scala/play/filters/csrf/CSRFActions.scala#L161-L185)
+    // we don't just use `next.through(BodyCaptor.flow)` since the stream wouldn't be audited without the controller pulling the content
     val wrappedAcc: Accumulator[ByteString, Result] =
       Accumulator(
         Flow[ByteString]
@@ -132,7 +133,8 @@ trait CommonAuditFilter extends AuditFilter {
           .prefixAndTail(0)
           .map(_._2)
           .concatSubstreams
-          .toMat(Sink.head[Source[ByteString, _]])(Keep.right)
+          .toMat(Sink.headOption[Source[ByteString, _]])(Keep.right)
+          .mapMaterializedValue(_.map(_.getOrElse(Source.single(ByteString.empty))))
       ).mapFuture(next.run)
 
     wrappedAcc
