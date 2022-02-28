@@ -1,13 +1,17 @@
 import sbt.Keys._
 import sbt._
 
-val silencerVersion = "1.7.5"
+val silencerVersion = "1.7.7"
+
+val scala2_12 = "2.12.15"
+val scala2_13 = "2.13.7"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
   majorVersion := 5,
-  scalaVersion := "2.12.14",
   isPublicArtefact := true,
+  scalaVersion := scala2_12,
+  crossScalaVersions := Seq(scala2_12, scala2_13),
   scalacOptions ++= Seq("-feature"),
   libraryDependencies ++= Seq(
     compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),

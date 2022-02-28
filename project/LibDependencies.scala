@@ -20,13 +20,13 @@ object LibDependencies {
       "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2", // this is compatible with play 2.8
       "com.typesafe.play"       %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
-      "uk.gov.hmrc"             %% "auth-client"                % s"5.7.0-$playSuffix",
+      "uk.gov.hmrc"             %% "auth-client"                % s"5.10.0-$playSuffix",
       "uk.gov.hmrc"             %% "crypto"                     % "6.1.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.10.0",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.11.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
-      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.1.0",
+      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
 
       // test dependencies
       "com.github.tomakehurst"  %  "wiremock-jre8"              % "2.26.3"       % Test,
@@ -43,8 +43,8 @@ object LibDependencies {
   private def frontendCommon(playVersion: String, playSuffix: String) =
     common(playVersion, playSuffix) ++
       Seq(
-        "uk.gov.hmrc"       %% "play-allowlist-filter" % s"1.0.0-$playSuffix",
-        "com.typesafe.akka" %% "akka-stream-testkit"   % "2.6.14"             % Test
+        "uk.gov.hmrc"       %% s"play-allowlist-filter-$playSuffix" % "1.1.0",
+        "com.typesafe.akka" %% "akka-stream-testkit"                % "2.6.14" % Test
       )
 
   private def test(playVersion: String, playSuffix: String) =
