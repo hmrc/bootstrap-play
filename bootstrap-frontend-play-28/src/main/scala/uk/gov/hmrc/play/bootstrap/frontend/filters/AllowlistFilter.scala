@@ -38,6 +38,7 @@ class AllowlistFilter @Inject() (
     allowlist =
       config.get[String]("bootstrap.filters.allowlist.ips")
         .split(",")
+        .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty),
 
@@ -49,6 +50,7 @@ class AllowlistFilter @Inject() (
     excludedPaths =
       config.get[String]("bootstrap.filters.allowlist.excluded")
         .split(",")
+        .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty)
         .map(path => Call("GET", path))

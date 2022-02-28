@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import javax.inject.Inject
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -34,7 +35,11 @@ object HeadersFilterSpec {
   class Filters @Inject()(headersFilter: HeadersFilter) extends DefaultHttpFilters(headersFilter)
 }
 
-class HeadersFilterSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
+class HeadersFilterSpec
+  extends AnyWordSpec
+     with Matchers
+     with OptionValues
+     with GuiceOneAppPerSuite {
 
   import HeadersFilterSpec._
 
@@ -70,16 +75,16 @@ class HeadersFilterSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSui
   ".apply" must {
 
     "add headers to a request which doesn't already have an xRequestId header" in {
-      val Some(result) = route(app, FakeRequest(GET, "/test"))
-      val body         = contentAsJson(result)
+      val result = route(app, FakeRequest(GET, "/test")).value
+      val body   = contentAsJson(result)
 
       (body \ HeaderNames.xRequestId).toOption mustBe defined
       (body \ HeaderNames.xRequestTimestamp).toOption mustBe defined
     }
 
     "not add headers to a request which already has an xRequestId header" in {
-      val Some(result) = route(app, FakeRequest(GET, "/test").withSession(HeaderNames.xRequestId -> "foo"))
-      val body         = contentAsJson(result)
+      val result = route(app, FakeRequest(GET, "/test").withSession(HeaderNames.xRequestId -> "foo")).value
+      val body   = contentAsJson(result)
 
       (body \ HeaderNames.xRequestId).get mustEqual JsNull
       (body \ HeaderNames.xRequestTimestamp).get mustEqual JsNull

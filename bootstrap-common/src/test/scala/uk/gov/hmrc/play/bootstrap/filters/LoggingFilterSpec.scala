@@ -149,9 +149,9 @@ class LoggingFilterSpec
   }
 
   class TestLoggingFilter(
-    loggerIn: LoggerLike,
+    loggerIn              : LoggerLike,
     controllerNeedsLogging: Boolean,
-    currentTime: () => Long = System.currentTimeMillis
+    currentTime           : () => Long = () => System.currentTimeMillis()
   ) extends LoggingFilter {
 
     override implicit val mat: Materializer = null
@@ -159,7 +159,7 @@ class LoggingFilterSpec
                                                 new MDCPropagatingExecutorService(
                                                   ExecutionContext.fromExecutorService(null)))
     override def logger: LoggerLike         = loggerIn
-    override val now: () => Long            = currentTime
+    override val now: () => Long            = () => currentTime()
     override def controllerNeedsLogging(controllerName: String): Boolean =
       controllerNeedsLogging
   }

@@ -43,21 +43,21 @@ class FrontendConfigLoadSpec extends AnyWordSpecLike with Matchers {
       // todo (konrad)    verify what we actually need, and what about CryptoConfig
       // todo (konrad)    this test doesn't seem very useful
 
-      injector.instanceOf[Langs].availables      should not be ('empty)
-      injector.instanceOf[MessagesApi]           should not be (null)
-      injector.instanceOf[Environment]           should not be (null)
-      injector.instanceOf[ConfigurationProvider] should not be (null)
-      injector.instanceOf[Configuration]         should not be (null)
-      injector.instanceOf[HttpConfiguration]     should not be (null)
-      injector.instanceOf[ApplicationLifecycle]  should not be (null)
-      injector.instanceOf[Router]                should not be (null)
-      injector.instanceOf[ActorSystem]           should not be (null)
-      injector.instanceOf[Materializer]          should not be (null)
-      injector.instanceOf[ExecutionContext]      should not be (null)
-//      injector.instanceOf[CryptoConfig]          should not be (null)
-      injector.instanceOf[CookieSigner]         should not be (null)
-      injector.instanceOf[CSRFTokenSigner]      should not be (null)
-      injector.instanceOf[TemporaryFileCreator] should not be (null)
+      injector.instanceOf[Langs].availables      should not be empty
+      injector.instanceOf[MessagesApi]           should not be null
+      injector.instanceOf[Environment]           should not be null
+      injector.instanceOf[ConfigurationProvider] should not be null
+      injector.instanceOf[Configuration]         should not be null
+      injector.instanceOf[HttpConfiguration]     should not be null
+      injector.instanceOf[ApplicationLifecycle]  should not be null
+      injector.instanceOf[Router]                should not be null
+      injector.instanceOf[ActorSystem]           should not be null
+      injector.instanceOf[Materializer]          should not be null
+      injector.instanceOf[ExecutionContext]      should not be null
+//      injector.instanceOf[CryptoConfig]          should not be null
+      injector.instanceOf[CookieSigner]         should not be null
+      injector.instanceOf[CSRFTokenSigner]      should not be null
+      injector.instanceOf[TemporaryFileCreator] should not be null
     }
   }
 }

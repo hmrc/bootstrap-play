@@ -23,7 +23,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.LoneElement
+import org.scalatest.{EitherValues, LoneElement}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -53,6 +53,7 @@ class JsonErrorHandlerSpec
      with MockitoSugar
      with LoneElement
      with TableDrivenPropertyChecks
+     with EitherValues
      with Eventually {
 
   import ExecutionContext.Implicits.global
@@ -288,7 +289,7 @@ class JsonErrorHandlerSpec
         )
       )
 
-      def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit) {
+      def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit): Unit = {
         import ch.qos.logback.classic.{Logger => LogbackLogger}
         import scala.collection.JavaConverters._
 
@@ -489,9 +490,8 @@ class JsonErrorHandlerSpec
       val fakeRequest = FakeRequest().withHeaders(play.api.http.HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       val parsers = PlayBodyParsers(eh = errorHandler)
       def errorResponse[A](parser: BodyParser[A], body: String): String =
-        parser(fakeRequest).run(ByteString(body)).futureValue.left.get.body.dataStream.runReduce(_ ++ _).futureValue.utf8String
+        parser(fakeRequest).run(ByteString(body)).futureValue.left.value.body.dataStream.runReduce(_ ++ _).futureValue.utf8String
     }
-
   }
 
   private class Setup(

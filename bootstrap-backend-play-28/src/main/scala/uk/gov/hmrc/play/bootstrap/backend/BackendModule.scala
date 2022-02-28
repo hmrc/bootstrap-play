@@ -33,6 +33,6 @@ class BackendModule extends BootstrapModule {
             configuration,
             deprecatedClasses ++ uk.gov.hmrc.play.bootstrap.deprecatedClasses
           )
-        ).eagerly
+        ).eagerly()
     )
 }

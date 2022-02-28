@@ -34,6 +34,6 @@ class ApplicationLoaderSpec extends Base64ConfigDecoderTests {
   }
 
   ".load" must {
-    behave like aBase64Decoder
+    behave like aBase64Decoder()
   }
 }

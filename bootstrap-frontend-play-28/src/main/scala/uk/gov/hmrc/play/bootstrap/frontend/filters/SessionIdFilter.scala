@@ -34,14 +34,12 @@ class SessionIdFilter(
 ) extends Filter {
 
   @Inject
-  def this(mat: Materializer, ec: ExecutionContext, sessionCookieBaker: SessionCookieBaker) {
+  def this(mat: Materializer, ec: ExecutionContext, sessionCookieBaker: SessionCookieBaker) =
     this(mat, UUID.randomUUID(), sessionCookieBaker, ec)
-  }
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
 
     if (rh.session.get(SessionKeys.sessionId).isEmpty) {
-
       val rhWithSessionId = {
         val sessionId = s"session-$uuid"
         val headers = rh.headers.add(HMRCHeaderNames.xSessionId -> sessionId)
@@ -51,9 +49,7 @@ class SessionIdFilter(
 
       f(rhWithSessionId)
         .map(result => result.withSession(session = result.session(rhWithSessionId)))
-
-    } else {
+    } else
       f(rh)
-    }
   }
 }

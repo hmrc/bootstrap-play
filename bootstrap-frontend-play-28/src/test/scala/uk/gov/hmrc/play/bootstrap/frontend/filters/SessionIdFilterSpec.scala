@@ -25,7 +25,6 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.components.OneAppPerSuiteWithComponents
 import play.api.{Application, BuiltInComponents, BuiltInComponentsFromContext, NoHttpFiltersComponents}
-import play.api.Application
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json

@@ -85,7 +85,7 @@ class BackendAuditFilterSpec
       when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(Success))
 
-      val result = await(auditFilter.apply(nextAction)(request).run)
+      val result = await(auditFilter.apply(nextAction)(request).run())
 
       await(result.body.dataStream.runForeach { i => })
 
@@ -110,7 +110,7 @@ class BackendAuditFilterSpec
       val config             = Configuration("auditing.enabled" -> false)
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
-      val result = await(auditFilter.apply(nextAction)(request).run)
+      val result = await(auditFilter.apply(nextAction)(request).run())
 
       await(result.body.dataStream.runForeach { i => })
 
@@ -127,7 +127,7 @@ class BackendAuditFilterSpec
       when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(Success))
 
-      a[RuntimeException] should be thrownBy await(auditFilter.apply(exceptionThrowingAction)(request).run)
+      a[RuntimeException] should be thrownBy await(auditFilter.apply(exceptionThrowingAction)(request).run())
 
       eventually {
         val captor = ArgCaptor[DataEvent]

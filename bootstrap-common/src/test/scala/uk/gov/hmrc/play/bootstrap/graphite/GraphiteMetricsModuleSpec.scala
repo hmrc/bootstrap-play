@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.codahale.metrics.{MetricFilter, SharedMetricRegistries}
-import com.kenshoo.play.metrics._
+import com.kenshoo.play.metrics.{DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
