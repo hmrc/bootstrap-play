@@ -58,11 +58,11 @@ object SessionTimeoutFilterSpec {
 }
 
 class SessionTimeoutFilterSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with ScalaFutures
-    with OptionValues
-    with MockitoSugar {
+  extends AnyWordSpecLike
+     with Matchers
+     with ScalaFutures
+     with OptionValues
+     with MockitoSugar {
 
   import SessionTimeoutFilterSpec._
 
@@ -94,7 +94,6 @@ class SessionTimeoutFilterSpec
   }
 
   "SessionTimeoutFilter" should {
-
     val timestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
     val config = SessionTimeoutFilterConfig(
@@ -112,16 +111,15 @@ class SessionTimeoutFilterSpec
     }
 
     "strip non-allowlist session variables from request if timestamp is old" in {
-
       running(app()) {
-
-        val Some(result) = route(
+        val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> timestamp,
             authToken            -> "a-token",
             "allowlisted"        -> "allowlisted"
-          ))
+          )
+        ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -132,17 +130,16 @@ class SessionTimeoutFilterSpec
     }
 
     "strip non-allowlist session variables from result if timestamp is old" in {
-
       running(app()) {
-
-        val Some(result) = route(
+        val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> timestamp,
             loginOrigin          -> "gg",
             authToken            -> "a-token",
             "allowlisted"        -> "allowlisted"
-          ))
+          )
+        ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -153,18 +150,17 @@ class SessionTimeoutFilterSpec
     }
 
     "pass through all session values if timestamp is recent" in {
-
       val timestamp = now.minusSeconds(5).toEpochMilli.toString
 
       running(app()) {
-
-        val Some(result) = route(
+        val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> timestamp,
             authToken            -> "a-token",
             "custom"             -> "custom"
-          ))
+          )
+        ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -176,15 +172,14 @@ class SessionTimeoutFilterSpec
     }
 
     "create timestamp if it's missing" in {
-
       running(app()) {
-
-        val Some(result) = route(
+        val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
             authToken -> "a-token",
             "custom"  -> "custom"
-          ))
+          )
+        ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -197,13 +192,12 @@ class SessionTimeoutFilterSpec
     }
 
     "strip only auth-related keys if timestamp is old, and onlyWipeAuthToken == true" in {
-
       val altConfig    = config.copy(onlyWipeAuthToken = true)
       val oldTimestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
       running(app(altConfig)) {
 
-        val Some(result) = route(
+        val result = route(
           app(altConfig),
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> oldTimestamp,
@@ -211,7 +205,7 @@ class SessionTimeoutFilterSpec
             "custom"             -> "custom",
             "allowlisted"        -> "allowlisted"
           )
-        )
+        ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
 
@@ -224,34 +218,34 @@ class SessionTimeoutFilterSpec
     }
 
     "update old timestamp with current time" in {
-
       running(app()) {
-        val Some(result) = route(
+        val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> now.minus(1, ChronoUnit.DAYS).toEpochMilli.toString
-          ))
+          )
+        ).value
+
         session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
       }
     }
 
     "update recent timestamp with current time" in {
-
       running(app()) {
-        val Some(result) = route(
+        val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> now.minusSeconds(1).toEpochMilli.toString
-          ))
+          )
+        ).value
+
         session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
       }
     }
 
     "treat an invalid timestamp as a missing timestamp" in {
-
       running(app()) {
-
-        val Some(result) = route(
+        val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> "invalid-format",
@@ -259,7 +253,7 @@ class SessionTimeoutFilterSpec
             loginOrigin          -> "gg",
             "custom"             -> "custom"
           )
-        )
+        ).value
 
         session(result).get(authToken).value            shouldEqual "a-token"
         session(result).get(loginOrigin).value          shouldEqual "gg"
@@ -269,7 +263,6 @@ class SessionTimeoutFilterSpec
     }
 
     "ensure non-session cookies are passed through to the action untouched" in {
-
       val timestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
       running(app()) {
@@ -281,8 +274,8 @@ class SessionTimeoutFilterSpec
             authToken            -> "a-token"
           )
 
-        val Some(result) = route(app(), request)
-        val rhCookies    = (contentAsJson(result) \ "cookies").as[Map[String, String]]
+        val result    = route(app(), request).value
+        val rhCookies = (contentAsJson(result) \ "cookies").as[Map[String, String]]
 
         rhCookies      should contain("aTestName" -> "aTestValue")
         status(result) shouldEqual OK
@@ -291,11 +284,10 @@ class SessionTimeoutFilterSpec
   }
 
   "SessionTimeoutFilterConfig.fromConfig" should {
-
     "return defaults when there is no config" in {
       val config = Configuration(ConfigFactory.load("frontend.conf"))
       val result = SessionTimeoutFilterConfig.fromConfig(config)
-      result.additionalSessionKeys should be('empty)
+      result.additionalSessionKeys should be (empty)
       result.onlyWipeAuthToken     shouldBe false
       result.timeoutDuration       shouldEqual Duration.of(15, ChronoUnit.MINUTES)
     }
@@ -307,7 +299,7 @@ class SessionTimeoutFilterSpec
         "session.additionalSessionKeysToKeep" -> Set.empty
       )
       val result = SessionTimeoutFilterConfig.fromConfig(config)
-      result.additionalSessionKeys should be('empty)
+      result.additionalSessionKeys should be (empty)
       result.onlyWipeAuthToken     shouldBe false
       result.timeoutDuration       shouldEqual Duration.of(15, ChronoUnit.MINUTES)
     }

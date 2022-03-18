@@ -96,13 +96,13 @@ class JsonErrorHandler @Inject()(
           val characterParseError        = "^Cannot parse parameter .* with value '(.*)' as Char: .* must be exactly one digit in length.$".r
           val parameterParseError        = "^Cannot parse parameter .* as .*: For input string: \"(.*)\"$".r
           input match {
-            case unrecognisedTokenJsonError(toBeRedacted) => input.replaceAllLiterally(toBeRedacted, "REDACTED")
+            case unrecognisedTokenJsonError(toBeRedacted) => input.replace(toBeRedacted, "REDACTED")
             case invalidJson()
                | jsonValidationError()
                | booleanParsingError()
                | missingParameterError()                  => input
-            case characterParseError(toBeRedacted)        => input.replaceAllLiterally(toBeRedacted, "REDACTED")
-            case parameterParseError(toBeRedacted)        => input.replaceAllLiterally(toBeRedacted, "REDACTED")
+            case characterParseError(toBeRedacted)        => input.replace(toBeRedacted, "REDACTED")
+            case parameterParseError(toBeRedacted)        => input.replace(toBeRedacted, "REDACTED")
             case _                                        => "bad request, cause: REDACTED"
           }
         }

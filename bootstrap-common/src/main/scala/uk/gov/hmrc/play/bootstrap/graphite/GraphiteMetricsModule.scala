@@ -30,7 +30,7 @@ class GraphiteMetricsModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     val defaultBindings: Seq[Binding[_]] = Seq(
       // Note: `MetricFilter` rather than `MetricsFilter`
-      bind[MetricFilter].toInstance(MetricFilter.ALL).eagerly
+      bind[MetricFilter].toInstance(MetricFilter.ALL).eagerly()
     )
 
     val kenshooMetricsEnabled    = configuration.get[Boolean]("metrics.enabled") // metrics collection
@@ -39,13 +39,13 @@ class GraphiteMetricsModule extends Module {
     val kenshooBindings: Seq[Binding[_]] =
       if (kenshooMetricsEnabled)
         Seq(
-          bind[MetricsFilter].to[MetricsFilterImpl].eagerly,
-          bind[Metrics].to[MetricsImpl].eagerly
+          bind[MetricsFilter].to[MetricsFilterImpl].eagerly(),
+          bind[Metrics].to[MetricsImpl].eagerly()
         )
       else
         Seq(
-          bind[MetricsFilter].to[DisabledMetricsFilter].eagerly,
-          bind[Metrics].to[DisabledMetrics].eagerly
+          bind[MetricsFilter].to[DisabledMetricsFilter].eagerly(),
+          bind[Metrics].to[DisabledMetrics].eagerly()
         )
 
     val graphiteBindings: Seq[Binding[_]] =
@@ -56,12 +56,12 @@ class GraphiteMetricsModule extends Module {
           bind[Graphite].toProvider[GraphiteProvider],
           bind[GraphiteReporter].toProvider[GraphiteReporterProvider],
           bind[DatastreamMetrics].toProvider[EnabledDatastreamMetricsProvider],
-          bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly
+          bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly()
         )
       else
         Seq(
           bind[DatastreamMetrics].toProvider[DisabledDatastreamMetricsProvider],
-          bind[GraphiteReporting].to[DisabledGraphiteReporting].eagerly
+          bind[GraphiteReporting].to[DisabledGraphiteReporting].eagerly()
         )
 
     defaultBindings ++ graphiteBindings ++ kenshooBindings

@@ -36,7 +36,7 @@ class GraphiteReportingSpec extends AnyWordSpec with Matchers with MockitoSugar 
     new GuiceApplicationBuilder()
       .bindings(
         bind[GraphiteReporter].toInstance(graphite),
-        bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly
+        bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly()
       )
   }
 

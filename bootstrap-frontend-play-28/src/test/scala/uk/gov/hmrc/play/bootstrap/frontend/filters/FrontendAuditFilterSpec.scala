@@ -69,7 +69,7 @@ class FrontendAuditFilterSpec
     throw new RuntimeException("Something went wrong")
   }
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     reset(auditConnector)
   }
 
@@ -142,12 +142,12 @@ class FrontendAuditFilterSpec
       "the request succeeds" in {
         val result = await(filter.apply(nextAction)(request).run(source))
         await(enumerateResponseBody(result))
-        behave like expected
+        behave like expected()
       }
 
       "an action further down the chain throws an exception" in {
         a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run(source))
-        behave like expected
+        behave like expected()
       }
 
       def expected() =
@@ -169,15 +169,15 @@ class FrontendAuditFilterSpec
         Cookie(DeviceFingerprint.deviceFingerprintCookieName, encryptedFingerprint))
 
       "the request succeeds" in {
-        val result = await(filter.apply(nextAction)(request).run)
+        val result = await(filter.apply(nextAction)(request).run())
         await(enumerateResponseBody(result))
 
-        behave like expected
+        behave like expected()
       }
 
       "an action further down the chain throws an exception" in {
-        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
-        behave like expected
+        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run())
+        behave like expected()
       }
 
       def expected() = eventually {
@@ -194,15 +194,15 @@ class FrontendAuditFilterSpec
       val request = FakeRequest("GET", "/foo")
 
       "the request succeeds" in {
-        val result = await(filter.apply(nextAction)(request).run)
+        val result = await(filter.apply(nextAction)(request).run())
         await(enumerateResponseBody(result))
 
-        behave like expected
+        behave like expected()
       }
 
       "an action further down the chain throws an exception" in {
-        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
-        behave like expected
+        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run())
+        behave like expected()
       }
 
       def expected() = eventually {
@@ -220,13 +220,13 @@ class FrontendAuditFilterSpec
             "THIS IS SOME JUST THAT SHOULDN'T BE DECRYPTABLE *!@&£$)B__!@£$"))
 
       "the request succeeds" taggedAs NonStrictCookies in {
-        await(filter.apply(nextAction)(request).run)
-        behave like expected
+        await(filter.apply(nextAction)(request).run())
+        behave like expected()
       }
 
       "an action further down the chain throws an exception" taggedAs NonStrictCookies in {
-        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
-        behave like expected
+        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run())
+        behave like expected()
       }
 
       def expected() = eventually {
@@ -243,10 +243,10 @@ class FrontendAuditFilterSpec
           "sessionId" -> "mySessionId"
         )
 
-        val result = await(filter.apply(nextAction)(request).run)
+        val result = await(filter.apply(nextAction)(request).run())
         await(enumerateResponseBody(result))
 
-        behave like expected
+        behave like expected()
       }
 
       "an action further down the chain throws an exception" in {
@@ -256,8 +256,8 @@ class FrontendAuditFilterSpec
           "sessionId" -> "mySessionId"
         )
 
-        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
-        behave like expected
+        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run())
+        behave like expected()
       }
 
       def expected() = eventually {
@@ -273,7 +273,7 @@ class FrontendAuditFilterSpec
         Future.successful(Results.Ok.withHeaders("Location" -> "some url"))
       }
 
-      val result = await(filter.apply(next)(FakeRequest()).run)
+      val result = await(filter.apply(next)(FakeRequest()).run())
       await(enumerateResponseBody(result))
 
       eventually {
@@ -288,15 +288,15 @@ class FrontendAuditFilterSpec
       val request       = FakeRequest("GET", "/foo").withHeaders(play.api.http.HeaderNames.COOKIE -> encodedCookie)
 
       "the request succeeds" in {
-        val result = await(filter.apply(nextAction)(request).run)
+        val result = await(filter.apply(nextAction)(request).run())
         await(enumerateResponseBody(result))
 
-        behave like expected
+        behave like expected()
       }
 
       "an action further down the chain throws an exception" in {
-        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
-        behave like expected
+        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run())
+        behave like expected()
       }
 
       def expected() = eventually {
@@ -312,13 +312,13 @@ class FrontendAuditFilterSpec
       val request = FakeRequest("GET", "/foo").withHeaders(HeaderNames.deviceID -> deviceID)
 
       "the request succeeds" in {
-        await(filter.apply(nextAction)(request).run)
-        behave like expected
+        await(filter.apply(nextAction)(request).run())
+        behave like expected()
       }
 
       "an action further down the chain throws an exception" in {
-        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run)
-        behave like expected
+        a[RuntimeException] should be thrownBy await(filter.apply(exceptionThrowingAction)(request).run())
+        behave like expected()
       }
 
       def expected() = eventually {
@@ -396,7 +396,7 @@ class FrontendAuditFilterSpec
     "not be included in the audit message if it is HTML" in {
       val next = Action(Results.Ok(<h1>Hello, world!</h1>).as(HTML).withHeaders("Content-Type" -> "text/html"))
 
-      val result = await(filter.apply(next)(FakeRequest()).run)
+      val result = await(filter.apply(next)(FakeRequest()).run())
       await(enumerateResponseBody(result))
 
       eventually {
@@ -408,7 +408,7 @@ class FrontendAuditFilterSpec
     "not depend on response headers when truncating HTML" in {
       val next = Action(Results.Ok(<h1>Hello, world!</h1>).as(HTML))
 
-      val result = await(filter.apply(next)(FakeRequest()).run)
+      val result = await(filter.apply(next)(FakeRequest()).run())
       await(enumerateResponseBody(result))
 
       eventually {
@@ -423,7 +423,7 @@ class FrontendAuditFilterSpec
           Results.Ok(<h1>Hello, world!</h1>).as(HTML).withHeaders("Content-Type" -> "text/html; charset=utf-8"))
       }
 
-      val result = await(filter.apply(next)(FakeRequest()).run)
+      val result = await(filter.apply(next)(FakeRequest()).run())
       await(enumerateResponseBody(result))
 
       eventually {
@@ -437,7 +437,7 @@ class FrontendAuditFilterSpec
         Future.successful(Results.Status(303)("....the response...").withHeaders("Content-Type" -> "application/json"))
       }
 
-      val result = await(filter.apply(next)(FakeRequest()).run)
+      val result = await(filter.apply(next)(FakeRequest()).run())
       await(enumerateResponseBody(result))
 
       eventually {
@@ -459,7 +459,7 @@ class FrontendAuditFilterServerSpec
      with BeforeAndAfterEach
      with BeforeAndAfterAll {
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     reset(auditConnector)
   }
 

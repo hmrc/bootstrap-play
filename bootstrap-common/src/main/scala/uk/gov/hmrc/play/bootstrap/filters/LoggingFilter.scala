@@ -32,7 +32,8 @@ trait LoggingFilter extends Filter {
 
   def controllerNeedsLogging(controllerName: String): Boolean
 
-  val now: () => Long = System.currentTimeMillis
+  val now: () => Long =
+    () => System.currentTimeMillis()
 
   protected def logger: LoggerLike = Logger(getClass)
 
@@ -40,11 +41,10 @@ trait LoggingFilter extends Filter {
     val startTime   = now()
     val result      = next(rh)
 
-    if (needsLogging(rh)) {
+    if (needsLogging(rh))
       log(rh, result, startTime)
-    } else {
+    else
       result
-    }
   }
 
   private def needsLogging(request: RequestHeader): Boolean =

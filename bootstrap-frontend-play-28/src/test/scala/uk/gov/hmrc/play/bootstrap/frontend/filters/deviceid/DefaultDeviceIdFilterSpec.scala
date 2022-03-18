@@ -30,11 +30,11 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId.MdtpDeviceId
 
 class DefaultDeviceIdFilterSpec
-    extends AnyWordSpecLike
-    with Matchers
-    with MockitoSugar
-    with OptionValues
-    with ScalaFutures {
+  extends AnyWordSpecLike
+     with Matchers
+     with MockitoSugar
+     with OptionValues
+     with ScalaFutures {
 
   import DefaultDeviceIdFilterSpec._
 
@@ -42,15 +42,15 @@ class DefaultDeviceIdFilterSpec
 
     "create the deviceId when no cookie exists" in {
       running(application(having = appConfig)) { application =>
-        val Some(result) = route(application, FakeRequest(GET, "/test"))
-        cookies(result).get(DeviceId.MdtpDeviceId) shouldBe 'defined
+        val result = route(application, FakeRequest(GET, "/test")).value
+        cookies(result).get(DeviceId.MdtpDeviceId) shouldBe defined
       }
     }
 
     "create the deviceId when no cookie exists and previous keys are empty" in {
       running(application(having = appConfigNoPreviousKey)) { application =>
-        val Some(result) = route(application, FakeRequest(GET, "/test"))
-        cookies(result).get(DeviceId.MdtpDeviceId) shouldBe 'defined
+        val result = route(application, FakeRequest(GET, "/test")).value
+        cookies(result).get(DeviceId.MdtpDeviceId) shouldBe defined
       }
     }
 
@@ -59,10 +59,10 @@ class DefaultDeviceIdFilterSpec
       running(application(having = appConfig)) { application =>
         val existingCookie = createDeviceId.buildNewDeviceIdCookie()
 
-        val Some(result) = route(
+        val result = route(
           application,
           FakeRequest(GET, "/test").withCookies(existingCookie)
-        )
+        ).value
 
         cookies(result) should contain(existingCookie)
       }
@@ -79,12 +79,12 @@ class DefaultDeviceIdFilterSpec
           createDeviceId.makeCookie(deviceIdMadeFromPrevKey)
         }
 
-        val Some(result) = route(
+        val result = route(
           application,
           FakeRequest(GET, "/test").withCookies(existingCookie)
-        )
+        ).value
 
-        val Some(mdtpidCookieValue) = cookies(result).get(MdtpDeviceId).map(_.value)
+        val mdtpidCookieValue = cookies(result).get(MdtpDeviceId).value.value
         mdtpidCookieValue should include(uuid)
       }
     }
@@ -93,9 +93,9 @@ class DefaultDeviceIdFilterSpec
 
       Seq(true, false).foreach { secureCookie =>
         running(application(having = appConfig + ("cookie.deviceId.secure" -> secureCookie))) { application =>
-          val Some(result) = route(application, FakeRequest(GET, "/test"))
+          val result = route(application, FakeRequest(GET, "/test")).value
           val deviceIdCookie = cookies(result).get(DeviceId.MdtpDeviceId)
-          deviceIdCookie shouldBe 'defined
+          deviceIdCookie shouldBe defined
           deviceIdCookie.get.secure shouldBe secureCookie
         }
       }

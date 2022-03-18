@@ -163,6 +163,10 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 5.21.0
+
+Builds for Scala 2.13 in addition to 2.12
+
 ### Version 5.20.0
 
 Adds the following configuration for `JsonErrorHandler`:

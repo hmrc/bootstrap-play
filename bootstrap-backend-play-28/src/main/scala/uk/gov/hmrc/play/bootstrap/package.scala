@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play
 
 import akka.stream.Materializer
+import com.github.ghik.silencer.silent
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
@@ -105,6 +106,7 @@ package bootstrap {
   }
 
   package object backend {
+    @silent("deprecated")
     val deprecatedClasses: Map[String, String] =
       Map(
         classOf[uk.gov.hmrc.play.bootstrap.MicroserviceModule].getName                                  -> classOf[uk.gov.hmrc.play.bootstrap.backend.BackendModule].getName,

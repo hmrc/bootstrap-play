@@ -64,6 +64,6 @@ class Base64ConfigDecoderSpec extends Base64ConfigDecoderTests with Base64Config
     decodeConfig(Configuration(config.toSeq: _*))
 
   ".decode" must {
-    behave like aBase64Decoder
+    behave like aBase64Decoder()
   }
 }

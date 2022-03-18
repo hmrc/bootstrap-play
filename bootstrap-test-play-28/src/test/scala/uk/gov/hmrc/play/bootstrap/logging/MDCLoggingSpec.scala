@@ -94,7 +94,7 @@ abstract class MDCLoggingSpec
           override def run(): Unit = {
 
             val data = Option(MDC.getCopyOfContextMap)
-              .fold(Map.empty[String, String]) { _.asScala.toMap }
+              .fold(Map.empty[String, String])(_.asScala.toMap)
 
             promise.success(data)
           }
@@ -152,7 +152,7 @@ abstract class MDCLoggingSpec
 
         val mdc = contentAsJson(result).as[Map[String, String]]
 
-        mdc must contain only(
+        mdc must contain.only(
           "appName"                     -> "test-application",
           "logger.json.dateformat"      -> "YYYY-mm-DD",
           HMRCHeaderNames.xSessionId    -> "some session id",
@@ -184,7 +184,7 @@ abstract class MDCLoggingSpec
 
         val mdc = contentAsJson(result).as[Map[String, String]]
 
-        mdc must contain only(
+        mdc must contain.only (
           "appName"                     -> "test-application",
           HMRCHeaderNames.xSessionId    -> "some session id",
           HMRCHeaderNames.xRequestId    -> "some request id",

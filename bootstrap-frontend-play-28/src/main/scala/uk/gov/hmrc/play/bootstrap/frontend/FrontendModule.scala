@@ -30,19 +30,18 @@ class FrontendModule extends BootstrapModule {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     super.bindings(environment, configuration) ++ Seq(
-      bind[AuditFilter].to[DefaultFrontendAuditFilter],
-      bind[ApplicationCrypto].toProvider[ApplicationCryptoProvider],
-      bind[SessionCookieCrypto].toProvider[SessionCookieCryptoProvider],
-      bind[SessionCookieCryptoFilter].to[DefaultSessionCookieCryptoFilter],
-      bind[DeviceIdFilter].to[DefaultDeviceIdFilter],
+      bind[AuditFilter               ].to[DefaultFrontendAuditFilter],
+      bind[ApplicationCrypto         ].toProvider[ApplicationCryptoProvider],
+      bind[SessionCookieCrypto       ].toProvider[SessionCookieCryptoProvider],
+      bind[SessionCookieCryptoFilter ].to[DefaultSessionCookieCryptoFilter],
+      bind[DeviceIdFilter            ].to[DefaultDeviceIdFilter],
       bind[SessionTimeoutFilterConfig].toInstance(SessionTimeoutFilterConfig.fromConfig(configuration)),
-      bind[CryptoValidation].toSelf.eagerly,
-      bind[DeprecatedConfigChecker]
-        .toInstance(
+      bind[CryptoValidation          ].toSelf.eagerly(),
+      bind[DeprecatedConfigChecker   ].toInstance(
           new DeprecatedConfigChecker(
             configuration,
             deprecatedClasses ++ uk.gov.hmrc.play.bootstrap.deprecatedClasses
           )
-        ).eagerly
+        ).eagerly()
     )
 }

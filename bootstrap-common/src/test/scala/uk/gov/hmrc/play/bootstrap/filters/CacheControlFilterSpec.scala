@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.filters
 
 import javax.inject.Inject
+import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -29,49 +30,53 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, Configuration, Environment}
 
-class CacheControlFilterSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
+class CacheControlFilterSpec
+  extends AnyWordSpec
+     with Matchers
+     with OptionValues
+     with GuiceOneAppPerSuite {
 
   import CacheControlFilterSpec._
 
   ".apply" must {
 
     "add the `CACHE_CONTROL` header with relevant values to a result" in {
-      val Some(result) = route(app, FakeRequest(GET, "/test"))
+      val result = route(app, FakeRequest(GET, "/test")).value
       headers(result) must contain(CACHE_CONTROL -> CacheControlFilter.headerValue)
     }
 
     "not modify the `CACHE_CONTROL` header when it's already set" in {
-      val Some(result) = route(app, FakeRequest(GET, "/exists"))
+      val result = route(app, FakeRequest(GET, "/exists")).value
       headers(result) must contain(CACHE_CONTROL -> "foo")
     }
 
     "not modify the `CACHE_CONTROL` header when the status is `NOT_MODIFIED`" in {
-      val Some(result) = route(app, FakeRequest(GET, "/not-modified"))
+      val result = route(app, FakeRequest(GET, "/not-modified")).value
       headers(result) mustNot contain(CACHE_CONTROL)
     }
 
     "not modify the `CACHE_CONTROL` header when the content type is cacheable" in {
-      val Some(result) = route(app, FakeRequest(GET, "/cacheable"))
+      val result = route(app, FakeRequest(GET, "/cacheable")).value
       headers(result) mustNot contain(CACHE_CONTROL)
     }
 
     "not modify the `CACHE_CONTROL` header when the status is `NOT_MODIFIED` and it's already set" in {
-      val Some(result) = route(app, FakeRequest(GET, "/not-modified-and-exists"))
+      val result = route(app, FakeRequest(GET, "/not-modified-and-exists")).value
       headers(result) must contain(CACHE_CONTROL -> "foo")
     }
 
     "not modify the `CACHE_CONTROL` header when the status is `NOT_MODIFIED` and the content type is cacheable" in {
-      val Some(result) = route(app, FakeRequest(GET, "/not-modified-and-cacheable"))
+      val result = route(app, FakeRequest(GET, "/not-modified-and-cacheable")).value
       headers(result) mustNot contain(CACHE_CONTROL)
     }
 
     "not modify the `CACHE_CONTROL` header when it's already set and the content type is cacheable" in {
-      val Some(result) = route(app, FakeRequest(GET, "/exists-and-cacheable"))
+      val result = route(app, FakeRequest(GET, "/exists-and-cacheable")).value
       headers(result) mustNot contain(CACHE_CONTROL)
     }
 
     "not modify the `CACHE_CONTROL` header when `all of the above`" in {
-      val Some(result) = route(app, FakeRequest(GET, "/all"))
+      val result = route(app, FakeRequest(GET, "/all")).value
       headers(result) must contain(CACHE_CONTROL -> "foo")
     }
   }
