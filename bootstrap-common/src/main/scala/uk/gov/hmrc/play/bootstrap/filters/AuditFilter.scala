@@ -17,6 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.filters
 
 import play.api.Configuration
+import play.api.http.HttpChunk
 import play.api.mvc.EssentialFilter
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
@@ -29,11 +30,10 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
-import uk.gov.hmrc.play.http.BodyCaptor
+import uk.gov.hmrc.play.http.{BodyCaptor, BodyCaptorResult}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
-import play.api.http.HttpChunk
 
 trait AuditFilter extends EssentialFilter
 
@@ -69,20 +69,23 @@ trait CommonAuditFilter extends AuditFilter {
 
       val loggingContext = s"incoming ${requestHeader.method} ${requestHeader.uri}"
 
-      def performAudit(requestBody: String, tryResult: Try[Result], responseBody: String): Unit = {
-        val detail = tryResult match {
-          case Success(result) =>
-            val responseHeader = result.header
-            Map(
-                EventKeys.ResponseMessage -> filterResponseBody(result, responseHeader, responseBody),
-                EventKeys.StatusCode      -> responseHeader.status.toString
-              ) ++
-              buildRequestDetails(requestHeader, requestBody) ++
-              buildResponseDetails(responseHeader)
-          case Failure(f) =>
-            Map(EventKeys.FailedRequestMessage -> f.getMessage) ++
-              buildRequestDetails(requestHeader, requestBody)
-        }
+      def performAudit(requestBody: BodyCaptorResult, tryResult: Try[Result], responseBody: BodyCaptorResult): Unit = {
+        val detail: Map[String, String] =
+          tryResult match {
+            case Success(result) =>
+              val responseHeader = result.header
+              Map(
+                  EventKeys.ResponseMessage     -> filterResponseBody(result, responseHeader, responseBody.body.utf8String),
+                  EventKeys.StatusCode          -> responseHeader.status.toString,
+                  EventKeys.RequestIsTruncated  -> requestBody.isTruncated.toString,
+                  EventKeys.ResponseIsTruncated -> responseBody.isTruncated.toString
+                ) ++
+                buildRequestDetails(requestHeader, requestBody.body.utf8String).toMap ++
+                buildResponseDetails(responseHeader).toMap
+            case Failure(f) =>
+              Map(EventKeys.FailedRequestMessage -> f.getMessage) ++
+                buildRequestDetails(requestHeader, requestBody.body.utf8String).toMap
+          }
         implicit val r = requestHeader
         auditConnector.sendEvent(
           dataEvent(
@@ -108,12 +111,12 @@ trait CommonAuditFilter extends AuditFilter {
   protected def onCompleteWithInput(
     loggingContext: String,
     next          : Accumulator[ByteString, Result],
-    handler       : (String, Try[Result], String) => Unit
+    handler       : (BodyCaptorResult, Try[Result], BodyCaptorResult) => Unit
   )(implicit ec: ExecutionContext
   ): Accumulator[ByteString, Result] = {
-    val requestBodyPromise  = Promise[String]()
+    val requestBodyPromise  = Promise[BodyCaptorResult]()
 
-    def callHandler(result: Try[Result], reponseBodyFuture: Future[String]): Unit =
+    def callHandler(result: Try[Result], reponseBodyFuture: Future[BodyCaptorResult]): Unit =
       for {
         auditRequestBody  <- requestBodyPromise.future
         auditResponseBody <- reponseBodyFuture
@@ -127,7 +130,7 @@ trait CommonAuditFilter extends AuditFilter {
           .via(BodyCaptor.flow(
             loggingContext = s"incoming $loggingContext request",
             maxBodySize,
-            withCapturedBody = body => requestBodyPromise.success(body.decodeString("UTF-8"))
+            withCapturedBody = bodyResult => requestBodyPromise.success(bodyResult)
           ))
           .splitWhen(_ => false)
           .prefixAndTail(0)
@@ -139,13 +142,13 @@ trait CommonAuditFilter extends AuditFilter {
 
     wrappedAcc
       .map { result =>
-        val responseBodyPromise = Promise[String]()
+        val responseBodyPromise = Promise[BodyCaptorResult]()
 
         lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
           BodyCaptor.sink(
             loggingContext   = s"incoming $loggingContext response",
             maxBodySize,
-            withCapturedBody = body => responseBodyPromise.success(body.decodeString("UTF-8"))
+            withCapturedBody = bodyResult => responseBodyPromise.success(bodyResult)
           )
 
         val auditedBody = result.body match {
@@ -160,8 +163,7 @@ trait CommonAuditFilter extends AuditFilter {
             str.copy(chunks = str.chunks.alsoTo(chunkedResponseBodyCaptor))
           case h: HttpEntity =>
             h.consumeData.map { rb =>
-              val auditResponseString = BodyCaptor.bodyUpto(rb, maxBodySize, s"incoming $loggingContext response").decodeString("UTF-8")
-              responseBodyPromise.success(auditResponseString)
+              responseBodyPromise.success(BodyCaptor.bodyUpto(rb, maxBodySize, s"incoming $loggingContext response"))
             }
             h
         }
@@ -172,7 +174,7 @@ trait CommonAuditFilter extends AuditFilter {
       }
       .recover[Result] {
         case ex: Throwable =>
-          callHandler(Failure(ex), Future.successful(""))
+          callHandler(Failure(ex), Future.successful(BodyCaptorResult(ByteString(""), isTruncated = false))) // TODO add an `isOmitted` field?
           throw ex
       }
   }
