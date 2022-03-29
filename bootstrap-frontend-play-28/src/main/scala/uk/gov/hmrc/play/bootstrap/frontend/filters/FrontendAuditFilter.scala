@@ -22,7 +22,8 @@ import play.api.Configuration
 import play.api.http.HeaderNames
 import play.api.mvc.{RequestHeader, ResponseHeader, Result}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.EventKeys
+import uk.gov.hmrc.http.hooks.Body
+import uk.gov.hmrc.play.audit.http.AuditUtils
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
@@ -48,13 +49,13 @@ trait FrontendAuditFilter
       .collect { case textHtml(a) => "<HTML>...</HTML>" }
       .getOrElse(responseBody)
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String] =
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Map[String, String] =
+    AuditUtils.requestBodyToMap(requestBody)(body => stripPasswords(requestHeader.contentType, body, maskedFormFields)) ++
     Map(
-      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody, maskedFormFields),
-      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
-      "host"                -> getHost(requestHeader),
-      "port"                -> getPort,
-      "queryString"         -> getQueryString(requestHeader.queryString)
+      "deviceFingerprint" -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
+      "host"              -> getHost(requestHeader),
+      "port"              -> getPort,
+      "queryString"       -> getQueryString(requestHeader.queryString)
     )
 
   override protected def buildResponseDetails(response: ResponseHeader): Map[String, String] =
