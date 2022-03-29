@@ -1,14 +1,14 @@
 import sbt.Keys._
 import sbt._
 
-val silencerVersion = "1.7.7"
+val silencerVersion = "1.7.8"
 
 val scala2_12 = "2.12.15"
-val scala2_13 = "2.13.7"
+val scala2_13 = "2.13.8"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
-  majorVersion := 5,
+  majorVersion := 6,
   isPublicArtefact := true,
   scalaVersion := scala2_12,
   crossScalaVersions := Seq(scala2_12, scala2_13),

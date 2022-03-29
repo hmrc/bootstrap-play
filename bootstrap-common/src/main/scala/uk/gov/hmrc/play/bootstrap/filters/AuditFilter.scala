@@ -77,6 +77,7 @@ trait CommonAuditFilter extends AuditFilter {
             case Success(result) =>
               val responseHeader = result.header
               AuditUtils.responseBodyToMap(responseBody)(body => filterResponseBody(result, responseHeader, body)) ++
+                Map(EventKeys.StatusCode -> responseHeader.status.toString) ++
                 buildRequestDetails(requestHeader, requestBody).toMap ++
                 buildResponseDetails(responseHeader).toMap
             case Failure(f) =>
@@ -127,7 +128,7 @@ trait CommonAuditFilter extends AuditFilter {
           .via(BodyCaptor.flow(
             loggingContext = s"incoming $loggingContext request",
             maxBodySize,
-            withCapturedBody = bodyResult => requestBodyPromise.success(bodyResult.map(_.utf8String))
+            withCapturedBody = body => requestBodyPromise.success(body.map(_.utf8String))
           ))
           .splitWhen(_ => false)
           .prefixAndTail(0)
@@ -145,7 +146,7 @@ trait CommonAuditFilter extends AuditFilter {
           BodyCaptor.sink(
             loggingContext   = s"incoming $loggingContext response",
             maxBodySize,
-            withCapturedBody = bodyResult => responseBodyPromise.success(bodyResult.map(_.utf8String))
+            withCapturedBody = body => responseBodyPromise.success(body.map(_.utf8String))
           )
 
         val auditedBody = result.body match {
