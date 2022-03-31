@@ -50,7 +50,9 @@ trait FrontendAuditFilter
       .getOrElse(responseBody)
 
   override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Map[String, String] =
-    AuditUtils.requestBodyToMap(requestBody)(body => stripPasswords(requestHeader.contentType, body, maskedFormFields)) ++
+    AuditUtils.requestBodyToMap(s"Inbound ${requestHeader.method} ${requestHeader.uri}", requestBody)(body =>
+      stripPasswords(requestHeader.contentType, body, maskedFormFields)
+    ) ++
     Map(
       "deviceFingerprint" -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
       "host"              -> getHost(requestHeader),

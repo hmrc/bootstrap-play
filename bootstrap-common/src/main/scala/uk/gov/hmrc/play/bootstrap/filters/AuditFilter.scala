@@ -69,14 +69,14 @@ trait CommonAuditFilter extends AuditFilter {
     override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
 
-      val loggingContext = s"incoming ${requestHeader.method} ${requestHeader.uri}"
-
       def performAudit(requestBody: Body[String], tryResult: Try[Result], responseBody: Body[String]): Unit = {
         val detail: Map[String, String] =
           tryResult match {
             case Success(result) =>
               val responseHeader = result.header
-              AuditUtils.responseBodyToMap(responseBody)(body => filterResponseBody(result, responseHeader, body)) ++
+              AuditUtils.responseBodyToMap(s"Inbound ${requestHeader.method} ${requestHeader.uri}", responseBody)(body =>
+                filterResponseBody(result, responseHeader, body)
+              ) ++
                 Map(EventKeys.StatusCode -> responseHeader.status.toString) ++
                 buildRequestDetails(requestHeader, requestBody).toMap ++
                 buildResponseDetails(responseHeader).toMap
@@ -96,7 +96,7 @@ trait CommonAuditFilter extends AuditFilter {
       }
 
       if (needsAuditing(requestHeader))
-        onCompleteWithInput(loggingContext, next, performAudit)
+        onCompleteWithInput(next, performAudit)
       else
         next
     }
@@ -107,7 +107,6 @@ trait CommonAuditFilter extends AuditFilter {
     request.attrs.get(Attrs.HandlerDef).map(_.controller).forall(controllerNeedsAuditing)
 
   protected def onCompleteWithInput(
-    loggingContext: String,
     next          : Accumulator[ByteString, Result],
     handler       : (Body[String], Try[Result], Body[String]) => Unit
   )(implicit ec: ExecutionContext
@@ -126,7 +125,6 @@ trait CommonAuditFilter extends AuditFilter {
       Accumulator(
         Flow[ByteString]
           .via(BodyCaptor.flow(
-            loggingContext = s"incoming $loggingContext request",
             maxBodySize,
             withCapturedBody = body => requestBodyPromise.success(body.map(_.utf8String))
           ))
@@ -144,7 +142,6 @@ trait CommonAuditFilter extends AuditFilter {
 
         lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
           BodyCaptor.sink(
-            loggingContext   = s"incoming $loggingContext response",
             maxBodySize,
             withCapturedBody = body => responseBodyPromise.success(body.map(_.utf8String))
           )
@@ -161,7 +158,7 @@ trait CommonAuditFilter extends AuditFilter {
             str.copy(chunks = str.chunks.alsoTo(chunkedResponseBodyCaptor))
           case h: HttpEntity =>
             h.consumeData.map { rb =>
-              responseBodyPromise.success(BodyCaptor.bodyUpto(rb, maxBodySize, s"incoming $loggingContext response").map(_.utf8String))
+              responseBodyPromise.success(BodyCaptor.bodyUpto(rb, maxBodySize).map(_.utf8String))
             }
             h
         }
