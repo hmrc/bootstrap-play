@@ -34,8 +34,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.DataEvent
 import uk.gov.hmrc.play.http.BodyCaptor
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Promise}
 
 trait AuditFilter extends EssentialFilter
 
@@ -68,38 +67,37 @@ trait CommonAuditFilter extends AuditFilter {
   override def apply(nextFilter: EssentialAction) = new EssentialAction {
     override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
-
-      def performAudit(requestBody: Body[String], tryResult: Try[Result], responseBody: Body[String]): Unit = {
-        val detail: Map[String, String] =
-          tryResult match {
-            case Success(result) =>
-              val responseHeader = result.header
-              AuditUtils.responseBodyToMap(s"Inbound ${requestHeader.method} ${requestHeader.uri}", responseBody)(body =>
-                filterResponseBody(result, responseHeader, body)
-              ) ++
-                Map(EventKeys.StatusCode -> responseHeader.status.toString) ++
-                buildRequestDetails(requestHeader, requestBody).toMap ++
-                buildResponseDetails(responseHeader).toMap
-            case Failure(f) =>
-              Map(EventKeys.FailedRequestMessage -> f.getMessage) ++
-                buildRequestDetails(requestHeader, requestBody).toMap
-          }
-        implicit val r = requestHeader
-        auditConnector.sendEvent(
-          dataEvent(
-            eventType       = requestReceived,
-            transactionName = requestHeader.uri,
-            request         = requestHeader,
-            detail          = detail
-          )
-        )
-      }
-
       if (needsAuditing(requestHeader))
-        onCompleteWithInput(next, performAudit)
+        onCompleteWithInput(next, performAudit(requestHeader))
       else
         next
     }
+  }
+
+  private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
+    val detail: Map[String, String] =
+      result match {
+        case Right((result, responseBody)) =>
+          val responseHeader = result.header
+          AuditUtils.responseBodyToMap(s"Inbound ${requestHeader.method} ${requestHeader.uri}", responseBody)(body =>
+            filterResponseBody(result, responseHeader, body)
+          ) ++
+            Map(EventKeys.StatusCode -> responseHeader.status.toString) ++
+            buildRequestDetails(requestHeader, requestBody).toMap ++
+            buildResponseDetails(responseHeader).toMap
+        case Left(ex) =>
+          Map(EventKeys.FailedRequestMessage -> ex.getMessage) ++
+            buildRequestDetails(requestHeader, requestBody).toMap
+      }
+    implicit val r = requestHeader
+    auditConnector.sendEvent(
+      dataEvent(
+        eventType       = requestReceived,
+        transactionName = requestHeader.uri,
+        request         = requestHeader,
+        detail          = detail
+      )
+    )
   }
 
   protected def needsAuditing(request: RequestHeader): Boolean =
@@ -108,16 +106,10 @@ trait CommonAuditFilter extends AuditFilter {
 
   protected def onCompleteWithInput(
     next          : Accumulator[ByteString, Result],
-    handler       : (Body[String], Try[Result], Body[String]) => Unit
+    handler       : (Body[String], Either[Throwable, (Result, Body[String])]) => Unit
   )(implicit ec: ExecutionContext
   ): Accumulator[ByteString, Result] = {
     val requestBodyPromise  = Promise[Body[String]]()
-
-    def callHandler(result: Try[Result], reponseBodyFuture: Future[Body[String]]): Unit =
-      for {
-        auditRequestBody  <- requestBodyPromise.future
-        auditResponseBody <- reponseBodyFuture
-      } yield handler(auditRequestBody, result, auditResponseBody)
 
     //grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody https://github.com/playframework/playframework/blob/2.8.13/web/play-filters-helpers/src/main/scala/play/filters/csrf/CSRFActions.scala#L161-L185)
     // we don't just use `next.through(BodyCaptor.flow)` since the stream wouldn't be audited without the controller pulling the content
@@ -163,13 +155,18 @@ trait CommonAuditFilter extends AuditFilter {
             h
         }
 
-        callHandler(Success(result), responseBodyPromise.future)
+        for {
+          auditRequestBody  <- requestBodyPromise.future
+          auditResponseBody <- responseBodyPromise.future
+        } yield handler(auditRequestBody, Right((result, auditResponseBody)))
 
         result.copy(body = auditedBody)
       }
       .recover[Result] {
         case ex: Throwable =>
-          callHandler(Failure(ex), Future.successful(Body.Omitted))
+          for {
+            auditRequestBody  <- requestBodyPromise.future
+          } yield handler(auditRequestBody, Left(ex))
           throw ex
       }
   }
