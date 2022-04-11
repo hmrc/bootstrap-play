@@ -3,8 +3,8 @@ import sbt._
 object LibDependencies {
 
   private val play28Version  = "2.8.15"
-
   private val httpVerbsVersion = "13.12.0"
+  private val akkaVersion = "2.6.19"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
 
@@ -44,7 +44,7 @@ object LibDependencies {
     common(playVersion, playSuffix) ++
       Seq(
         "uk.gov.hmrc"       %% s"play-allowlist-filter-$playSuffix" % "1.1.0",
-        "com.typesafe.akka" %% "akka-stream-testkit"                % "2.6.14" % Test
+        "com.typesafe.akka" %% "akka-stream-testkit"                % akkaVersion % Test
       )
 
   private def test(playVersion: String, playSuffix: String) =
@@ -56,7 +56,7 @@ object LibDependencies {
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
       "org.scalatest"           %% "scalatest"                    % "3.2.3"       % Test,
-      "com.typesafe.akka"       %% "akka-stream-testkit"          % "2.6.14"      % Test,
+      "com.typesafe.akka"       %% "akka-stream-testkit"          % akkaVersion   % Test,
       "com.typesafe.play"       %% "play-akka-http-server"        % playVersion   % Test
     )
 
