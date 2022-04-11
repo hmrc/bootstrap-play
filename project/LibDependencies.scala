@@ -2,7 +2,7 @@ import sbt._
 
 object LibDependencies {
 
-  private val play28Version  = "2.8.8"
+  private val play28Version  = "2.8.15"
 
   private val httpVerbsVersion = "13.12.0"
 
