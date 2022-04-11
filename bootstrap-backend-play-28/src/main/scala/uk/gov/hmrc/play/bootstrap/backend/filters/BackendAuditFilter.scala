@@ -23,7 +23,7 @@ import play.api.mvc.{RequestHeader, ResponseHeader, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
@@ -60,7 +60,14 @@ class DefaultBackendAuditFilter @Inject()(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String]
+    detail         : Map[String, String],
+    truncationLog  : Option[TruncationLog]
   )(implicit hc: HeaderCarrier): DataEvent =
-    httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
+    httpAuditEvent.dataEvent(
+      eventType,
+      transactionName,
+      request,
+      detail,
+      truncationLog
+    )
 }

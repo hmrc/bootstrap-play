@@ -31,9 +31,10 @@ import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.AuditUtils
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
 
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Promise}
 
 trait AuditFilter extends EssentialFilter
@@ -51,7 +52,8 @@ trait CommonAuditFilter extends AuditFilter {
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String] = Map()
+    detail         : Map[String, String]   = Map.empty,
+    truncationLog  : Option[TruncationLog] = None
   )(implicit
     hc: HeaderCarrier
   ): DataEvent
@@ -75,19 +77,36 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
-    val detail: Map[String, String] =
+    val (detail, truncationLog) =
       result match {
         case Right((result, responseBody)) =>
           val responseHeader = result.header
-          AuditUtils.responseBodyToMap(s"Inbound ${requestHeader.method} ${requestHeader.uri}", responseBody)(body =>
-            filterResponseBody(result, responseHeader, body)
-          ) ++
-            Map(EventKeys.StatusCode -> responseHeader.status.toString) ++
+          val isRequestTruncated  = AuditUtils.isTruncated(requestBody)
+          val isResponseTruncated = AuditUtils.isTruncated(responseBody)
+          val responseBodyStr =
+            AuditUtils.extractFromBody(
+              s"Inbound ${requestHeader.method} ${requestHeader.uri} response",
+              responseBody.map(filterResponseBody(result, responseHeader, _))
+            )
+          val detail =
+            Map(
+              EventKeys.StatusCode      -> responseHeader.status.toString,
+              EventKeys.ResponseMessage -> responseBodyStr
+            ) ++
             buildRequestDetails(requestHeader, requestBody).toMap ++
             buildResponseDetails(responseHeader).toMap
+          val truncationLog = {
+            val truncatedFields =
+              (if (isRequestTruncated) List("request.detail.requestBody") else List.empty) ++
+              (if (isResponseTruncated) List("response.detail.responseMessage") else List.empty)
+            if (truncatedFields.nonEmpty) Some(TruncationLog(truncatedFields, Instant.now())) else None
+          }
+          (detail, truncationLog)
         case Left(ex) =>
-          Map(EventKeys.FailedRequestMessage -> ex.getMessage) ++
-            buildRequestDetails(requestHeader, requestBody).toMap
+          val detail =
+            Map(EventKeys.FailedRequestMessage -> ex.getMessage) ++
+              buildRequestDetails(requestHeader, requestBody).toMap
+          (detail, None)
       }
     implicit val r = requestHeader
     auditConnector.sendEvent(
@@ -95,7 +114,8 @@ trait CommonAuditFilter extends AuditFilter {
         eventType       = requestReceived,
         transactionName = requestHeader.uri,
         request         = requestHeader,
-        detail          = detail
+        detail          = detail,
+        truncationLog   = truncationLog
       )
     )
   }

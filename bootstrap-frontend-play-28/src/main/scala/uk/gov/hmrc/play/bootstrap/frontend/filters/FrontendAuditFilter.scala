@@ -23,9 +23,10 @@ import play.api.http.HeaderNames
 import play.api.mvc.{RequestHeader, ResponseHeader, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
+import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.AuditUtils
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
@@ -49,16 +50,21 @@ trait FrontendAuditFilter
       .collect { case textHtml(a) => "<HTML>...</HTML>" }
       .getOrElse(responseBody)
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Map[String, String] =
-    AuditUtils.requestBodyToMap(s"Inbound ${requestHeader.method} ${requestHeader.uri}", requestBody)(body =>
-      stripPasswords(requestHeader.contentType, body, maskedFormFields)
-    ) ++
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Map[String, String] = {
+    val requestBodyStr =
+      AuditUtils.extractFromBody(
+        s"Inbound ${requestHeader.method} ${requestHeader.uri} request",
+        requestBody.map(stripPasswords(requestHeader.contentType, _, maskedFormFields))
+      )
+
     Map(
-      "deviceFingerprint" -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
-      "host"              -> getHost(requestHeader),
-      "port"              -> getPort,
-      "queryString"       -> getQueryString(requestHeader.queryString)
+      EventKeys.RequestBody -> requestBodyStr,
+      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
+      "host"                -> getHost(requestHeader),
+      "port"                -> getPort,
+      "queryString"         -> getQueryString(requestHeader.queryString)
     )
+  }
 
   override protected def buildResponseDetails(response: ResponseHeader): Map[String, String] =
     response.headers.get(HeaderNames.LOCATION)
@@ -117,7 +123,14 @@ class DefaultFrontendAuditFilter @Inject()(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String]
+    detail         : Map[String, String],
+    truncationLog  : Option[TruncationLog]
   )(implicit hc: HeaderCarrier): DataEvent =
-    httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
+    httpAuditEvent.dataEvent(
+      eventType,
+      transactionName,
+      request,
+      detail,
+      truncationLog
+    )
 }
