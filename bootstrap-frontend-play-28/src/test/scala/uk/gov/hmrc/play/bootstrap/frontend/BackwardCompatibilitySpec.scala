@@ -188,7 +188,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter(
-        config            = mock[Configuration],
+        config            = Configuration.reference,
         controllerConfigs = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
         auditConnector    = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
         httpAuditEvent    = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],

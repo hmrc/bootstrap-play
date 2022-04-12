@@ -586,7 +586,7 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
 
   protected implicit val system: ActorSystem = ActorSystem("FrontendAuditFilterInstance")
   private implicit val ec: ExecutionContext  = system.dispatcher
-  val config                                 = Configuration("auditing.enabled" -> true)
+  val config                                 = Configuration("auditing.enabled" -> true).withFallback(Configuration.reference)
   val auditConnector                         = mock[AuditConnector]
   val controllerConfigs                      = mock[ControllerConfigs]
   val httpAuditEvent                         = new HttpAuditEvent { override val appName = "app" }
