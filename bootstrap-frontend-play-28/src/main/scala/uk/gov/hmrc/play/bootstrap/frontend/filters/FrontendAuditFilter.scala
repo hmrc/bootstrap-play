@@ -102,7 +102,8 @@ class DefaultFrontendAuditFilter @Inject()(
 )(implicit protected val ec: ExecutionContext
 ) extends FrontendAuditFilter {
 
-  override val maskedFormFields: Seq[String] = Seq.empty
+  override val maskedFormFields: Seq[String] =
+    config.get[Seq[String]]("bootstrap.auditfilter.maskedFormFields")
 
   override val applicationPort: Option[Int] = None
 
