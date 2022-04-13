@@ -34,7 +34,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
 
-import java.time.Instant
 import scala.concurrent.{ExecutionContext, Promise}
 
 trait AuditFilter extends EssentialFilter
@@ -94,12 +93,18 @@ trait CommonAuditFilter extends AuditFilter {
               EventKeys.ResponseMessage -> responseBodyStr
             ) ++
             buildRequestDetails(requestHeader, requestBody).toMap ++
-            buildResponseDetails(responseHeader).toMap
+            buildResponseDetails(responseHeader).toMap // note buildResponseDetails does not add ResponseMessage (or StatusCode) as would buildRequestDetails
           val truncationLog = {
             val truncatedFields =
-              (if (isRequestTruncated) List("request.detail.requestBody") else List.empty) ++
-              (if (isResponseTruncated) List("response.detail.responseMessage") else List.empty)
-            if (truncatedFields.nonEmpty) Some(TruncationLog(truncatedFields, Instant.now())) else None
+              (if (detail.contains(EventKeys.RequestBody) && isRequestTruncated)
+                List(s"detail.${EventKeys.RequestBody}")
+               else List.empty
+              ) ++
+              (if (detail.contains(EventKeys.ResponseMessage) && isResponseTruncated)
+                List(s"detail.${EventKeys.ResponseMessage}")
+               else List.empty
+              )
+            if (truncatedFields.nonEmpty) Some(TruncationLog(truncatedFields)) else None
           }
           (detail, truncationLog)
         case Left(ex) =>
