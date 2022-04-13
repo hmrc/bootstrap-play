@@ -81,8 +81,8 @@ trait CommonAuditFilter extends AuditFilter {
       result match {
         case Right((result, responseBody)) =>
           val responseHeader = result.header
-          val isRequestTruncated  = AuditUtils.isTruncated(requestBody)
-          val isResponseTruncated = AuditUtils.isTruncated(responseBody)
+          val isRequestTruncated  = requestBody.isTruncated
+          val isResponseTruncated = responseBody.isTruncated
           val responseBodyStr =
             AuditUtils.extractFromBody(
               s"Inbound ${requestHeader.method} ${requestHeader.uri} response",
