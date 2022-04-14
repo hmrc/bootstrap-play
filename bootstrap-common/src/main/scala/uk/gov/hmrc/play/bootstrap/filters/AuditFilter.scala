@@ -76,43 +76,36 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
-    val (detail, truncationLog) =
+    val isRequestTruncated  = requestBody.isTruncated
+    val requestBodyStr =
+      AuditUtils.extractFromBody(s"Inbound ${requestHeader.method} ${requestHeader.uri} request", requestBody)
+    val (detail, isResponseTruncated) =
       result match {
         case Right((result, responseBody)) =>
-          val responseHeader = result.header
-          val isRequestTruncated  = requestBody.isTruncated
-          val isResponseTruncated = responseBody.isTruncated
           val responseBodyStr =
-            AuditUtils.extractFromBody(
-              s"Inbound ${requestHeader.method} ${requestHeader.uri} response",
-              responseBody.map(filterResponseBody(result, responseHeader, _))
-            )
+            AuditUtils.extractFromBody(s"Inbound ${requestHeader.method} ${requestHeader.uri} response", responseBody)
           val detail =
-            Map(
-              EventKeys.StatusCode      -> responseHeader.status.toString,
-              EventKeys.ResponseMessage -> responseBodyStr
-            ) ++
-            buildRequestDetails(requestHeader, requestBody).toMap ++
-            buildResponseDetails(responseHeader).toMap // note buildResponseDetails does not add ResponseMessage (or StatusCode) as would buildRequestDetails
-          val truncationLog = {
-            val truncatedFields =
-              (if (detail.contains(EventKeys.RequestBody) && isRequestTruncated)
-                List(s"detail.${EventKeys.RequestBody}")
-               else List.empty
-              ) ++
-              (if (detail.contains(EventKeys.ResponseMessage) && isResponseTruncated)
-                List(s"detail.${EventKeys.ResponseMessage}")
-               else List.empty
-              )
-            if (truncatedFields.nonEmpty) Some(TruncationLog(truncatedFields)) else None
-          }
-          (detail, truncationLog)
+            buildRequestDetails(requestHeader, requestBodyStr).toMap ++
+            buildResponseDetails(result.header, responseBodyStr, result.body.contentType).toMap
+          (detail, responseBody.isTruncated)
         case Left(ex) =>
           val detail =
             Map(EventKeys.FailedRequestMessage -> ex.getMessage) ++
-              buildRequestDetails(requestHeader, requestBody).toMap
-          (detail, None)
+              buildRequestDetails(requestHeader, requestBodyStr).toMap
+          (detail, false)
       }
+      val truncationLog =
+        Some(TruncationLog(
+          truncatedFields =
+            (if (detail.contains(EventKeys.RequestBody) && isRequestTruncated)
+              List(s"detail.${EventKeys.RequestBody}")
+             else List.empty
+            ) ++
+            (if (detail.contains(EventKeys.ResponseMessage) && isResponseTruncated)
+              List(s"detail.${EventKeys.ResponseMessage}")
+             else List.empty
+            )
+        )).filter(_.truncatedFields.nonEmpty)
     implicit val r = requestHeader
     auditConnector.sendEvent(
       dataEvent(
@@ -196,9 +189,7 @@ trait CommonAuditFilter extends AuditFilter {
       }
   }
 
-  protected def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String): String
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String]
 
-  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Map[String, String]
-
-  protected def buildResponseDetails(response: ResponseHeader): Map[String, String]
+  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: String, contentType: Option[String]): Map[String, String]
 }

@@ -22,9 +22,7 @@ import play.api.Configuration
 import play.api.http.HeaderNames
 import play.api.mvc.{RequestHeader, ResponseHeader, Result}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
-import uk.gov.hmrc.play.audit.http.AuditUtils
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
@@ -42,39 +40,25 @@ trait FrontendAuditFilter
 
   def applicationPort: Option[Int]
 
-
   private val textHtml = ".*(text/html).*".r
 
-  override protected def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String) =
-    result.body.contentType
-      .collect { case textHtml(a) => "<HTML>...</HTML>" }
-      .getOrElse(responseBody)
-
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Map[String, String] = {
-    val requestBodyStr =
-      AuditUtils.extractFromBody(
-        s"Inbound ${requestHeader.method} ${requestHeader.uri} request",
-        requestBody.map(stripPasswords(requestHeader.contentType, _, maskedFormFields))
-      )
-
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String] =
     Map(
-      EventKeys.RequestBody -> requestBodyStr,
+      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody, maskedFormFields),
       "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
       "host"                -> getHost(requestHeader),
       "port"                -> getPort,
       "queryString"         -> getQueryString(requestHeader.queryString)
     )
-  }
 
-  override protected def buildResponseDetails(response: ResponseHeader): Map[String, String] =
-    response.headers.get(HeaderNames.LOCATION)
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: String, contentType: Option[String]): Map[String, String] =
+    Map(
+      EventKeys.StatusCode      -> responseHeader.status.toString,
+      EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBody)
+    ) ++
+     responseHeader.headers.get(HeaderNames.LOCATION)
       .map(HeaderNames.LOCATION -> _)
       .toMap
-
-  private[filters] def getQueryString(queryString: Map[String, Seq[String]]): String =
-    cleanQueryStringForDatastream(
-      queryString.map { case (k, vs) => k + ":" + vs.mkString(",") }.mkString("&")
-    )
 
   private[filters] def getHost(request: RequestHeader): String =
     request.headers.get("Host").map(_.takeWhile(_ != ':')).getOrElse("-")
@@ -82,9 +66,21 @@ trait FrontendAuditFilter
   private[filters] def getPort: String =
     applicationPort.map(_.toString).getOrElse("-")
 
+  private[filters] def getQueryString(queryString: Map[String, Seq[String]]): String =
+    cleanQueryStringForDatastream(
+      queryString.map { case (k, vs) => k + ":" + vs.mkString(",") }.mkString("&")
+    )
+
+  private def cleanQueryStringForDatastream(queryString: String): String =
+    queryString.trim match {
+      case ""    => "-"
+      case ":"   => "-" // play 2.5 FakeRequest now parses an empty query string into a two empty string params
+      case other => other
+    }
+
   private[filters] def stripPasswords(
-    contentType: Option[String],
-    requestBody: String,
+    contentType     : Option[String],
+    requestBody     : String,
     maskedFormFields: Seq[String]
   ): String =
     contentType match {
@@ -94,12 +90,10 @@ trait FrontendAuditFilter
       case _ => requestBody
     }
 
-  private def cleanQueryStringForDatastream(queryString: String): String =
-    queryString.trim match {
-      case ""    => "-"
-      case ":"   => "-" // play 2.5 FakeRequest now parses an empty query string into a two empty string params
-      case other => other
-    }
+  private[filters] def filterResponseBody(contentType: Option[String], responseBody: String) =
+    contentType
+      .collect { case textHtml(a) => "<HTML>...</HTML>" }
+      .getOrElse(responseBody)
 }
 
 class DefaultFrontendAuditFilter @Inject()(
