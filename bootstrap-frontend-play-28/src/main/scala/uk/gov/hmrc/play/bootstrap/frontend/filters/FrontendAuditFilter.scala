@@ -20,8 +20,9 @@ import akka.stream.Materializer
 import javax.inject.Inject
 import play.api.Configuration
 import play.api.http.HeaderNames
-import play.api.mvc.{RequestHeader, ResponseHeader, Result}
+import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
@@ -42,23 +43,41 @@ trait FrontendAuditFilter
 
   private val textHtml = ".*(text/html).*".r
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String] =
-    Map(
-      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody, maskedFormFields),
-      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
-      "host"                -> getHost(requestHeader),
-      "port"                -> getPort,
-      "queryString"         -> getQueryString(requestHeader.queryString)
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog) = {
+    val (requestBodyStr, isRequestTruncated) = requestBody match {
+      case Body.Complete(b)  => (b, false)
+      case Body.Truncated(b) => (b, true)
+    }
+    (Map(
+       EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields),
+       "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
+       "host"                -> getHost(requestHeader),
+       "port"                -> getPort,
+       "queryString"         -> getQueryString(requestHeader.queryString)
+     ),
+     TruncationLog(
+       truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty
+     )
     )
+  }
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: String, contentType: Option[String]): Map[String, String] =
-    Map(
-      EventKeys.StatusCode      -> responseHeader.status.toString,
-      EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBody)
-    ) ++
-     responseHeader.headers.get(HeaderNames.LOCATION)
-      .map(HeaderNames.LOCATION -> _)
-      .toMap
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog) = {
+    val (responseBodyStr, isResponseTruncated) = responseBody match {
+      case Body.Complete(b)  => (b, false)
+      case Body.Truncated(b) => (b, true)
+    }
+    (Map(
+       EventKeys.StatusCode      -> responseHeader.status.toString,
+       EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBodyStr)
+     ) ++
+      responseHeader.headers.get(HeaderNames.LOCATION)
+       .map(HeaderNames.LOCATION -> _)
+       .toMap,
+     TruncationLog(
+       truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty
+     )
+    )
+  }
 
   private[filters] def getHost(request: RequestHeader): String =
     request.headers.get("Host").map(_.takeWhile(_ != ':')).getOrElse("-")

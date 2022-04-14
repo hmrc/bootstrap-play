@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.http.HttpChunk
 import play.api.mvc.EssentialFilter
 import akka.stream._
@@ -29,7 +29,6 @@ import play.api.routing.Router.Attrs
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
-import uk.gov.hmrc.play.audit.http.AuditUtils
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
@@ -59,6 +58,8 @@ trait CommonAuditFilter extends AuditFilter {
 
   implicit def mat: Materializer
 
+  private val logger = Logger(getClass)
+
   val maxBodySize = config.get[Int]("bootstrap.auditing.maxBodyLength")
 
   val requestReceived = "RequestReceived"
@@ -76,36 +77,25 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
-    val isRequestTruncated  = requestBody.isTruncated
-    val requestBodyStr =
-      AuditUtils.extractFromBody(s"Inbound ${requestHeader.method} ${requestHeader.uri} request", requestBody)
-    val (detail, isResponseTruncated) =
+    val (detail, truncationLog) =
       result match {
         case Right((result, responseBody)) =>
-          val responseBodyStr =
-            AuditUtils.extractFromBody(s"Inbound ${requestHeader.method} ${requestHeader.uri} response", responseBody)
-          val detail =
-            buildRequestDetails(requestHeader, requestBodyStr).toMap ++
-            buildResponseDetails(result.header, responseBodyStr, result.body.contentType).toMap
-          (detail, responseBody.isTruncated)
+          val (requestDetail , requestTruncationLog ) = buildRequestDetails(requestHeader, requestBody)
+          val (responseDetail, responseTruncationLog) = buildResponseDetails(result.header, responseBody, result.body.contentType)
+          ( requestDetail ++ responseDetail,
+            TruncationLog(requestTruncationLog.truncatedFields ++ responseTruncationLog.truncatedFields)
+          )
         case Left(ex) =>
-          val detail =
-            Map(EventKeys.FailedRequestMessage -> ex.getMessage) ++
-              buildRequestDetails(requestHeader, requestBodyStr).toMap
-          (detail, false)
+          val (requestDetail, requestTruncationLog) = buildRequestDetails(requestHeader, requestBody)
+          ( requestDetail ++ Map(EventKeys.FailedRequestMessage -> ex.getMessage),
+            requestTruncationLog
+          )
       }
-      val truncationLog =
-        Some(TruncationLog(
-          truncatedFields =
-            (if (detail.contains(EventKeys.RequestBody) && isRequestTruncated)
-              List(s"detail.${EventKeys.RequestBody}")
-             else List.empty
-            ) ++
-            (if (detail.contains(EventKeys.ResponseMessage) && isResponseTruncated)
-              List(s"detail.${EventKeys.ResponseMessage}")
-             else List.empty
-            )
-        )).filter(_.truncatedFields.nonEmpty)
+
+    val truncationLog2 = TruncationLog(truncatedFields = truncationLog.truncatedFields.map("detail." + _))
+    if (truncationLog2.truncatedFields.nonEmpty)
+      logger.info(s"Inbound ${requestHeader.method} ${requestHeader.uri} - the following fields were truncated for auditing: ${truncationLog2.truncatedFields.mkString(", ")}")
+
     implicit val r = requestHeader
     auditConnector.sendEvent(
       dataEvent(
@@ -113,7 +103,7 @@ trait CommonAuditFilter extends AuditFilter {
         transactionName = requestHeader.uri,
         request         = requestHeader,
         detail          = detail,
-        truncationLog   = truncationLog
+        truncationLog   = Some(truncationLog2)
       )
     )
   }
@@ -129,7 +119,7 @@ trait CommonAuditFilter extends AuditFilter {
   ): Accumulator[ByteString, Result] = {
     val requestBodyPromise  = Promise[Body[String]]()
 
-    //grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody https://github.com/playframework/playframework/blob/2.8.13/web/play-filters-helpers/src/main/scala/play/filters/csrf/CSRFActions.scala#L161-L185)
+    // grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody https://github.com/playframework/playframework/blob/2.8.13/web/play-filters-helpers/src/main/scala/play/filters/csrf/CSRFActions.scala#L161-L185)
     // we don't just use `next.through(BodyCaptor.flow)` since the stream wouldn't be audited without the controller pulling the content
     val wrappedAcc: Accumulator[ByteString, Result] =
       Accumulator(
@@ -189,7 +179,7 @@ trait CommonAuditFilter extends AuditFilter {
       }
   }
 
-  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String]
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog)
 
-  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: String, contentType: Option[String]): Map[String, String]
+  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog)
 }

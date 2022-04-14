@@ -21,6 +21,7 @@ import javax.inject.Inject
 import play.api.Configuration
 import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
@@ -34,14 +35,23 @@ trait BackendAuditFilter
   extends CommonAuditFilter
      with BackendHeaderCarrierProvider {
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String] =
-    Map.empty
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog) =
+    (Map.empty, TruncationLog(List.empty))
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: String, contentType: Option[String]): Map[String, String] =
-    Map(
-      EventKeys.StatusCode      -> responseHeader.status.toString,
-      EventKeys.ResponseMessage -> responseBody
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog) = {
+    val (responseBodyStr, isResponseTruncated) = responseBody match {
+      case Body.Complete(b)  => (b, false)
+      case Body.Truncated(b) => (b, true)
+    }
+    (Map(
+       EventKeys.StatusCode      -> responseHeader.status.toString,
+       EventKeys.ResponseMessage -> responseBodyStr
+     ),
+     TruncationLog(
+       truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty
+     )
     )
+  }
 }
 
 class DefaultBackendAuditFilter @Inject()(
