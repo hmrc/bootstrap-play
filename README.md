@@ -196,13 +196,17 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ### Version 8.0.0
 
-`http-verbs` has been updated to version 14.0.0, and `play-auditing` to version 8.0.0. This has internal changes to the auditing hook data format to identify when audit data has been truncated or omitted. This should have little impact on clients as long as they rely on `bootstrap-play` to provide compatible versions.
-
-### Version 5.22.0
-
 #### http-verbs
 
-Http-verbs has been updated to version 13.13.0, which adds `HttpClientV2`. See [http-verbs](https://github.com/hmrc/http-verbs) for details.
+Http-verbs has been updated to version 14.0.0, which adds `HttpClientV2`. See [http-verbs](https://github.com/hmrc/http-verbs) for details.
+
+#### Auditing of truncated payloads
+
+http-verbs's `HookData` has been updated to identify when audit data has been truncated. This should have little impact on clients as long as they rely on `bootstrap-play` to provide compatible versions of `http-verbs` and `play-auditing`.
+
+`AuditFilter`s have been updated to identify when audit data has been truncated. Most clients will be using the provided AuditFilters and should not be impacted.
+
+
 
 ### Version 5.21.0
 
