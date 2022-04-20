@@ -26,7 +26,7 @@ import play.api.Configuration
 import play.api.libs.json.OFormat
 import play.api.mvc.{ControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 
 import scala.concurrent.ExecutionContext
 
@@ -86,7 +86,8 @@ class BackwardCompatibilitySpec
           eventType      : String,
           transactionName: String,
           request        : RequestHeader,
-          detail         : Map[String,String]
+          detail         : Map[String,String],
+          truncationLog  : Option[TruncationLog]
         )(implicit hc: HeaderCarrier): DataEvent = mock[DataEvent]
       }
     }

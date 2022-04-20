@@ -19,10 +19,12 @@ package uk.gov.hmrc.play.bootstrap.backend.filters
 import akka.stream.Materializer
 import javax.inject.Inject
 import play.api.Configuration
-import play.api.mvc.{RequestHeader, ResponseHeader, Result}
+import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.hooks.Body
+import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
@@ -33,14 +35,23 @@ trait BackendAuditFilter
   extends CommonAuditFilter
      with BackendHeaderCarrierProvider {
 
-  override protected def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String): String =
-    responseBody
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog) =
+    (Map.empty, TruncationLog(List.empty))
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, request: String): Map[String, String] =
-    Map.empty
-
-  override protected def buildResponseDetails(response: ResponseHeader): Map[String, String] =
-    Map.empty
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog) = {
+    val (responseBodyStr, isResponseTruncated) = responseBody match {
+      case Body.Complete(b)  => (b, false)
+      case Body.Truncated(b) => (b, true)
+    }
+    (Map(
+       EventKeys.StatusCode      -> responseHeader.status.toString,
+       EventKeys.ResponseMessage -> responseBodyStr
+     ),
+     TruncationLog(
+       truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty
+     )
+    )
+  }
 }
 
 class DefaultBackendAuditFilter @Inject()(
@@ -59,7 +70,14 @@ class DefaultBackendAuditFilter @Inject()(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String]
+    detail         : Map[String, String],
+    truncationLog  : Option[TruncationLog]
   )(implicit hc: HeaderCarrier): DataEvent =
-    httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
+    httpAuditEvent.dataEvent(
+      eventType,
+      transactionName,
+      request,
+      detail,
+      truncationLog
+    )
 }

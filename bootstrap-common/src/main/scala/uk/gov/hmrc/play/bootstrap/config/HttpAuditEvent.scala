@@ -21,7 +21,7 @@ import javax.inject.{Inject, Named}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions._
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 
 class DefaultHttpAuditEvent @Inject()(
   @Named("appName") val appName: String
@@ -45,14 +45,14 @@ trait HttpAuditEvent {
   }
 
   def dataEvent(
-    eventType: String,
+    eventType      : String,
     transactionName: String,
-    request: RequestHeader,
-    detail: Map[String, String] = Map()
+    request        : RequestHeader,
+    detail         : Map[String, String]   = Map.empty,
+    truncationLog  : Option[TruncationLog] = None
   )(implicit
     hc: HeaderCarrier
   ): DataEvent = {
-
     import auditDetailKeys._
     import headers._
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
@@ -72,8 +72,9 @@ trait HttpAuditEvent {
     DataEvent(
       appName,
       eventType,
-      detail = detail ++ requiredFields ++ optionalAuditFieldsSeq(request.headers.toMap),
-      tags   = tags
+      detail        = detail ++ requiredFields ++ optionalAuditFieldsSeq(request.headers.toMap),
+      tags          = tags,
+      truncationLog = truncationLog
     )
   }
 }

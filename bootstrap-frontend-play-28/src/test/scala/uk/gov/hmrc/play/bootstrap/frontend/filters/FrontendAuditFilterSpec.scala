@@ -92,41 +92,50 @@ class FrontendAuditFilterSpec
   "A password" should {
     "be obfuscated with the password at the beginning" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "password=p2ssword%26adkj&csrfToken=123&userId=113244018119",
-        Seq("password")) shouldBe "password=#########&csrfToken=123&userId=113244018119"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "password=p2ssword%26adkj&csrfToken=123&userId=113244018119",
+        maskedFormFields = Seq("password")
+      ) shouldBe "password=#########&csrfToken=123&userId=113244018119"
     }
 
     "be obfuscated with the password in the end" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "csrfToken=123&userId=113244018119&password=p2ssword%26adkj",
-        Seq("password")) shouldBe "csrfToken=123&userId=113244018119&password=#########"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "csrfToken=123&userId=113244018119&password=p2ssword%26adkj",
+        maskedFormFields = Seq("password")
+      ) shouldBe "csrfToken=123&userId=113244018119&password=#########"
     }
 
     "be obfuscated with the password in the middle" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "csrfToken=123&password=p2ssword%26adkj&userId=113244018119",
-        Seq("password")) shouldBe "csrfToken=123&password=#########&userId=113244018119"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "csrfToken=123&password=p2ssword%26adkj&userId=113244018119",
+        maskedFormFields = Seq("password")
+      ) shouldBe "csrfToken=123&password=#########&userId=113244018119"
     }
 
     "be obfuscated even if the password is empty" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "csrfToken=123&password=&userId=113244018119",
-        Seq("password")) shouldBe "csrfToken=123&password=#########&userId=113244018119"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "csrfToken=123&password=&userId=113244018119",
+        maskedFormFields = Seq("password")
+      ) shouldBe "csrfToken=123&password=#########&userId=113244018119"
     }
 
     "not be obfuscated if content type is not application/x-www-form-urlencoded" in {
-      filter.stripPasswords(Some("text/json"), "{ password=p2ssword%26adkj }", Seq("password")) shouldBe "{ password=p2ssword%26adkj }"
+      filter.stripPasswords(
+        contentType      = Some("text/json"),
+        requestBody      = "{ password=p2ssword%26adkj }",
+        maskedFormFields = Seq("password")
+      ) shouldBe "{ password=p2ssword%26adkj }"
     }
 
     "be obfuscated using multiple fields" in {
-      val body   = """companyNumber=05448736&password=secret&authCode=code"""
-      val result = filter.stripPasswords(Some("application/x-www-form-urlencoded"), body, Seq("password", "authCode"))
-
-      result shouldBe """companyNumber=05448736&password=#########&authCode=#########"""
+      filter.stripPasswords(
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = """companyNumber=05448736&password=secret&authCode=code""",
+        maskedFormFields = Seq("password", "authCode")
+      ) shouldBe """companyNumber=05448736&password=#########&authCode=#########"""
     }
   }
 
