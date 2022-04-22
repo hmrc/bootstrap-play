@@ -38,6 +38,15 @@ class DefaultFormBindingSpec extends AnyWordSpecLike with Matchers {
       result should contain("test" -> Seq("test"))
     }
 
+    "work with map body" in {
+      val request = FakeRequest("POST", "/test")
+        .withHeaders(CONTENT_TYPE -> "application/x-www-form-urlencoded")
+        .withBody(Map("test" -> Seq("test")))
+
+      val result = fixture.apply(request)
+      result should contain("test" -> Seq("test"))
+    }
+
     "work with application/json" in {
       val request = FakeRequest("POST", "/test")
         .withHeaders(CONTENT_TYPE -> "application/json")
