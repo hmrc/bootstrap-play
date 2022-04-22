@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.data
+package uk.gov.hmrc.play.bootstrap.controller
 
-import play.api.http.HttpVerbs
+import play.api.data.FormBinding
+import play.api.mvc.BaseControllerHelpers
+import uk.gov.hmrc.play.bootstrap.data.{UrlEncodedAndMultipartFormBinding, UrlEncodedOnlyFormBinding}
 
-private [data] object QueryStringMapper {
-  def apply(request: play.api.mvc.Request[_]): Map[_ <: String, Seq[String]] = request.method.toUpperCase match {
-    case HttpVerbs.POST | HttpVerbs.PUT | HttpVerbs.PATCH => Map.empty
-    case _                                                => request.queryString
-  }
+trait WithUrlEncodedAndMultipartFormBinding { self: BaseControllerHelpers =>
+
+  override implicit lazy val defaultFormBinding: FormBinding = new UrlEncodedAndMultipartFormBinding
+}
+
+trait WithUrlEncodedOnlyFormBinding { self: BaseControllerHelpers =>
+
+  override implicit lazy val defaultFormBinding: FormBinding = new UrlEncodedOnlyFormBinding
 }

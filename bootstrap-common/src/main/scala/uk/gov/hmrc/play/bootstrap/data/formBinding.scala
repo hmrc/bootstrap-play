@@ -20,6 +20,17 @@ import play.api.data.FormBinding
 import play.api.http.HttpVerbs
 import play.api.mvc.{AnyContent, MultipartFormData, Request}
 
+// Based on play.api.data.DefaultFormBinding - removing the ability to bind forms from JSON and multipart data
+class UrlEncodedOnlyFormBinding extends FormBinding {
+  override def apply(request: Request[_]): Map[String, Seq[String]] = {
+    val data = request.body match {
+      case any: AnyContent => any.asFormUrlEncoded.getOrElse(Map.empty)
+      case _               => Map.empty
+    }
+    (data ++ QueryStringMapper(request)).toMap
+  }
+}
+
 // Based on play.api.data.DefaultFormBinding - removing the ability to bind forms from JSON
 class UrlEncodedAndMultipartFormBinding extends FormBinding {
   override def apply(request: play.api.mvc.Request[_]): Map[String, Seq[String]] = {
@@ -39,3 +50,12 @@ class UrlEncodedAndMultipartFormBinding extends FormBinding {
   }
   private def multipartFormParse(body: MultipartFormData[_]) = body.asFormUrlEncoded
 }
+
+// helper
+private object QueryStringMapper {
+  def apply(request: play.api.mvc.Request[_]): Map[_ <: String, Seq[String]] = request.method.toUpperCase match {
+    case HttpVerbs.POST | HttpVerbs.PUT | HttpVerbs.PATCH => Map.empty
+    case _                                                => request.queryString
+  }
+}
+
