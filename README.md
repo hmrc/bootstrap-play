@@ -163,6 +163,12 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 5.24.0
+
+Builds update dependencies to Play 2.8.15 and Jackson 2.12.6.  Also drops support for using `bindFormRequest` with `application/json` and 
+`application/multipart` content types - if this is required, add `with WithUrlEncodedAndMultipartFormBinding` or `with WithDefaultFormBinding` to your
+controller.  Please speak to PlatOps if you havee issues.
+
 ### Version 5.21.0
 
 Builds for Scala 2.13 in addition to 2.12
