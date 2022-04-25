@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.controller
 
-import play.api.data.FormBinding
+import play.api.data.{DefaultFormBinding, FormBinding}
 import play.api.mvc.BaseControllerHelpers
 import uk.gov.hmrc.play.bootstrap.data.{UrlEncodedAndMultipartFormBinding, UrlEncodedOnlyFormBinding}
 
@@ -28,4 +28,9 @@ trait WithUrlEncodedAndMultipartFormBinding { self: BaseControllerHelpers =>
 trait WithUrlEncodedOnlyFormBinding { self: BaseControllerHelpers =>
 
   override implicit lazy val defaultFormBinding: FormBinding = new UrlEncodedOnlyFormBinding
+}
+
+trait WithDefaultFormBinding { self: BaseControllerHelpers =>
+
+  override implicit lazy val defaultFormBinding: FormBinding = new DefaultFormBinding(parse.DefaultMaxTextLength)
 }
