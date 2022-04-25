@@ -5,6 +5,8 @@ object LibDependencies {
   private val play28Version  = "2.8.15"
   private val httpVerbsVersion = "13.12.0"
   private val akkaVersion = "2.6.19"
+  private val jacksonVersion = "2.12.6"
+  private val jacksonDatabindVersion = "2.12.6.1"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
 
@@ -28,6 +30,16 @@ object LibDependencies {
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
+
+      //jackson overrides (CVE-2020-36518 mitigation)
+      "com.fasterxml.jackson.core"       %  "jackson-core"                   % jacksonVersion,
+      "com.fasterxml.jackson.core"       %  "jackson-annotations"            % jacksonVersion,
+      "com.fasterxml.jackson.datatype"   %  "jackson-datatype-jdk8"          % jacksonVersion,
+      "com.fasterxml.jackson.datatype"   %  "jackson-datatype-jsr310"        % jacksonVersion,
+      "com.fasterxml.jackson.core"       %  "jackson-databind"               % jacksonDatabindVersion,
+      "com.fasterxml.jackson.dataformat" %  "jackson-dataformat-cbor"        % jacksonVersion,
+      "com.fasterxml.jackson.module"     %  "jackson-module-parameter-names" % jacksonVersion,
+      "com.fasterxml.jackson.module"     %% "jackson-module-scala"           % jacksonVersion,
 
       // test dependencies
       "com.github.tomakehurst"  %  "wiremock-jre8"              % "2.26.3"       % Test,

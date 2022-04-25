@@ -17,8 +17,8 @@
 package uk.gov.hmrc.play.bootstrap.frontend.controller
 
 import play.api.mvc._
-import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody, WithUrlEncodedOnlyFormBinding}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 trait FrontendBaseController
@@ -28,7 +28,7 @@ trait FrontendBaseController
     with FrontendHeaderCarrierProvider
 
 abstract class FrontendController(override val controllerComponents: MessagesControllerComponents)
-    extends FrontendBaseController
+    extends FrontendBaseController with WithUrlEncodedOnlyFormBinding
 
 trait FrontendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
