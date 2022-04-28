@@ -3,7 +3,7 @@ import sbt._
 object LibDependencies {
 
   private val play28Version    = "2.8.15"
-  private val httpVerbsVersion = "14.0.0"
+  private val httpVerbsVersion = "14.1.0"
   private val akkaVersion      = "2.6.19"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
