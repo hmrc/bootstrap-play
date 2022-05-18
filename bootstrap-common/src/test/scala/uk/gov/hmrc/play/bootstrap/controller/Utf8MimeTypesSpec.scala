@@ -22,7 +22,7 @@ import play.api.http.ContentTypes
 
 class Utf8MimeTypesSpec extends AnyWordSpecLike with Matchers {
 
-  "Controller minetypes" should {
+  "Controller mimetypes" should {
 
     "have default application json" in {
 

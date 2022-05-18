@@ -207,6 +207,11 @@ http-verbs's `HookData` has been updated to identify when audit data has been tr
 `AuditFilter`s have been updated to identify when audit data has been truncated. Most clients will be using the provided AuditFilters and should not be impacted.
 
 
+### Version 5.24.0
+
+Builds update dependencies to Play 2.8.15 and Jackson 2.12.6.  Also drops support for using `bindFormRequest` with `application/json` and
+`application/multipart` content types - if this is required, add `with WithUrlEncodedAndMultipartFormBinding` or `with WithDefaultFormBinding` to your
+controller.  Please speak to PlatOps if you have issues.
 
 ### Version 5.21.0
 
