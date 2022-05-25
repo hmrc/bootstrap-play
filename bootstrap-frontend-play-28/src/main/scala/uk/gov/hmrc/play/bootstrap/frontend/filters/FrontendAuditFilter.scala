@@ -41,6 +41,8 @@ trait FrontendAuditFilter
 
   def applicationPort: Option[Int]
 
+  def shouldAuditAllHeaders: Boolean
+
   private val textHtml = ".*(text/html).*".r
 
   override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog) = {
@@ -48,17 +50,20 @@ trait FrontendAuditFilter
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
     }
-    (Map(
-       EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields),
-       "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
-       "host"                -> getHost(requestHeader),
-       "port"                -> getPort,
-       "queryString"         -> getQueryString(requestHeader.queryString)
-     ),
-     TruncationLog(
-       truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty
-     )
-    )
+
+    val requestDetails =
+      Map(
+        EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields),
+        "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
+        "host"                -> getHost(requestHeader),
+        "port"                -> getPort,
+        "queryString"         -> getQueryString(requestHeader.queryString)
+      ) ++ (if (shouldAuditAllHeaders) requestHeader.headers.headers else Seq.empty[(String, String)])
+
+    val truncationLog =
+      TruncationLog(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
+
+    (requestDetails, truncationLog)
   }
 
   override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog) = {
@@ -128,6 +133,9 @@ class DefaultFrontendAuditFilter @Inject()(
     config.get[Seq[String]]("bootstrap.auditfilter.maskedFormFields")
 
   override val applicationPort: Option[Int] = None
+
+  override val shouldAuditAllHeaders: Boolean =
+    config.get[Boolean]("bootstrap.auditfilter.frontend.auditAllHeaders")
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)

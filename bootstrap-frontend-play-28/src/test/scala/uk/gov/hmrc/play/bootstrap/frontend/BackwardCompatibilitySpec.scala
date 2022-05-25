@@ -184,6 +184,7 @@ class BackwardCompatibilitySpec
         )(implicit hc: HeaderCarrier): DataEvent = mock[DataEvent]
         override def maskedFormFields = mock[Seq[String]]
         override def applicationPort  = mock[Option[Int]]
+        override def shouldAuditAllHeaders = false
       }
     }
 

@@ -168,6 +168,40 @@ class FrontendAuditFilterSpec
         }(fiveSecondsPatience, implicitly, implicitly)
     }
 
+    "audit all request headers according to configuration" when {
+      val headers =
+        List(
+          "some-header-1" -> "some-value",
+          "some-header-2" -> "some-value",
+          "some-header-3" -> "some-value",
+        )
+
+      val request =
+        FakeRequest()
+          .withHeaders(headers: _*)
+
+      "if configured to do so" in {
+        shouldAuditAllHeaders = true
+
+        await(filter.apply(nextAction)(request).run())
+
+        eventually {
+          val event = verifyAndRetrieveEvent
+          event.detail should contain allElementsOf headers
+        }(fiveSecondsPatience, implicitly, implicitly)
+      }
+
+      "if not configured to do so" in {
+         shouldAuditAllHeaders = false
+         await(filter.apply(nextAction)(request).run())
+
+         eventually {
+           val event = verifyAndRetrieveEvent
+           event.detail should contain noElementsOf headers
+         }(fiveSecondsPatience, implicitly, implicitly)
+      }
+    }
+
     "generate audit events with the device finger print when it is supplied in a request cookie" when {
       val encryptedFingerprint = "eyJ1c2VyQWdlbnQiOiJNb3ppbGxhLzUuMCAoTWFjaW50b3NoOyBJbnRlbCBNYWMgT1MgWCAxMF84XzUpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGx" +
         "pa2UgR2Vja28pIENocm9tZS8zMS4wLjE2NTAuNDggU2FmYXJpLzUzNy4zNiIsImxhbmd1YWdlIjoiZW4tVVMiLCJjb2xvckRlcHRoIjoyNCwicmVzb2x1dGlvbiI6IjgwMHgxMj" +
@@ -590,10 +624,14 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   private val ms = new MockitoSugar {}
   import ms._
 
+  var shouldAuditAllHeaders: Boolean        = false
+
   protected implicit val system             = ActorSystem("FrontendAuditFilterInstance")
   private implicit val ec: ExecutionContext = system.dispatcher
-  val config                                = Configuration("auditing.enabled" -> true)
-                                                .withFallback(Configuration(ConfigFactory.load()))
+  def config                                = Configuration(
+                                                "auditing.enabled" -> true,
+                                                "bootstrap.auditfilter.frontend.auditAllHeaders" -> shouldAuditAllHeaders
+                                              ).withFallback(Configuration(ConfigFactory.load()))
   val auditConnector                        = mock[AuditConnector]
   val controllerConfigs                     = mock[ControllerConfigs]
   val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
@@ -601,7 +639,7 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
   when(controllerConfigs.controllerNeedsAuditing(any[String]))
     .thenReturn(false)
 
-  protected val filter: FrontendAuditFilter =
+  protected def filter: FrontendAuditFilter =
     new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, implicitly[Materializer]) {
       override val maskedFormFields: Seq[String] = Seq("password")
       override val applicationPort: Option[Int]  = Some(80)
