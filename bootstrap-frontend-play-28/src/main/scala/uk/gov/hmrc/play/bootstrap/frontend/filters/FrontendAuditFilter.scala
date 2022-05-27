@@ -21,8 +21,8 @@ import akka.stream.Materializer
 import javax.inject.Inject
 import play.api.Configuration
 import play.api.http.HeaderNames
-import play.api.libs.json.{JsObject, JsString, Json}
-import play.api.mvc.{RequestHeader, ResponseHeader}
+import play.api.libs.json.{JsObject, JsString, Json, Writes}
+import play.api.mvc.{Headers, RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
@@ -62,7 +62,7 @@ trait FrontendAuditFilter
         "queryString"         -> getQueryString(requestHeader.queryString)
       ) ++
         (if (shouldAuditAllHeaders)
-          JsObject(requestHeader.headers.headers.toMap.mapValues(JsString))
+          Json.obj("requestHeaders" -> RequestHeaders(requestHeader.headers))
         else
           JsObject.empty)
 
@@ -131,6 +131,22 @@ trait FrontendAuditFilter
     contentType
       .collect { case textHtml(a) => "<HTML>...</HTML>" }
       .getOrElse(responseBody)
+
+  private case class RequestHeaders(value: Headers)
+
+  private object RequestHeaders {
+
+    implicit val writes: Writes[RequestHeaders] = {
+      val header =
+        Writes[(String, Seq[String])] { case (name, values) =>
+          Json.obj("name" -> name, "values" -> values)
+        }
+
+      Writes
+        .seq(header)
+        .contramap[RequestHeaders](_.value.toMap.toSeq)
+    }
+  }
 }
 
 class DefaultFrontendAuditFilter @Inject()(

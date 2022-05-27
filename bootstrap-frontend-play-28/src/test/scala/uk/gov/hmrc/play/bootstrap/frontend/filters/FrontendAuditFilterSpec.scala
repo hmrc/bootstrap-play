@@ -32,7 +32,7 @@ import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.{Application, Configuration}
 import play.api.http.{HttpChunk, HttpEntity}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.JsString
+import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
 import play.api.mvc.Results.NotFound
@@ -174,8 +174,8 @@ class FrontendAuditFilterSpec
       val headers =
         List(
           "some-header-1" -> "some-value",
+          "some-header-1" -> "some-other-value",
           "some-header-2" -> "some-value",
-          "some-header-3" -> "some-value",
         )
 
       val request =
@@ -189,7 +189,13 @@ class FrontendAuditFilterSpec
 
         eventually {
           val event = verifyAndRetrieveEvent
-          event.detail.asJsObjectMap should contain allElementsOf headers.toMap.mapValues(JsString)
+          event.detail.asJsObjectMap.get("requestHeaders") shouldBe Some(
+            Json.arr(
+              Json.obj("name" -> "Host", "values" -> Json.arr("localhost")),
+              Json.obj("name" -> "some-header-1", "values" -> Json.arr("some-value", "some-other-value")),
+              Json.obj("name" -> "some-header-2", "values" -> Json.arr("some-value"))
+            )
+          )
         }(fiveSecondsPatience, implicitly, implicitly)
       }
 
@@ -199,7 +205,7 @@ class FrontendAuditFilterSpec
 
          eventually {
            val event = verifyAndRetrieveEvent
-           event.detail.asJsObjectMap should contain noElementsOf headers
+           event.detail.asJsObjectMap should not contain "requestHeaders"
          }(fiveSecondsPatience, implicitly, implicitly)
       }
     }
