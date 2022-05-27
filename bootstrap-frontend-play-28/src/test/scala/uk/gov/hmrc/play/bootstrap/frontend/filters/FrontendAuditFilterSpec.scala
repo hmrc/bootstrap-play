@@ -22,9 +22,11 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar.{mock, verify}
 import org.mockito.captor.ArgCaptor
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TestData}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Tag, TestData}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
@@ -53,13 +55,30 @@ import scala.concurrent.duration.DurationLong
 
 class FrontendAuditFilterSpec
   extends AnyWordSpec
-     with FrontendAuditFilterInstance
      with Matchers
      with Eventually
      with ScalaFutures
      with MockitoSugar
      with GuiceOneAppPerTest
-     with BeforeAndAfterEach {
+     with BeforeAndAfterAll
+     with BeforeAndAfterEach
+     with FrontendAuditFilterInstance {
+
+  implicit val system =
+    ActorSystem("FrontendAuditFilterSpec")
+
+  implicit val ec: ExecutionContext =
+    system.dispatcher
+
+  override def afterAll(): Unit = {
+    system.terminate()
+    super.afterAll()
+  }
+
+  override def beforeEach(): Unit = {
+    reset(auditConnector)
+    super.beforeEach()
+  }
 
   private val Action = stubControllerComponents().actionBuilder
 
@@ -70,10 +89,6 @@ class FrontendAuditFilterSpec
 
   private def exceptionThrowingAction = Action { _ =>
     throw new RuntimeException("Something went wrong")
-  }
-
-  override def beforeEach(): Unit = {
-    reset(auditConnector)
   }
 
   private object NonStrictCookies extends Tag("NonStringCookies")
@@ -182,8 +197,13 @@ class FrontendAuditFilterSpec
         FakeRequest()
           .withHeaders(headers: _*)
 
-      "if configured to do so" in {
-        shouldAuditAllHeaders = true
+      "if configured to do so" in new FrontendAuditFilterInstance {
+
+        override val config =
+          Configuration(
+            "auditing.enabled" -> true,
+            "bootstrap.auditfilter.frontend.auditAllHeaders" -> true
+          ).withFallback(Configuration(ConfigFactory.load()))
 
         await(filter.apply(nextAction)(request).run())
 
@@ -200,7 +220,6 @@ class FrontendAuditFilterSpec
       }
 
       "if not configured to do so" in {
-         shouldAuditAllHeaders = false
          await(filter.apply(nextAction)(request).run())
 
          eventually {
@@ -502,24 +521,32 @@ class FrontendAuditFilterSpec
 
 class FrontendAuditFilterServerSpec
   extends AnyWordSpec
-     with FrontendAuditFilterInstance
      with Matchers
      with Eventually
      with IntegrationPatience
      with MockitoSugar
      with GuiceOneServerPerTest
      with BeforeAndAfterEach
-     with BeforeAndAfterAll {
+     with BeforeAndAfterAll
+     with FrontendAuditFilterInstance {
 
-  override def beforeEach(): Unit = {
-    reset(auditConnector)
-  }
+  implicit val system =
+    ActorSystem("FrontendAuditFilterServerSpec")
+
+  implicit val ec: ExecutionContext =
+    system.dispatcher
 
   val client: WSClient = AhcWSClient()
 
   override def afterAll(): Unit = {
     client.close()
+    system.terminate()
     super.afterAll()
+  }
+
+  override def beforeEach(): Unit = {
+    reset(auditConnector)
+    super.beforeEach()
   }
 
   val random          = new scala.util.Random
@@ -636,28 +663,18 @@ class FrontendAuditFilterServerSpec
   }
 }
 
-trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
-  this: Suite =>
+trait FrontendAuditFilterInstance {
 
-  private val ms = new MockitoSugar {}
-  import ms._
+  val config =
+    Configuration(
+      "auditing.enabled" -> true,
+    ).withFallback(Configuration(ConfigFactory.load()))
 
-  var shouldAuditAllHeaders: Boolean        = false
-
-  protected implicit val system             = ActorSystem("FrontendAuditFilterInstance")
-  private implicit val ec: ExecutionContext = system.dispatcher
-  def config                                = Configuration(
-                                                "auditing.enabled" -> true,
-                                                "bootstrap.auditfilter.frontend.auditAllHeaders" -> shouldAuditAllHeaders
-                                              ).withFallback(Configuration(ConfigFactory.load()))
   val auditConnector                        = mock[AuditConnector]
   val controllerConfigs                     = mock[ControllerConfigs]
   val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
 
-  when(controllerConfigs.controllerNeedsAuditing(any[String]))
-    .thenReturn(false)
-
-  protected def filter: FrontendAuditFilter =
+  protected def filter(implicit system: ActorSystem, ec: ExecutionContext): FrontendAuditFilter =
     new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, implicitly[Materializer]) {
       override val maskedFormFields: Seq[String] = Seq("password")
       override val applicationPort: Option[Int]  = Some(80)
@@ -667,9 +684,5 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
     val captor = ArgCaptor[ExtendedDataEvent]
     verify(auditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
     captor.value
-  }
-
-  override def afterAll(): Unit = {
-    system.terminate()
   }
 }
