@@ -75,7 +75,7 @@ trait HttpAuditEvent {
     ExtendedDataEvent(
       appName,
       eventType,
-      detail        = detail ++ requiredFields ++ JsObject(optionalAuditFieldsSeq(request.headers.toMap).mapValues(JsString)),
+      detail        = detail ++ requiredFields ++ JsObject(optionalAuditFieldsSeq(request.headers.toMap).mapValues(JsString).toSeq),
       tags          = tags,
       truncationLog = truncationLog
     )
