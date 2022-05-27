@@ -20,7 +20,7 @@ import javax.inject.Inject
 import play.api.{Configuration, Logger}
 import play.api.http.HttpErrorHandler
 import play.api.http.Status._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.libs.json.Json.toJson
 import play.api.mvc.Results._
 import play.api.mvc.{RequestHeader, Result}
@@ -40,7 +40,7 @@ class JsonErrorHandler @Inject()(
 ) extends HttpErrorHandler
      with BackendHeaderCarrierProvider {
 
-  import httpAuditEvent.dataEvent
+  import httpAuditEvent.extendedEvent
 
   private val logger = Logger(getClass)
 
@@ -68,23 +68,23 @@ class JsonErrorHandler @Inject()(
     implicit val headerCarrier: HeaderCarrier = hc(request)
     val result = statusCode match {
       case NOT_FOUND =>
-        auditConnector.sendEvent(
-          dataEvent(
+        auditConnector.sendExtendedEvent(
+          extendedEvent(
             eventType       = "ResourceNotFound",
             transactionName = "Resource Endpoint Not Found",
             request         = request,
-            detail          = Map.empty
+            detail          = JsObject.empty
           )
         )
         NotFound(toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path))))
 
       case BAD_REQUEST =>
-        auditConnector.sendEvent(
-          dataEvent(
+        auditConnector.sendExtendedEvent(
+          extendedEvent(
             eventType       = "ServerValidationError",
             transactionName = "Request bad format exception",
             request         = request,
-            detail          = Map.empty
+            detail          = JsObject.empty
           )
         )
         def constructErrorMessage(input: String): String = {
@@ -113,12 +113,12 @@ class JsonErrorHandler @Inject()(
         BadRequest(toJson(ErrorResponse(BAD_REQUEST, msg)))
 
       case _ =>
-        auditConnector.sendEvent(
-          dataEvent(
+        auditConnector.sendExtendedEvent(
+          extendedEvent(
             eventType       = "ClientError",
             transactionName = s"A client error occurred, status: $statusCode",
             request         = request,
-            detail          = Map.empty
+            detail          = JsObject.empty
           )
         )
 
@@ -167,12 +167,12 @@ class JsonErrorHandler @Inject()(
         ErrorResponse(INTERNAL_SERVER_ERROR, msg)
     }
 
-    auditConnector.sendEvent(
-      dataEvent(
+    auditConnector.sendExtendedEvent(
+      extendedEvent(
         eventType       = eventType,
         transactionName = "Unexpected error",
         request         = request,
-        detail          = Map("transactionFailureReason" -> ex.getMessage)
+        detail          = Json.obj("transactionFailureReason" -> ex.getMessage)
       )
     )
     Future.successful(new Status(errorResponse.statusCode)(Json.toJson(errorResponse)))

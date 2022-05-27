@@ -17,11 +17,13 @@
 package uk.gov.hmrc.play.bootstrap.config
 
 import com.google.inject.ImplementedBy
+import play.api.libs.json.{JsObject, JsString, Json}
+
 import javax.inject.{Inject, Named}
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions._
-import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, TruncationLog}
 
 class DefaultHttpAuditEvent @Inject()(
   @Named("appName") val appName: String
@@ -44,35 +46,36 @@ trait HttpAuditEvent {
     val Referer   = "Referer"
   }
 
-  def dataEvent(
+  def extendedEvent(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String]   = Map.empty,
+    detail         : JsObject              = JsObject.empty,
     truncationLog  : Option[TruncationLog] = None
   )(implicit
     hc: HeaderCarrier
-  ): DataEvent = {
+  ): ExtendedDataEvent = {
     import auditDetailKeys._
     import headers._
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
 
-    val requiredFields = Map(
-      "ipAddress"            -> hc.forwarded.map(_.value).getOrElse("-"),
-      hc.names.authorisation -> hc.authorization.map(_.value).getOrElse("-"),
-      hc.names.deviceID      -> hc.deviceID.getOrElse("-"),
-      Input                  -> s"Request to ${request.path}",
-      Method                 -> request.method.toUpperCase,
-      UserAgentString        -> request.headers.get(UserAgent).getOrElse("-"),
-      Referrer               -> request.headers.get(Referer).getOrElse("-")
-    )
+    val requiredFields =
+      Json.obj(
+        "ipAddress"            -> hc.forwarded.map(_.value).getOrElse[String]("-"),
+        hc.names.authorisation -> hc.authorization.map(_.value).getOrElse[String]("-"),
+        hc.names.deviceID      -> hc.deviceID.getOrElse[String]("-"),
+        Input                  -> s"Request to ${request.path}",
+        Method                 -> request.method.toUpperCase,
+        UserAgentString        -> request.headers.get(UserAgent).getOrElse[String]("-"),
+        Referrer               -> request.headers.get(Referer).getOrElse[String]("-")
+      )
 
     val tags = hc.toAuditTags(transactionName, request.path)
 
-    DataEvent(
+    ExtendedDataEvent(
       appName,
       eventType,
-      detail        = detail ++ requiredFields ++ optionalAuditFieldsSeq(request.headers.toMap),
+      detail        = detail ++ requiredFields ++ JsObject(optionalAuditFieldsSeq(request.headers.toMap).mapValues(JsString)),
       tags          = tags,
       truncationLog = truncationLog
     )

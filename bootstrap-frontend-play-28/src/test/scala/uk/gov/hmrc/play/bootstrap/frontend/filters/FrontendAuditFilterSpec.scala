@@ -32,6 +32,7 @@ import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.{Application, Configuration}
 import play.api.http.{HttpChunk, HttpEntity}
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.JsString
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
 import play.api.mvc.Results.NotFound
@@ -42,7 +43,8 @@ import play.api.test.{FakeHeaders, FakeRequest}
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
+import uk.gov.hmrc.play.bootstrap.audit.syntax._
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
 
@@ -164,9 +166,9 @@ class FrontendAuditFilterSpec
         eventually {
           val event = verifyAndRetrieveEvent
           event.auditType shouldBe "RequestReceived"
-          event.detail    should contain("requestBody" -> "csrfToken=acb&userId=113244018119&password=#########&key1=")
+          event.detail.asJsObjectMap should contain("requestBody" -> JsString("csrfToken=acb&userId=113244018119&password=#########&key1="))
         }(fiveSecondsPatience, implicitly, implicitly)
-    }
+      }
 
     "audit all request headers according to configuration" when {
       val headers =
@@ -187,7 +189,7 @@ class FrontendAuditFilterSpec
 
         eventually {
           val event = verifyAndRetrieveEvent
-          event.detail should contain allElementsOf headers
+          event.detail.asJsObjectMap should contain allElementsOf headers.toMap.mapValues(JsString)
         }(fiveSecondsPatience, implicitly, implicitly)
       }
 
@@ -197,7 +199,7 @@ class FrontendAuditFilterSpec
 
          eventually {
            val event = verifyAndRetrieveEvent
-           event.detail should contain noElementsOf headers
+           event.detail.asJsObjectMap should contain noElementsOf headers
          }(fiveSecondsPatience, implicitly, implicitly)
       }
     }
@@ -227,8 +229,8 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail should contain(
-          "deviceFingerprint" -> ("""{"userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.48 Safari/537.36",""" +
+        event.detail.asJsObjectMap should contain(
+          "deviceFingerprint" -> JsString("""{"userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.48 Safari/537.36",""" +
             """"language":"en-US","colorDepth":24,"resolution":"800x1280","timezone":0,"sessionStorage":true,"localStorage":true,"indexedDB":true,"platform":"MacIntel",""" +
             """"doNotTrack":true,"numberOfPlugins":5,"plugins":["Shockwave Flash","Chrome Remote Desktop Viewer","Native Client","Chrome PDF Viewer","QuickTime Plug-in 7.7.1"]}"""))
       }
@@ -252,7 +254,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceFingerprint" -> "-")
+        event.detail.asJsObjectMap should contain("deviceFingerprint" -> JsString("-"))
       }
     }
 
@@ -276,7 +278,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceFingerprint" -> "-")
+        event.detail.asJsObjectMap should contain("deviceFingerprint" -> JsString("-"))
       }
     }
 
@@ -307,7 +309,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType               shouldBe "RequestReceived"
-        event.detail("Authorization") shouldBe "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE="
+        event.detail.asJsObjectMap("Authorization") shouldBe JsString("Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE=")
         event.tags("X-Session-ID")    shouldBe "mySessionId"
       }
     }
@@ -322,7 +324,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("Location" -> "some url")
+        event.detail.asJsObjectMap should contain("Location" -> JsString("some url"))
       }
     }
 
@@ -346,7 +348,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceID" -> deviceID)
+        event.detail.asJsObjectMap should contain("deviceID" -> JsString(deviceID))
       }
     }
 
@@ -368,7 +370,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceID" -> deviceID)
+        event.detail.asJsObjectMap should contain("deviceID" -> JsString(deviceID))
       }
     }
   }
@@ -445,7 +447,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "<HTML>...</HTML>")
+        event.detail.asJsObjectMap should contain("responseMessage" -> JsString("<HTML>...</HTML>"))
       }
     }
 
@@ -457,7 +459,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "<HTML>...</HTML>")
+        event.detail.asJsObjectMap should contain("responseMessage" -> JsString("<HTML>...</HTML>"))
       }
     }
 
@@ -472,7 +474,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "<HTML>...</HTML>")
+        event.detail.asJsObjectMap should contain("responseMessage" -> JsString("<HTML>...</HTML>"))
       }
     }
 
@@ -486,7 +488,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "....the response...")
+        event.detail.asJsObjectMap should contain("responseMessage" -> JsString("....the response..."))
       }
     }
   }
@@ -613,8 +615,18 @@ class FrontendAuditFilterServerSpec
 
   def verifyDetailPropertyLength(detailKey: String, length: Int): Unit = {
     val event = verifyAndRetrieveEvent
-    event.detail                                 should not be null
-    event.detail.getOrElse(detailKey, "").length should equal(length)
+    event.detail should not be null
+    val valueAsString =
+      event
+        .detail
+        .asJsObjectMap
+        .get(detailKey) match {
+          case Some(JsString(str)) => str
+          case Some(_)             => fail("A `JsString` was required but not found.")
+          case None                => ""
+        }
+
+    valueAsString.length should equal(length)
   }
 }
 
@@ -645,9 +657,9 @@ trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
       override val applicationPort: Option[Int]  = Some(80)
     }
 
-  protected def verifyAndRetrieveEvent: DataEvent = {
-    val captor = ArgCaptor[DataEvent]
-    verify(auditConnector).sendEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
+  protected def verifyAndRetrieveEvent: ExtendedDataEvent = {
+    val captor = ArgCaptor[ExtendedDataEvent]
+    verify(auditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
     captor.value
   }
 

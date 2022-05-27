@@ -23,10 +23,10 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
-import play.api.libs.json.OFormat
+import play.api.libs.json.{JsObject, OFormat}
 import play.api.mvc.{ControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, TruncationLog}
 
 import scala.concurrent.ExecutionContext
 
@@ -82,13 +82,13 @@ class BackwardCompatibilitySpec
         override def auditConnector = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector]
         override def mat            = mock[Materializer]
         override def controllerNeedsAuditing(controllerName: String): Boolean = true
-        override def dataEvent(
+        override def extendedDataEvent(
           eventType      : String,
           transactionName: String,
           request        : RequestHeader,
-          detail         : Map[String,String],
+          detail         : JsObject,
           truncationLog  : Option[TruncationLog]
-        )(implicit hc: HeaderCarrier): DataEvent = mock[DataEvent]
+        )(implicit hc: HeaderCarrier): ExtendedDataEvent = mock[ExtendedDataEvent]
       }
     }
 

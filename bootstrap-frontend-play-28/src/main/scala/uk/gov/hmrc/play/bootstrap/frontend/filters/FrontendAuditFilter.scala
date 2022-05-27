@@ -17,15 +17,17 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
+
 import javax.inject.Inject
 import play.api.Configuration
 import play.api.http.HeaderNames
+import play.api.libs.json.{JsObject, JsString, Json}
 import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
@@ -45,20 +47,24 @@ trait FrontendAuditFilter
 
   private val textHtml = ".*(text/html).*".r
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog) = {
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog) = {
     val (requestBodyStr, isRequestTruncated) = requestBody match {
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
     }
 
     val requestDetails =
-      Map(
+      Json.obj(
         EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields),
         "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
         "host"                -> getHost(requestHeader),
         "port"                -> getPort,
         "queryString"         -> getQueryString(requestHeader.queryString)
-      ) ++ (if (shouldAuditAllHeaders) requestHeader.headers.headers else Seq.empty[(String, String)])
+      ) ++
+        (if (shouldAuditAllHeaders)
+          JsObject(requestHeader.headers.headers.toMap.mapValues(JsString))
+        else
+          JsObject.empty)
 
     val truncationLog =
       TruncationLog(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
@@ -66,22 +72,29 @@ trait FrontendAuditFilter
     (requestDetails, truncationLog)
   }
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog) = {
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog) = {
     val (responseBodyStr, isResponseTruncated) = responseBody match {
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
     }
-    (Map(
-       EventKeys.StatusCode      -> responseHeader.status.toString,
-       EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBodyStr)
-     ) ++
-      responseHeader.headers.get(HeaderNames.LOCATION)
-       .map(HeaderNames.LOCATION -> _)
-       .toMap,
-     TruncationLog(
-       truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty
-     )
-    )
+
+    val responseDetails =
+      Json.obj(
+        EventKeys.StatusCode      -> responseHeader.status.toString,
+        EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBodyStr)
+      ) ++
+        JsObject(
+          responseHeader
+            .headers
+            .get(HeaderNames.LOCATION)
+            .map(loc => HeaderNames.LOCATION -> JsString(loc))
+            .toSeq
+        )
+
+    val truncationLog =
+      TruncationLog(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
+
+    (responseDetails, truncationLog)
   }
 
   private[filters] def getHost(request: RequestHeader): String =
@@ -140,14 +153,14 @@ class DefaultFrontendAuditFilter @Inject()(
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)
 
-  override def dataEvent(
+  override def extendedDataEvent(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String],
+    detail         : JsObject,
     truncationLog  : Option[TruncationLog]
-  )(implicit hc: HeaderCarrier): DataEvent =
-    httpAuditEvent.dataEvent(
+  )(implicit hc: HeaderCarrier): ExtendedDataEvent =
+    httpAuditEvent.extendedEvent(
       eventType,
       transactionName,
       request,

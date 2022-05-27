@@ -26,6 +26,7 @@ import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
+import play.api.libs.json.JsString
 import play.api.mvc.Results.NotFound
 import play.api.mvc.{Action, AnyContent}
 import play.api.test.FakeRequest
@@ -33,7 +34,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
+import uk.gov.hmrc.play.bootstrap.audit.syntax._
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -84,7 +86,7 @@ class BackendAuditFilterSpec
                                  .withFallback(Configuration(ConfigFactory.load()))
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
-      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+      when(mockAuditConnector.sendExtendedEvent(any[ExtendedDataEvent])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(Success))
 
       val result = await(auditFilter.apply(nextAction)(request).run())
@@ -92,8 +94,8 @@ class BackendAuditFilterSpec
       await(result.body.dataStream.runForeach { i => })
 
       eventually {
-        val captor = ArgCaptor[DataEvent]
-        verify(mockAuditConnector).sendEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
+        val captor = ArgCaptor[ExtendedDataEvent]
+        verify(mockAuditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
         val event = captor.value
 
@@ -102,8 +104,10 @@ class BackendAuditFilterSpec
         event.tags("X-Request-ID")      shouldBe xRequestId
         event.tags("X-Session-ID")      shouldBe xSessionId
         event.tags("Akamai-Reputation") shouldBe akamaiReputation
-        event.detail("deviceID")        shouldBe deviceID
-        event.detail("responseMessage") shouldBe actionNotFoundMessage
+
+        val detail = event.detail.asJsObjectMap
+        detail("deviceID") shouldBe JsString(deviceID)
+        detail("responseMessage") shouldBe JsString(actionNotFoundMessage)
       }
     }
 
@@ -128,23 +132,23 @@ class BackendAuditFilterSpec
                                  .withFallback(Configuration(ConfigFactory.load()))
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
-      when(mockAuditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
+      when(mockAuditConnector.sendExtendedEvent(any[ExtendedDataEvent])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(Success))
 
       a[RuntimeException] should be thrownBy await(auditFilter.apply(exceptionThrowingAction)(request).run())
 
       eventually {
-        val captor = ArgCaptor[DataEvent]
-        verify(mockAuditConnector).sendEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
+        val captor = ArgCaptor[ExtendedDataEvent]
+        verify(mockAuditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
         val event = captor.value
 
-        event.auditSource               shouldBe applicationName
-        event.auditType                 shouldBe requestReceived
-        event.tags("X-Request-ID")      shouldBe xRequestId
-        event.tags("X-Session-ID")      shouldBe xSessionId
-        event.tags("Akamai-Reputation") shouldBe akamaiReputation
-        event.detail("deviceID")        shouldBe deviceID
+        event.auditSource                      shouldBe applicationName
+        event.auditType                        shouldBe requestReceived
+        event.tags("X-Request-ID")             shouldBe xRequestId
+        event.tags("X-Session-ID")             shouldBe xSessionId
+        event.tags("Akamai-Reputation")        shouldBe akamaiReputation
+        event.detail.asJsObjectMap("deviceID") shouldBe JsString(deviceID)
       }
     }
   }

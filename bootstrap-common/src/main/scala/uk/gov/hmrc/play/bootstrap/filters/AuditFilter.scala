@@ -23,6 +23,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.util.ByteString
 import play.api.http.HttpEntity
+import play.api.libs.json.{JsObject, Json}
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import play.api.routing.Router.Attrs
@@ -30,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
 
 import scala.concurrent.{ExecutionContext, Promise}
@@ -46,15 +47,15 @@ trait CommonAuditFilter extends AuditFilter {
 
   def controllerNeedsAuditing(controllerName: String): Boolean
 
-  def dataEvent(
+  def extendedDataEvent(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String]   = Map.empty,
+    detail         : JsObject              = JsObject.empty,
     truncationLog  : Option[TruncationLog] = None
   )(implicit
     hc: HeaderCarrier
-  ): DataEvent
+  ): ExtendedDataEvent
 
   implicit def mat: Materializer
 
@@ -87,7 +88,7 @@ trait CommonAuditFilter extends AuditFilter {
           )
         case Left(ex) =>
           val (requestDetail, requestTruncationLog) = buildRequestDetails(requestHeader, requestBody)
-          ( requestDetail ++ Map(EventKeys.FailedRequestMessage -> ex.getMessage),
+          ( requestDetail ++ Json.obj(EventKeys.FailedRequestMessage -> ex.getMessage),
             requestTruncationLog
           )
       }
@@ -97,8 +98,8 @@ trait CommonAuditFilter extends AuditFilter {
       logger.info(s"Inbound ${requestHeader.method} ${requestHeader.uri} - the following fields were truncated for auditing: ${truncationLog2.truncatedFields.mkString(", ")}")
 
     implicit val r = requestHeader
-    auditConnector.sendEvent(
-      dataEvent(
+    auditConnector.sendExtendedEvent(
+      extendedDataEvent(
         eventType       = requestReceived,
         transactionName = requestHeader.uri,
         request         = requestHeader,
@@ -179,7 +180,7 @@ trait CommonAuditFilter extends AuditFilter {
       }
   }
 
-  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog)
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog)
 
-  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog)
+  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog)
 }

@@ -17,14 +17,16 @@
 package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import akka.stream.Materializer
+
 import javax.inject.Inject
 import play.api.Configuration
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
@@ -35,22 +37,25 @@ trait BackendAuditFilter
   extends CommonAuditFilter
      with BackendHeaderCarrierProvider {
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (Map[String, String], TruncationLog) =
-    (Map.empty, TruncationLog(List.empty))
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog) =
+    (JsObject.empty, TruncationLog(List.empty))
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (Map[String, String], TruncationLog) = {
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog) = {
     val (responseBodyStr, isResponseTruncated) = responseBody match {
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
     }
-    (Map(
-       EventKeys.StatusCode      -> responseHeader.status.toString,
-       EventKeys.ResponseMessage -> responseBodyStr
-     ),
-     TruncationLog(
-       truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty
-     )
-    )
+
+    val responseDetails =
+      Json.obj(
+        EventKeys.StatusCode      -> responseHeader.status.toString,
+        EventKeys.ResponseMessage -> responseBodyStr
+       )
+
+    val truncationLog =
+      TruncationLog(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
+
+    (responseDetails, truncationLog)
   }
 }
 
@@ -66,14 +71,14 @@ class DefaultBackendAuditFilter @Inject()(
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)
 
-  override def dataEvent(
+  override def extendedDataEvent(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String],
+    detail         : JsObject,
     truncationLog  : Option[TruncationLog]
-  )(implicit hc: HeaderCarrier): DataEvent =
-    httpAuditEvent.dataEvent(
+  )(implicit hc: HeaderCarrier): ExtendedDataEvent =
+    httpAuditEvent.extendedEvent(
       eventType,
       transactionName,
       request,
