@@ -20,6 +20,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.mvc.{Cookie, Cookies, DefaultCookieHeaderEncoding, Headers}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.redactedValue
 
 class RequestHeaderAuditingSpec
   extends AnyWordSpec
@@ -74,7 +75,10 @@ class RequestHeaderAuditingSpec
 
       val expectedHeaders =
         Headers(
-          "Some-Header-3" -> "Some-Value"
+          "Some-Header-1" -> redactedValue,
+          "Some-Header-1" -> redactedValue,
+          "Some-Header-2" -> redactedValue,
+          "Some-Header-3" -> "Some-Value",
         )
 
       requestHeaderAuditing(
@@ -105,39 +109,12 @@ class RequestHeaderAuditingSpec
         Headers(
           "Some-Header-1" -> "Some-Value",
           "Some-Header-1" -> "Some-Value",
-          "Cookie" -> "c2=v; c4=v",
+          "Cookie" -> s"c1=$redactedValue; c2=v; c3=$redactedValue; c4=v; c5=$redactedValue",
         )
 
       requestHeaderAuditing(
         redactedHeaders = Set.empty,
         redactedCookies = Set("c1", "c3", "c5")
-      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
-    }
-
-    "Redact the entire `Cookie` header if all cookies are configured to be redacted" in {
-      val headers =
-        Headers(
-          "Some-Header-1" -> "Some-Value",
-          "Some-Header-1" -> "Some-Value",
-        )
-
-      val cookies =
-        Cookies(
-          Seq(
-            Cookie("c1", "v"),
-            Cookie("c2", "v"),
-          )
-        )
-
-      val expectedHeaders =
-        Headers(
-          "Some-Header-1" -> "Some-Value",
-          "Some-Header-1" -> "Some-Value",
-        )
-
-      requestHeaderAuditing(
-        redactedHeaders = Set.empty,
-        redactedCookies = Set("c1", "c2")
       ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
     }
   }

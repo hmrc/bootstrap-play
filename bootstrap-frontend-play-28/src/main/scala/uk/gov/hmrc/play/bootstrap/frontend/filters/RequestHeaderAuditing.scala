@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import play.api.Configuration
 import play.api.libs.json.{JsObject, Json, Writes}
 import play.api.mvc.{CookieHeaderEncoding, Cookies, Headers}
-import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.{AuditableRequestHeaders, AuditableRequestHeadersImpl}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.{AuditableRequestHeaders, AuditableRequestHeadersImpl, redactedValue}
 
 import javax.inject.{Inject, Singleton}
 
@@ -32,17 +32,28 @@ class RequestHeaderAuditing @Inject()(
   def auditableHeaders(headers: Headers, cookies: Cookies): AuditableRequestHeaders = {
     val updatedCookies = {
       val updated =
-        cookies.filterNot(cookie => config.redactedCookies.contains(cookie.name))
+        cookies
+          .map(cookie =>
+            if (config.redactedCookies.contains(cookie.name))
+              cookie.copy(value = redactedValue)
+            else
+              cookie
+          )
 
-      if (updated.nonEmpty)
-        Some(cookieHeaderEncoding.encodeCookieHeader(updated.toSeq))
-      else None
+      if (updated.nonEmpty) Some(cookieHeaderEncoding.encodeCookieHeader(updated.toSeq)) else None
     }
 
-    val updatedHeaders =
+    val updatedHeaders = {
+      val replacements =
+        config
+          .redactedHeaders
+          .toSeq
+          .map(_ -> redactedValue)
+
       updatedCookies
-        .fold(headers)(cookieHeader => headers.remove("Cookie").add("Cookie" -> cookieHeader))
-        .remove(config.redactedHeaders.toSeq: _*)
+        .fold(headers)(cookieHeader => headers.replace("Cookie" -> cookieHeader))
+        .replace(replacements: _*)
+    }
 
     AuditableRequestHeadersImpl(updatedHeaders)
   }
@@ -87,4 +98,6 @@ object RequestHeaderAuditing {
   }
 
   private final case class AuditableRequestHeadersImpl(headers: Headers) extends AuditableRequestHeaders
+
+  val redactedValue: String = "########"
 }
