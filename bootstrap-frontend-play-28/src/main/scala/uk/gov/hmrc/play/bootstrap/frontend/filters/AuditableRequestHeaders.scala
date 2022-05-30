@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import play.api.Configuration
 import play.api.libs.json.{Json, Writes}
-import play.api.mvc.Headers
+import play.api.mvc.{Cookies, DefaultCookieHeaderEncoding, Headers}
 
 sealed trait AuditableRequestHeaders {
   def headers: Headers
@@ -39,22 +39,23 @@ object AuditableRequestHeaders {
       Redactions(Set.empty, Set.empty)
   }
 
-  def from(headers: Headers, redactions: Redactions): AuditableRequestHeaders = {
-    val updatedCookies =
-      headers
-        .getAll("Cookie")
-        .map(_.split("; ").filterNot { cookie =>
-              val name = cookie.takeWhile(_ != '=')
-              redactions.cookies.contains(name)
-            }
-          .mkString("; ")
-        )
-        .filterNot(_.isEmpty)
+  def from(
+    headers: Headers,
+    cookies: Cookies,
+    redactions: Redactions
+  ): AuditableRequestHeaders = {
+    val updatedCookies = {
+      val updated =
+        cookies.filterNot(cookie => redactions.cookies.contains(cookie.name))
+
+      if (updated.nonEmpty)
+        Some(new DefaultCookieHeaderEncoding().encodeCookieHeader(updated.toSeq))
+      else None
+    }
 
     val updatedHeaders =
-      headers
-        .remove("Cookie")
-        .add(updatedCookies.map("Cookie" -> _): _*)
+      updatedCookies
+        .fold(headers)(cookieHeader => headers.remove("Cookie").add("Cookie" -> cookieHeader))
         .remove(redactions.headers.toSeq: _*)
 
     AuditableRequestHeadersImpl(updatedHeaders)

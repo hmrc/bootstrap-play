@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.mvc.Headers
+import play.api.mvc.{Cookie, Cookies, Headers}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.AuditableRequestHeaders.Redactions
 
 class AuditableRequestHeadersSpec
@@ -34,12 +34,28 @@ class AuditableRequestHeadersSpec
           "Some-Header-1" -> "Some-Value",
           "Some-Header-1" -> "Some-Value",
           "Some-Header-2" -> "Some-Value",
-          "Cookie" -> "c1=v",
-          "Cookie" -> "c2=v; c3=v; c4=v",
-          "Cookie" -> "c5=v; c6=v"
         )
 
-      AuditableRequestHeaders.from(headers, Redactions.empty).headers shouldBe headers
+      val cookies =
+        Cookies(
+          Seq(
+            Cookie("c1", "v"),
+            Cookie("c2", "v"),
+            Cookie("c3", "v"),
+            Cookie("c4", "v"),
+          )
+        )
+
+      val expectedHeaders =
+        Headers(
+          "Host" -> "localhost",
+          "Some-Header-1" -> "Some-Value",
+          "Some-Header-1" -> "Some-Value",
+          "Some-Header-2" -> "Some-Value",
+          "Cookie" -> "c1=v; c2=v; c3=v; c4=v"
+        )
+
+      AuditableRequestHeaders.from(headers, cookies, Redactions.empty).headers shouldBe expectedHeaders
     }
 
     "Redact all values that correspond to a header, when configured" in {
@@ -50,6 +66,8 @@ class AuditableRequestHeadersSpec
           "Some-Header-2" -> "Some-Value",
           "Some-Header-3" -> "Some-Value",
         )
+
+      val cookies = Cookies(Seq.empty)
 
       val redactions =
         Redactions(
@@ -62,7 +80,7 @@ class AuditableRequestHeadersSpec
           "Some-Header-3" -> "Some-Value"
         )
 
-      AuditableRequestHeaders.from(headers, redactions).headers shouldBe expectedHeaders
+      AuditableRequestHeaders.from(headers, cookies, redactions).headers shouldBe expectedHeaders
     }
 
     "Redact individual cookies by name, when configured" in {
@@ -70,29 +88,33 @@ class AuditableRequestHeadersSpec
         Headers(
           "Some-Header-1" -> "Some-Value",
           "Some-Header-1" -> "Some-Value",
-          "Cookie" -> "c1=v",
-          "Cookie" -> "c2=v; c3=v; c4=v",
-          "Cookie" -> "c5=v; c6=v; c7=v",
-          "Cookie" -> "c8=v; c9=v; c10=v",
-          "Cookie" -> "c11=v; c12=v; c13=v",
+        )
+
+      val cookies =
+        Cookies(
+          Seq(
+            Cookie("c1", "v"),
+            Cookie("c2", "v"),
+            Cookie("c3", "v"),
+            Cookie("c4", "v"),
+            Cookie("c5", "v"),
+          )
         )
 
       val redactions =
         Redactions(
           headers = Set.empty,
-          cookies = Set("c1", "c2", "c7", "c8", "c9", "c10")
+          cookies = Set("c1", "c3", "c5")
         )
 
       val expectedHeaders =
         Headers(
           "Some-Header-1" -> "Some-Value",
           "Some-Header-1" -> "Some-Value",
-          "Cookie" -> "c3=v; c4=v",
-          "Cookie" -> "c5=v; c6=v",
-          "Cookie" -> "c11=v; c12=v; c13=v",
+          "Cookie" -> "c2=v; c4=v",
         )
 
-      AuditableRequestHeaders.from(headers, redactions).headers shouldBe expectedHeaders
+      AuditableRequestHeaders.from(headers, cookies, redactions).headers shouldBe expectedHeaders
     }
 
     "Redact the entire `Cookie` header if all cookies are configured to be redacted" in {
@@ -100,14 +122,20 @@ class AuditableRequestHeadersSpec
         Headers(
           "Some-Header-1" -> "Some-Value",
           "Some-Header-1" -> "Some-Value",
-          "Cookie" -> "c1=v",
-          "Cookie" -> "c2=v; c3=v; c4=v"
+        )
+
+      val cookies =
+        Cookies(
+          Seq(
+            Cookie("c1", "v"),
+            Cookie("c2", "v"),
+          )
         )
 
       val redactions =
         Redactions(
           headers = Set.empty,
-          cookies = Set("c1", "c2", "c3", "c4")
+          cookies = Set("c1", "c2")
         )
 
       val expectedHeaders =
@@ -116,7 +144,7 @@ class AuditableRequestHeadersSpec
           "Some-Header-1" -> "Some-Value",
         )
 
-      AuditableRequestHeaders.from(headers, redactions).headers shouldBe expectedHeaders
+      AuditableRequestHeaders.from(headers, cookies, redactions).headers shouldBe expectedHeaders
     }
   }
 }

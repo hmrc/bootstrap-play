@@ -64,7 +64,9 @@ trait FrontendAuditFilter
         "queryString"         -> getQueryString(requestHeader.queryString)
       ) ++
         (if (shouldAuditAllHeaders)
-          Json.obj("requestHeaders" -> AuditableRequestHeaders.from(requestHeader.headers, headerRedactions))
+          Json.obj("requestHeaders" ->
+            AuditableRequestHeaders.from(requestHeader.headers, requestHeader.cookies, headerRedactions)
+          )
         else
           JsObject.empty)
 
