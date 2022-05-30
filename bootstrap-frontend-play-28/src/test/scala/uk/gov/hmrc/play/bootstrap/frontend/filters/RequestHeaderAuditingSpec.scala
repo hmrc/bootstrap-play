@@ -18,10 +18,10 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.mvc.{Cookie, Cookies, Headers}
-import uk.gov.hmrc.play.bootstrap.frontend.filters.AuditableRequestHeaders.Redactions
+import play.api.Configuration
+import play.api.mvc.{Cookie, Cookies, DefaultCookieHeaderEncoding, Headers}
 
-class AuditableRequestHeadersSpec
+class RequestHeaderAuditingSpec
   extends AnyWordSpec
      with Matchers {
 
@@ -55,7 +55,10 @@ class AuditableRequestHeadersSpec
           "Cookie" -> "c1=v; c2=v; c3=v; c4=v"
         )
 
-      AuditableRequestHeaders.from(headers, cookies, Redactions.empty).headers shouldBe expectedHeaders
+      requestHeaderAuditing(
+        redactedHeaders = Set.empty,
+        redactedCookies = Set.empty
+      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
     }
 
     "Redact all values that correspond to a header, when configured" in {
@@ -69,18 +72,15 @@ class AuditableRequestHeadersSpec
 
       val cookies = Cookies(Seq.empty)
 
-      val redactions =
-        Redactions(
-          headers = Set("Some-Header-1", "Some-Header-2"),
-          cookies = Set.empty
-        )
-
       val expectedHeaders =
         Headers(
           "Some-Header-3" -> "Some-Value"
         )
 
-      AuditableRequestHeaders.from(headers, cookies, redactions).headers shouldBe expectedHeaders
+      requestHeaderAuditing(
+        redactedHeaders = Set("Some-Header-1", "Some-Header-2"),
+        redactedCookies = Set.empty
+      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
     }
 
     "Redact individual cookies by name, when configured" in {
@@ -101,12 +101,6 @@ class AuditableRequestHeadersSpec
           )
         )
 
-      val redactions =
-        Redactions(
-          headers = Set.empty,
-          cookies = Set("c1", "c3", "c5")
-        )
-
       val expectedHeaders =
         Headers(
           "Some-Header-1" -> "Some-Value",
@@ -114,7 +108,10 @@ class AuditableRequestHeadersSpec
           "Cookie" -> "c2=v; c4=v",
         )
 
-      AuditableRequestHeaders.from(headers, cookies, redactions).headers shouldBe expectedHeaders
+      requestHeaderAuditing(
+        redactedHeaders = Set.empty,
+        redactedCookies = Set("c1", "c3", "c5")
+      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
     }
 
     "Redact the entire `Cookie` header if all cookies are configured to be redacted" in {
@@ -132,19 +129,30 @@ class AuditableRequestHeadersSpec
           )
         )
 
-      val redactions =
-        Redactions(
-          headers = Set.empty,
-          cookies = Set("c1", "c2")
-        )
-
       val expectedHeaders =
         Headers(
           "Some-Header-1" -> "Some-Value",
           "Some-Header-1" -> "Some-Value",
         )
 
-      AuditableRequestHeaders.from(headers, cookies, redactions).headers shouldBe expectedHeaders
+      requestHeaderAuditing(
+        redactedHeaders = Set.empty,
+        redactedCookies = Set("c1", "c2")
+      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
     }
+  }
+
+  private def requestHeaderAuditing(redactedHeaders: Set[String], redactedCookies: Set[String]) = {
+    val cookieHeaderEncoding =
+      new DefaultCookieHeaderEncoding()
+
+    val config =
+      Configuration(
+        "bootstrap.auditfilter.frontend.auditAllHeaders" -> true,
+        "bootstrap.auditfilter.frontend.redactedHeaders" -> redactedHeaders.toSeq,
+        "bootstrap.auditfilter.frontend.redactedCookies" -> redactedCookies.toSeq,
+      )
+
+    new RequestHeaderAuditing(new RequestHeaderAuditing.Config(config), cookieHeaderEncoding)
   }
 }

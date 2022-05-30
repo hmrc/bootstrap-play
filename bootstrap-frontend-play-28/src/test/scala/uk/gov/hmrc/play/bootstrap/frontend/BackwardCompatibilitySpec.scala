@@ -28,7 +28,7 @@ import play.api.libs.json.JsObject
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, TruncationLog}
-import uk.gov.hmrc.play.bootstrap.frontend.filters.AuditableRequestHeaders
+import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing
 
 import scala.concurrent.ExecutionContext
 
@@ -186,19 +186,19 @@ class BackwardCompatibilitySpec
         )(implicit hc: HeaderCarrier): ExtendedDataEvent = mock[ExtendedDataEvent]
         override def maskedFormFields = mock[Seq[String]]
         override def applicationPort  = mock[Option[Int]]
-        override def shouldAuditAllHeaders = false
-        override def headerRedactions = AuditableRequestHeaders.Redactions.empty
+        override def requestHeaderAuditing = mock[RequestHeaderAuditing]
       }
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter(
-        config            = Configuration(ConfigFactory.load()),
-        controllerConfigs = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
-        auditConnector    = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
-        httpAuditEvent    = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],
-        mat               = mock[Materializer]
-      )(ec                = mock[ExecutionContext])
+        config                = Configuration(ConfigFactory.load()),
+        controllerConfigs     = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
+        auditConnector        = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
+        httpAuditEvent        = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],
+        requestHeaderAuditing = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing],
+        mat                   = mock[Materializer]
+      )(ec                    = mock[ExecutionContext])
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter" in {

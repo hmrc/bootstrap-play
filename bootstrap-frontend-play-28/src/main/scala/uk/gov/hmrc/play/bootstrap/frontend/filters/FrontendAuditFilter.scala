@@ -43,9 +43,7 @@ trait FrontendAuditFilter
 
   def applicationPort: Option[Int]
 
-  def shouldAuditAllHeaders: Boolean
-
-  def headerRedactions: AuditableRequestHeaders.Redactions
+  def requestHeaderAuditing: RequestHeaderAuditing
 
   private val textHtml = ".*(text/html).*".r
 
@@ -62,13 +60,7 @@ trait FrontendAuditFilter
         "host"                -> getHost(requestHeader),
         "port"                -> getPort,
         "queryString"         -> getQueryString(requestHeader.queryString)
-      ) ++
-        (if (shouldAuditAllHeaders)
-          Json.obj("requestHeaders" ->
-            AuditableRequestHeaders.from(requestHeader.headers, requestHeader.cookies, headerRedactions)
-          )
-        else
-          JsObject.empty)
+      ) ++ requestHeaderAuditing.auditableHeadersAsJsObject(requestHeader.headers, requestHeader.cookies)
 
     val truncationLog =
       TruncationLog(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
@@ -142,6 +134,7 @@ class DefaultFrontendAuditFilter @Inject()(
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
+  override val requestHeaderAuditing: RequestHeaderAuditing,
   override val mat: Materializer
 )(implicit protected val ec: ExecutionContext
 ) extends FrontendAuditFilter {
@@ -150,12 +143,6 @@ class DefaultFrontendAuditFilter @Inject()(
     config.get[Seq[String]]("bootstrap.auditfilter.maskedFormFields")
 
   override val applicationPort: Option[Int] = None
-
-  override val shouldAuditAllHeaders: Boolean =
-    config.get[Boolean]("bootstrap.auditfilter.frontend.auditAllHeaders")
-
-  override val headerRedactions: AuditableRequestHeaders.Redactions =
-    AuditableRequestHeaders.Redactions.fromConfig(config)
 
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)

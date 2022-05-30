@@ -670,12 +670,22 @@ trait FrontendAuditFilterInstance {
       "auditing.enabled" -> true,
     ).withFallback(Configuration(ConfigFactory.load()))
 
-  val auditConnector                        = mock[AuditConnector]
-  val controllerConfigs                     = mock[ControllerConfigs]
-  val httpAuditEvent                        = new HttpAuditEvent { override val appName = "app" }
+  val auditConnector             = mock[AuditConnector]
+  val controllerConfigs          = mock[ControllerConfigs]
+  val httpAuditEvent             = new HttpAuditEvent { override val appName = "app" }
+  lazy val requestHeaderAuditing = new RequestHeaderAuditing(
+                                     new RequestHeaderAuditing.Config(config), new DefaultCookieHeaderEncoding()
+                                   )
 
   protected def filter(implicit system: ActorSystem, ec: ExecutionContext): FrontendAuditFilter =
-    new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, implicitly[Materializer]) {
+    new DefaultFrontendAuditFilter(
+      config,
+      controllerConfigs,
+      auditConnector,
+      httpAuditEvent,
+      requestHeaderAuditing,
+      implicitly[Materializer]
+    ) {
       override val maskedFormFields: Seq[String] = Seq("password")
       override val applicationPort: Option[Int]  = Some(80)
     }
