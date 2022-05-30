@@ -117,6 +117,21 @@ class RequestHeaderAuditingSpec
         redactedCookies = Set("c1", "c3", "c5")
       ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
     }
+
+    "Only update existing headers, not add new redacted ones" in {
+      val headers =
+        Headers(
+          "Some-Header-1" -> "Some-Value",
+          "Some-Header-2" -> "Some-Value",
+        )
+
+      val cookies = Cookies(Seq.empty)
+
+      requestHeaderAuditing(
+        redactedHeaders = Set("Some-Header-3"),
+        redactedCookies = Set.empty
+      ).auditableHeaders(headers, cookies).headers shouldBe headers
+    }
   }
 
   private def requestHeaderAuditing(redactedHeaders: Set[String], redactedCookies: Set[String]) = {

@@ -45,8 +45,7 @@ class RequestHeaderAuditing @Inject()(
 
     val updatedHeaders = {
       val replacements =
-        config
-          .redactedHeaders
+        (headers.keys & config.redactedHeaders)
           .toSeq
           .map(_ -> redactedValue)
 
