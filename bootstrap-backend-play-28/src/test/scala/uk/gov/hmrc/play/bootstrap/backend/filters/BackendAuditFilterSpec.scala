@@ -26,6 +26,7 @@ import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
+import play.api.libs.json.{Reads, __}
 import play.api.mvc.Results.NotFound
 import play.api.mvc.{Action, AnyContent}
 import play.api.test.FakeRequest
@@ -34,7 +35,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import uk.gov.hmrc.play.bootstrap.testhelpers.ReadsHelpers.at
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -104,8 +104,8 @@ class BackendAuditFilterSpec
         event.tags("X-Session-ID")      shouldBe xSessionId
         event.tags("Akamai-Reputation") shouldBe akamaiReputation
 
-        event.detail.as(at[String]("deviceID")) shouldBe deviceID
-        event.detail.as(at[String]("responseMessage")) shouldBe actionNotFoundMessage
+        event.detail.as(Reads.at[String](__ \ "deviceID")) shouldBe deviceID
+        event.detail.as(Reads.at[String](__ \ "responseMessage")) shouldBe actionNotFoundMessage
       }
     }
 
@@ -141,12 +141,12 @@ class BackendAuditFilterSpec
         verifyNoMoreInteractions(mockAuditConnector)
         val event = captor.value
 
-        event.auditSource                       shouldBe applicationName
-        event.auditType                         shouldBe requestReceived
-        event.tags("X-Request-ID")              shouldBe xRequestId
-        event.tags("X-Session-ID")              shouldBe xSessionId
-        event.tags("Akamai-Reputation")         shouldBe akamaiReputation
-        event.detail.as(at[String]("deviceID")) shouldBe deviceID
+        event.auditSource                                  shouldBe applicationName
+        event.auditType                                    shouldBe requestReceived
+        event.tags("X-Request-ID")                         shouldBe xRequestId
+        event.tags("X-Session-ID")                         shouldBe xSessionId
+        event.tags("Akamai-Reputation")                    shouldBe akamaiReputation
+        event.detail.as(Reads.at[String](__ \ "deviceID")) shouldBe deviceID
       }
     }
   }

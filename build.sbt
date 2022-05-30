@@ -50,7 +50,7 @@ lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("boo
     commonSettings,
     libraryDependencies ++= LibDependencies.commonPlay28
   ).dependsOn(
-    bootstrapCommonPlay28 % "compile->compile;test->test",
+    bootstrapCommonPlay28,
     bootstrapTestPlay28 % "test->test",
     bootstrapHealthPlay28 // dependency just to add to classpath
   )
@@ -60,7 +60,7 @@ lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("b
     commonSettings,
     libraryDependencies ++= LibDependencies.frontendCommonPlay28
   ).dependsOn(
-    bootstrapCommonPlay28 % "compile->compile;test->test",
+    bootstrapCommonPlay28,
     bootstrapTestPlay28 % "test->test",
     bootstrapHealthPlay28 // dependency just to add to classpath
   )
