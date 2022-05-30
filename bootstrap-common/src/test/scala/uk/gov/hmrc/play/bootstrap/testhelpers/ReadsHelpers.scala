@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.audit
+package uk.gov.hmrc.play.bootstrap.testhelpers
 
-import org.scalatest.Assertions
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{Reads, __}
 
-package object syntax {
+object ReadsHelpers {
 
-  implicit class RichJsValue(val underlying: JsValue) extends AnyVal {
-    def asJsObjectMap: Map[String, JsValue] =
-      underlying match {
-        case JsObject(fields) => fields.toMap
-        case _                => Assertions.fail("A `JsObject` was required but not found")
-      }
-  }
+  def at[A](field: String)(implicit reads: Reads[A]): Reads[A] =
+    (__ \ field).read(reads)
+
+  def atNullable[A](field: String)(implicit reads: Reads[A]): Reads[Option[A]] =
+    (__ \ field).readNullable(reads)
 }

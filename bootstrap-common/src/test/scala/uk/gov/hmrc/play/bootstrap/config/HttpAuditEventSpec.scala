@@ -19,10 +19,9 @@ package uk.gov.hmrc.play.bootstrap.config
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.json.JsString
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.audit.syntax._
+import uk.gov.hmrc.play.bootstrap.testhelpers.ReadsHelpers.{at, atNullable}
 
 class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerSuite {
 
@@ -37,13 +36,13 @@ class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with GuiceOneAppP
       val request =
         FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool")
       val event = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
-      event.detail.asJsObjectMap.get("surrogate") shouldBe Some(JsString("Cool,Cool"))
+      event.detail.as(at[String]("surrogate")) shouldBe "Cool,Cool"
     }
 
     "create a valid audit event with no optional headers" in {
       val request     = FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh")
       val event = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
-      event.detail.asJsObjectMap.get("surrogate") shouldBe None
+      event.detail.as(atNullable[String]("surrogate")) shouldBe None
     }
   }
 }
