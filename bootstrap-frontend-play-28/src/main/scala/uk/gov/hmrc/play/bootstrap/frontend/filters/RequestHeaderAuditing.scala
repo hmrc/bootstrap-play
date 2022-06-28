@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import play.api.Configuration
-import play.api.libs.json.{JsObject, Json, Writes}
+import play.api.libs.json.{JsObject, Json, OWrites}
 import play.api.mvc.{CookieHeaderEncoding, Cookies, Headers}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.{AuditableRequestHeaders, AuditableRequestHeadersImpl, redactedValue}
 
@@ -84,16 +84,12 @@ object RequestHeaderAuditing {
 
   object AuditableRequestHeaders {
 
-    implicit val writes: Writes[AuditableRequestHeaders] = {
-      val header =
-        Writes[(String, Seq[String])] { case (name, values) =>
-          Json.obj("name" -> name, "values" -> values)
-        }
-
-      Writes
-        .seq(header)
-        .contramap[AuditableRequestHeaders](_.headers.toMap.toSeq)
-    }
+    implicit val writes: OWrites[AuditableRequestHeaders] =
+      OWrites[AuditableRequestHeaders]{ arh =>
+        JsObject(arh.headers.toMap.map { case (name, values) =>
+          name.toLowerCase -> Json.toJson(values)
+        })
+      }
   }
 
   private final case class AuditableRequestHeadersImpl(headers: Headers) extends AuditableRequestHeaders

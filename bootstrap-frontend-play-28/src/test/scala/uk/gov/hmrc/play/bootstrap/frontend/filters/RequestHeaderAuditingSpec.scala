@@ -19,6 +19,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
+import play.api.libs.json.Json
 import play.api.mvc.{Cookie, Cookies, DefaultCookieHeaderEncoding, Headers}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.redactedValue
 
@@ -47,7 +48,13 @@ class RequestHeaderAuditingSpec
           )
         )
 
-      val expectedHeaders =
+      val auditableHeaders =
+        requestHeaderAuditing(
+          redactedHeaders = Set.empty,
+          redactedCookies = Set.empty
+        ).auditableHeaders(headers, cookies)
+
+      auditableHeaders.headers shouldBe
         Headers(
           "Host" -> "localhost",
           "Some-Header-1" -> "Some-Value",
@@ -56,10 +63,13 @@ class RequestHeaderAuditingSpec
           "Cookie" -> "c1=v; c2=v; c3=v; c4=v"
         )
 
-      requestHeaderAuditing(
-        redactedHeaders = Set.empty,
-        redactedCookies = Set.empty
-      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
+      Json.toJsObject(auditableHeaders) shouldBe
+        Json.obj(
+          "host" -> Json.arr("localhost"),
+          "cookie" -> Json.arr("c1=v; c2=v; c3=v; c4=v"),
+          "some-header-1" -> Json.arr("Some-Value", "Some-Value"),
+          "some-header-2" -> Json.arr("Some-Value")
+        )
     }
 
     "Redact all values that correspond to a header, when configured" in {
@@ -73,18 +83,25 @@ class RequestHeaderAuditingSpec
 
       val cookies = Cookies(Seq.empty)
 
-      val expectedHeaders =
+      val auditableHeaders =
+        requestHeaderAuditing(
+          redactedHeaders = Set("Some-Header-1", "Some-Header-2"),
+          redactedCookies = Set.empty
+        ).auditableHeaders(headers, cookies)
+
+      auditableHeaders.headers shouldBe
         Headers(
-          "Some-Header-1" -> redactedValue,
           "Some-Header-1" -> redactedValue,
           "Some-Header-2" -> redactedValue,
           "Some-Header-3" -> "Some-Value",
         )
 
-      requestHeaderAuditing(
-        redactedHeaders = Set("Some-Header-1", "Some-Header-2"),
-        redactedCookies = Set.empty
-      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
+      Json.toJsObject(auditableHeaders) shouldBe
+        Json.obj(
+          "some-header-1" -> Json.arr(redactedValue),
+          "some-header-2" -> Json.arr(redactedValue),
+          "some-header-3" -> Json.arr("Some-Value"),
+        )
     }
 
     "Redact individual cookies by name, when configured" in {
@@ -105,17 +122,24 @@ class RequestHeaderAuditingSpec
           )
         )
 
-      val expectedHeaders =
+      val auditableHeaders =
+        requestHeaderAuditing(
+          redactedHeaders = Set.empty,
+          redactedCookies = Set("c1", "c3", "c5")
+        ).auditableHeaders(headers, cookies)
+
+      auditableHeaders.headers shouldBe
         Headers(
           "Some-Header-1" -> "Some-Value",
           "Some-Header-1" -> "Some-Value",
           "Cookie" -> s"c1=$redactedValue; c2=v; c3=$redactedValue; c4=v; c5=$redactedValue",
         )
 
-      requestHeaderAuditing(
-        redactedHeaders = Set.empty,
-        redactedCookies = Set("c1", "c3", "c5")
-      ).auditableHeaders(headers, cookies).headers shouldBe expectedHeaders
+      Json.toJsObject(auditableHeaders) shouldBe
+        Json.obj(
+          "cookie" -> Json.arr(s"c1=$redactedValue; c2=v; c3=$redactedValue; c4=v; c5=$redactedValue"),
+          "some-header-1" -> Json.arr("Some-Value", "Some-Value")
+        )
     }
 
     "Only update existing headers, not add new redacted ones" in {
@@ -127,10 +151,19 @@ class RequestHeaderAuditingSpec
 
       val cookies = Cookies(Seq.empty)
 
-      requestHeaderAuditing(
-        redactedHeaders = Set("Some-Header-3"),
-        redactedCookies = Set.empty
-      ).auditableHeaders(headers, cookies).headers shouldBe headers
+      val auditableHeaders =
+        requestHeaderAuditing(
+          redactedHeaders = Set("Some-Header-3"),
+          redactedCookies = Set.empty
+        ).auditableHeaders(headers, cookies)
+
+      auditableHeaders.headers shouldBe headers
+
+      Json.toJsObject(auditableHeaders) shouldBe
+        Json.obj(
+          "some-header-1" -> Json.arr("Some-Value"),
+          "some-header-2" -> Json.arr("Some-Value"),
+        )
     }
   }
 
