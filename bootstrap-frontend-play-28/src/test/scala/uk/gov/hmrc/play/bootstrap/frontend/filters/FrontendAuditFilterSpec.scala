@@ -182,8 +182,7 @@ class FrontendAuditFilterSpec
           val event = verifyAndRetrieveEvent
           event.auditType shouldBe "RequestReceived"
           event.detail.as(Reads.at[String](__ \ "requestBody")) shouldBe "csrfToken=acb&userId=113244018119&password=#########&key1="
-          val redactedFields = event.redaction.redactionLog.flatMap(_.redactedFields)
-          redactedFields shouldBe List("detail.requestBody")
+          event.redactionLog.redactedFields shouldBe List("detail.requestBody")
         }(fiveSecondsPatience, implicitly, implicitly)
       }
 
@@ -211,11 +210,11 @@ class FrontendAuditFilterSpec
 
         eventually {
           val event = verifyAndRetrieveEvent
-          event.detail.as(Reads.at[JsValue](__ \ "requestHeaders")) shouldBe Json.arr(
-              Json.obj("name" -> "Host", "values" -> Json.arr("localhost")),
-              Json.obj("name" -> "some-header-1", "values" -> Json.arr("some-value", "some-other-value")),
-              Json.obj("name" -> "some-header-2", "values" -> Json.arr("some-value"))
-            )
+          event.detail.as(Reads.at[JsValue](__ \ "requestHeaders")) shouldBe Json.obj(
+              "host" -> Json.arr("localhost"),
+              "some-header-1" -> Json.arr("some-value", "some-other-value"),
+              "some-header-2" -> Json.arr("some-value")
+          )
         }(fiveSecondsPatience, implicitly, implicitly)
       }
 

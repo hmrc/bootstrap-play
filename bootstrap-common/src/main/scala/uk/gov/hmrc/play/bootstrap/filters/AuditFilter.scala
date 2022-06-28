@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, Redaction, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
 
 import scala.concurrent.{ExecutionContext, Promise}
@@ -53,7 +53,7 @@ trait CommonAuditFilter extends AuditFilter {
     request        : RequestHeader,
     detail         : JsObject              = JsObject.empty,
     truncationLog  : Option[TruncationLog] = None,
-    redaction      : Redaction             = Redaction.empty
+    redaction      : RedactionLog          = RedactionLog.Empty
 
   )(implicit
     hc: HeaderCarrier
@@ -80,7 +80,7 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
-    val (detail, truncationLog, redaction) =
+    val (detail, truncationLog, redactionLog) =
       result match {
         case Right((result, responseBody)) =>
           val (requestDetail , requestTruncationLog, requestRedaction) =
@@ -90,7 +90,7 @@ trait CommonAuditFilter extends AuditFilter {
             buildResponseDetails(result.header, responseBody, result.body.contentType)
           ( requestDetail ++ responseDetail,
             TruncationLog(requestTruncationLog.truncatedFields ++ responseTruncationLog.truncatedFields),
-            Redaction(requestRedaction.redactionLog ++ responseRedaction.redactionLog)
+            RedactionLog.of(requestRedaction.redactedFields ++ responseRedaction.redactedFields)
           )
         case Left(ex) =>
           val (requestDetail, requestTruncationLog, requestRedaction) =
@@ -106,7 +106,7 @@ trait CommonAuditFilter extends AuditFilter {
     if (truncationLog2.truncatedFields.nonEmpty)
       logger.info(s"Inbound ${requestHeader.method} ${requestHeader.uri} - the following fields were truncated for auditing: ${truncationLog2.truncatedFields.mkString(", ")}")
 
-    val redaction2 = Redaction(redaction.redactionLog.map(log => log.copy(redactedFields = log.redactedFields.map("detail." + _))))
+    val redaction2 = RedactionLog.of(redactionLog.redactedFields.map("detail." + _))
 
     implicit val r = requestHeader
     auditConnector.sendExtendedEvent(
@@ -192,7 +192,7 @@ trait CommonAuditFilter extends AuditFilter {
       }
   }
 
-  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, Redaction)
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, RedactionLog)
 
-  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, Redaction)
+  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, RedactionLog)
 }

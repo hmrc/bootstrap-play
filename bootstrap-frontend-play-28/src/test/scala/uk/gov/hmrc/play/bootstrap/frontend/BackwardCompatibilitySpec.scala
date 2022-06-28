@@ -27,7 +27,7 @@ import play.api.i18n.MessagesApi
 import play.api.libs.json.JsObject
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, Redaction, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing
 
 import scala.concurrent.ExecutionContext
@@ -183,7 +183,7 @@ class BackwardCompatibilitySpec
           request        : RequestHeader,
           detail         : JsObject,
           truncationLog  : Option[TruncationLog],
-          redaction      : Redaction
+          redactionLog   : RedactionLog
         )(implicit hc: HeaderCarrier): ExtendedDataEvent = mock[ExtendedDataEvent]
         override def maskedFormFields = mock[Seq[String]]
         override def applicationPort  = mock[Option[Int]]

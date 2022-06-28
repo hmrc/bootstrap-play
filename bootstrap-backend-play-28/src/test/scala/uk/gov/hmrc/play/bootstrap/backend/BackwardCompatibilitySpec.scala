@@ -26,7 +26,7 @@ import play.api.Configuration
 import play.api.libs.json.{JsObject, OFormat}
 import play.api.mvc.{ControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, Redaction, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 
 import scala.concurrent.ExecutionContext
 
@@ -88,7 +88,7 @@ class BackwardCompatibilitySpec
           request        : RequestHeader,
           detail         : JsObject,
           truncationLog  : Option[TruncationLog],
-          redaction      : Redaction
+          redactionLog   : RedactionLog
         )(implicit hc: HeaderCarrier): ExtendedDataEvent = mock[ExtendedDataEvent]
       }
     }

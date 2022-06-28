@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.Data
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, Redaction, RedactionLog, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
@@ -48,7 +48,7 @@ trait FrontendAuditFilter
 
   private val textHtml = ".*(text/html).*".r
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, Redaction) = {
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, RedactionLog) = {
     val (requestBodyStr, isRequestTruncated) = requestBody match {
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
@@ -69,16 +69,16 @@ trait FrontendAuditFilter
     val truncationLog =
       TruncationLog(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
 
-    val redaction =
+    val redactionLog =
       if (requestBodyData.isRedacted)
-        Redaction(List(RedactionLog(redactedFields = List(EventKeys.RequestBody))))
+        RedactionLog.Entry(List(EventKeys.RequestBody))
       else
-        Redaction.empty
+        RedactionLog.Empty
 
-    (requestDetails, truncationLog, redaction)
+    (requestDetails, truncationLog, redactionLog)
   }
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, Redaction) = {
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, RedactionLog) = {
     val (responseBodyStr, isResponseTruncated) = responseBody match {
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
@@ -100,7 +100,7 @@ trait FrontendAuditFilter
     val truncationLog =
       TruncationLog(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
 
-    (responseDetails, truncationLog, Redaction.empty)
+    (responseDetails, truncationLog, RedactionLog.Empty)
   }
 
   private[filters] def getHost(request: RequestHeader): String =
@@ -166,7 +166,7 @@ class DefaultFrontendAuditFilter @Inject()(
     request        : RequestHeader,
     detail         : JsObject,
     truncationLog  : Option[TruncationLog],
-    redaction      : Redaction
+    redactionLog   : RedactionLog
   )(implicit hc: HeaderCarrier): ExtendedDataEvent =
     httpAuditEvent.extendedEvent(
       eventType,
@@ -174,6 +174,6 @@ class DefaultFrontendAuditFilter @Inject()(
       request,
       detail,
       truncationLog,
-      redaction
+      redactionLog
     )
 }
