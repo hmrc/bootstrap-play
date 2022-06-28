@@ -106,6 +106,8 @@ trait CommonAuditFilter extends AuditFilter {
     if (truncationLog2.truncatedFields.nonEmpty)
       logger.info(s"Inbound ${requestHeader.method} ${requestHeader.uri} - the following fields were truncated for auditing: ${truncationLog2.truncatedFields.mkString(", ")}")
 
+    val redaction2 = Redaction(redaction.redactionLog.map(log => log.copy(redactedFields = log.redactedFields.map("detail." + _))))
+
     implicit val r = requestHeader
     auditConnector.sendExtendedEvent(
       extendedDataEvent(
@@ -114,7 +116,7 @@ trait CommonAuditFilter extends AuditFilter {
         request         = requestHeader,
         detail          = detail,
         truncationLog   = Some(truncationLog2),
-        redaction       = redaction
+        redaction       = redaction2
       )
     )
   }

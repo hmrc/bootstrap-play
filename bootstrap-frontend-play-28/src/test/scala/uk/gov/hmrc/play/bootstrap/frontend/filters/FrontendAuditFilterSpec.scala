@@ -44,6 +44,7 @@ import play.api.test.Helpers._
 import play.api.test.{FakeHeaders, FakeRequest}
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.EventKeys
+import uk.gov.hmrc.play.audit.http.Data
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
@@ -111,7 +112,7 @@ class FrontendAuditFilterSpec
         contentType      = Some("application/x-www-form-urlencoded"),
         requestBody      = "password=p2ssword%26adkj&csrfToken=123&userId=113244018119",
         maskedFormFields = Seq("password")
-      ) shouldBe "password=#########&csrfToken=123&userId=113244018119"
+      ) shouldBe Data.redacted("password=#########&csrfToken=123&userId=113244018119")
     }
 
     "be obfuscated with the password in the end" in {
@@ -119,7 +120,7 @@ class FrontendAuditFilterSpec
         contentType      = Some("application/x-www-form-urlencoded"),
         requestBody      = "csrfToken=123&userId=113244018119&password=p2ssword%26adkj",
         maskedFormFields = Seq("password")
-      ) shouldBe "csrfToken=123&userId=113244018119&password=#########"
+      ) shouldBe Data.redacted("csrfToken=123&userId=113244018119&password=#########")
     }
 
     "be obfuscated with the password in the middle" in {
@@ -127,7 +128,7 @@ class FrontendAuditFilterSpec
         contentType      = Some("application/x-www-form-urlencoded"),
         requestBody      = "csrfToken=123&password=p2ssword%26adkj&userId=113244018119",
         maskedFormFields = Seq("password")
-      ) shouldBe "csrfToken=123&password=#########&userId=113244018119"
+      ) shouldBe Data.redacted("csrfToken=123&password=#########&userId=113244018119")
     }
 
     "be obfuscated even if the password is empty" in {
@@ -135,7 +136,7 @@ class FrontendAuditFilterSpec
         contentType      = Some("application/x-www-form-urlencoded"),
         requestBody      = "csrfToken=123&password=&userId=113244018119",
         maskedFormFields = Seq("password")
-      ) shouldBe "csrfToken=123&password=#########&userId=113244018119"
+      ) shouldBe Data.redacted("csrfToken=123&password=#########&userId=113244018119")
     }
 
     "not be obfuscated if content type is not application/x-www-form-urlencoded" in {
@@ -143,7 +144,7 @@ class FrontendAuditFilterSpec
         contentType      = Some("text/json"),
         requestBody      = "{ password=p2ssword%26adkj }",
         maskedFormFields = Seq("password")
-      ) shouldBe "{ password=p2ssword%26adkj }"
+      ) shouldBe Data.pure("{ password=p2ssword%26adkj }")
     }
 
     "be obfuscated using multiple fields" in {
@@ -151,7 +152,7 @@ class FrontendAuditFilterSpec
         contentType      = Some("application/x-www-form-urlencoded"),
         requestBody      = """companyNumber=05448736&password=secret&authCode=code""",
         maskedFormFields = Seq("password", "authCode")
-      ) shouldBe """companyNumber=05448736&password=#########&authCode=#########"""
+      ) shouldBe Data.redacted("""companyNumber=05448736&password=#########&authCode=#########""")
     }
   }
 
@@ -181,6 +182,8 @@ class FrontendAuditFilterSpec
           val event = verifyAndRetrieveEvent
           event.auditType shouldBe "RequestReceived"
           event.detail.as(Reads.at[String](__ \ "requestBody")) shouldBe "csrfToken=acb&userId=113244018119&password=#########&key1="
+          val redactedFields = event.redaction.redactionLog.flatMap(_.redactedFields)
+          redactedFields shouldBe List("detail.requestBody")
         }(fiveSecondsPatience, implicitly, implicitly)
       }
 

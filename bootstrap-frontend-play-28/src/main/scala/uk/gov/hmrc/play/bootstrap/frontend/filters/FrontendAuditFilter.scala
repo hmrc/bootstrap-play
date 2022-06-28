@@ -26,8 +26,9 @@ import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
+import uk.gov.hmrc.play.audit.http.Data
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, Redaction, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, Redaction, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
@@ -53,9 +54,12 @@ trait FrontendAuditFilter
       case Body.Truncated(b) => (b, true)
     }
 
+    val requestBodyData =
+      stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields)
+
     val requestDetails =
       Json.obj(
-        EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields),
+        EventKeys.RequestBody -> requestBodyData.value,
         "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
         "host"                -> getHost(requestHeader),
         "port"                -> getPort,
@@ -65,7 +69,13 @@ trait FrontendAuditFilter
     val truncationLog =
       TruncationLog(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
 
-    (requestDetails, truncationLog, Redaction.empty)
+    val redaction =
+      if (requestBodyData.isRedacted)
+        Redaction(List(RedactionLog(redactedFields = List(EventKeys.RequestBody))))
+      else
+        Redaction.empty
+
+    (requestDetails, truncationLog, redaction)
   }
 
   override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, Redaction) = {
@@ -115,12 +125,15 @@ trait FrontendAuditFilter
     contentType     : Option[String],
     requestBody     : String,
     maskedFormFields: Seq[String]
-  ): String =
+  ): Data[String] =
     contentType match {
       case Some("application/x-www-form-urlencoded") =>
-        maskedFormFields.foldLeft(requestBody)((maskedBody, field) =>
-          maskedBody.replaceAll(field + """=.*?(?=&|$|\s)""", field + "=#########"))
-      case _ => requestBody
+        val maskedBody =
+          maskedFormFields
+            .foldLeft(requestBody)((maskedBody, field) =>
+              maskedBody.replaceAll(field + """=.*?(?=&|$|\s)""", field + "=#########"))
+        if (maskedBody != requestBody) Data.redacted(maskedBody) else Data.pure(requestBody)
+      case _ => Data.pure(requestBody)
     }
 
   private[filters] def filterResponseBody(contentType: Option[String], responseBody: String) =
