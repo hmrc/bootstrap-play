@@ -70,6 +70,8 @@ class RequestHeaderAuditingSpec
           "some-header-1" -> Json.arr("Some-Value", "Some-Value"),
           "some-header-2" -> Json.arr("Some-Value")
         )
+
+      auditableHeaders.redactedHeaderNames shouldBe Set.empty
     }
 
     "Redact all values that correspond to a header, when configured" in {
@@ -101,6 +103,12 @@ class RequestHeaderAuditingSpec
           "some-header-1" -> Json.arr(redactedValue),
           "some-header-2" -> Json.arr(redactedValue),
           "some-header-3" -> Json.arr("Some-Value"),
+        )
+
+      auditableHeaders.redactedHeaderNames shouldBe
+        Set(
+          "requestHeaders.some-header-1",
+          "requestHeaders.some-header-2"
         )
     }
 
@@ -140,6 +148,8 @@ class RequestHeaderAuditingSpec
           "cookie" -> Json.arr(s"c1=$redactedValue; c2=v; c3=$redactedValue; c4=v; c5=$redactedValue"),
           "some-header-1" -> Json.arr("Some-Value", "Some-Value")
         )
+
+      auditableHeaders.redactedHeaderNames shouldBe Set("requestHeaders.cookie")
     }
 
     "Only update existing headers, not add new redacted ones" in {
@@ -164,6 +174,8 @@ class RequestHeaderAuditingSpec
           "some-header-1" -> Json.arr("Some-Value"),
           "some-header-2" -> Json.arr("Some-Value"),
         )
+
+      auditableHeaders.redactedHeaderNames shouldBe Set.empty
     }
   }
 
