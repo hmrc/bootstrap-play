@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.hooks.Body
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, TruncationLog}
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, Redaction, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
 
 import scala.concurrent.{ExecutionContext, Promise}
@@ -52,7 +52,9 @@ trait CommonAuditFilter extends AuditFilter {
     transactionName: String,
     request        : RequestHeader,
     detail         : JsObject              = JsObject.empty,
-    truncationLog  : Option[TruncationLog] = None
+    truncationLog  : Option[TruncationLog] = None,
+    redaction      : Redaction             = Redaction.empty
+
   )(implicit
     hc: HeaderCarrier
   ): ExtendedDataEvent
@@ -78,18 +80,25 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
-    val (detail, truncationLog) =
+    val (detail, truncationLog, redaction) =
       result match {
         case Right((result, responseBody)) =>
-          val (requestDetail , requestTruncationLog ) = buildRequestDetails(requestHeader, requestBody)
-          val (responseDetail, responseTruncationLog) = buildResponseDetails(result.header, responseBody, result.body.contentType)
+          val (requestDetail , requestTruncationLog, requestRedaction) =
+            buildRequestDetails(requestHeader, requestBody)
+
+          val (responseDetail, responseTruncationLog, responseRedaction) =
+            buildResponseDetails(result.header, responseBody, result.body.contentType)
           ( requestDetail ++ responseDetail,
-            TruncationLog(requestTruncationLog.truncatedFields ++ responseTruncationLog.truncatedFields)
+            TruncationLog(requestTruncationLog.truncatedFields ++ responseTruncationLog.truncatedFields),
+            Redaction(requestRedaction.redactionLog ++ responseRedaction.redactionLog)
           )
         case Left(ex) =>
-          val (requestDetail, requestTruncationLog) = buildRequestDetails(requestHeader, requestBody)
+          val (requestDetail, requestTruncationLog, requestRedaction) =
+            buildRequestDetails(requestHeader, requestBody)
+
           ( requestDetail ++ Json.obj(EventKeys.FailedRequestMessage -> ex.getMessage),
-            requestTruncationLog
+            requestTruncationLog,
+            requestRedaction
           )
       }
 
@@ -104,7 +113,8 @@ trait CommonAuditFilter extends AuditFilter {
         transactionName = requestHeader.uri,
         request         = requestHeader,
         detail          = detail,
-        truncationLog   = Some(truncationLog2)
+        truncationLog   = Some(truncationLog2),
+        redaction       = redaction
       )
     )
   }
@@ -180,7 +190,7 @@ trait CommonAuditFilter extends AuditFilter {
       }
   }
 
-  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog)
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, Redaction)
 
-  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog)
+  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, Redaction)
 }
