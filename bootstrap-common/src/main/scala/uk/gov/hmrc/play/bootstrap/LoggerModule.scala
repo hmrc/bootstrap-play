@@ -21,20 +21,30 @@ import org.slf4j.LoggerFactory
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 
+import scala.collection.JavaConverters._
+
 class LoggerModule extends Module {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
+    val config =
+      configuration
+        .getOptional[Configuration]("logger").getOrElse(Configuration.empty)
+        .entrySet.toMap.map { case (k, v) => stripQuotes(k) -> v.unwrapped }.toMap
+    // since config parent objects are ignored (which can be avoided by quoting keys in HOCON - not System.properties though)
+    // we should preserve any explicit keys from System.properties too
+    val props =
+      System.getProperties.entrySet.asScala
+        .collect { case e if e.getKey.toString.startsWith("logger.") => e.getKey.toString.stripPrefix("logger.") -> e.getValue }
+        .toMap
     (for {
-       config    <- configuration.getOptional[Configuration]("logger").toSet[Configuration]
-       (k, v)    <- config.entrySet.toMap
-                      .filterKeys(_ != "resource") // logger.resource configures logback location, not a level
-                      .mapValues(_.unwrapped)
-                      .map {
-                        case (k, v: String) => k -> Option(Level.toLevel(v, null))
-                        case (k, _        ) => k -> None
-                      }
+       (k, v) <- (config ++ props) // props second to take precedence
+                   .filterKeys(_ != "resource") // logger.resource configures logback location, not a level
+                   .map {
+                     case (k, v: String) => k -> Option(Level.toLevel(v, null))
+                     case (k, _        ) => k -> None
+                   }
      } yield (k, v)
     ).foreach {
       case (reqLogger, Some(level)) => logger.info(s"Configuring logger $reqLogger to level $level")
@@ -44,4 +54,7 @@ class LoggerModule extends Module {
 
     Seq.empty
   }
+
+  private def stripQuotes(s: String): String =
+    s.stripPrefix("\"").stripSuffix("\"")
 }
