@@ -32,6 +32,7 @@ import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, Truncation
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
+import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.AuditableRequestHeaders
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
 
 import scala.concurrent.ExecutionContext
@@ -57,6 +58,10 @@ trait FrontendAuditFilter
     val requestBodyData =
       stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields)
 
+    val auditableRequestHeaders =
+      requestHeaderAuditing
+        .auditableHeaders(requestHeader.headers, requestHeader.cookies)
+
     val requestDetails =
       Json.obj(
         EventKeys.RequestBody -> requestBodyData.value,
@@ -64,16 +69,16 @@ trait FrontendAuditFilter
         "host"                -> getHost(requestHeader),
         "port"                -> getPort,
         "queryString"         -> getQueryString(requestHeader.queryString)
-      ) ++ requestHeaderAuditing.auditableHeadersAsJsObject(requestHeader.headers, requestHeader.cookies)
+      ) ++ requestHeaderDetails(auditableRequestHeaders)
 
     val truncationLog =
       TruncationLog(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
 
     val redactionLog =
-      if (requestBodyData.isRedacted)
-        RedactionLog.Entry(List(EventKeys.RequestBody))
-      else
-        RedactionLog.Empty
+      RedactionLog.of(
+        auditableRequestHeaders.redactedHeaderNames.toList ++
+          (if (requestBodyData.isRedacted) List(EventKeys.RequestBody) else List.empty)
+      )
 
     (requestDetails, truncationLog, redactionLog)
   }
@@ -113,6 +118,12 @@ trait FrontendAuditFilter
     cleanQueryStringForDatastream(
       queryString.map { case (k, vs) => k + ":" + vs.mkString(",") }.mkString("&")
     )
+
+  private def requestHeaderDetails(auditableRequestHeaders: AuditableRequestHeaders): JsObject =
+    if (requestHeaderAuditing.config.enabled)
+      Json.obj("requestHeaders" -> auditableRequestHeaders)
+    else
+      JsObject.empty
 
   private def cleanQueryStringForDatastream(queryString: String): String =
     queryString.trim match {

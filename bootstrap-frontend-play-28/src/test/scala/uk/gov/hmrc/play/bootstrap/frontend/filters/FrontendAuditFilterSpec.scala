@@ -187,23 +187,26 @@ class FrontendAuditFilterSpec
       }
 
     "audit all request headers according to configuration" when {
-      val headers =
-        List(
-          "some-header-1" -> "some-value",
-          "some-header-1" -> "some-other-value",
-          "some-header-2" -> "some-value",
-        )
-
       val request =
         FakeRequest()
-          .withHeaders(headers: _*)
+          .withHeaders(
+            "some-header-1" -> "some-value",
+            "some-header-1" -> "some-other-value",
+            "some-header-2" -> "some-value"
+          )
+          .withCookies(
+            Cookie("c1", "v"),
+            Cookie("c2", "v")
+          )
 
       "if configured to do so" in new FrontendAuditFilterInstance {
 
         override val config =
           Configuration(
             "auditing.enabled" -> true,
-            "bootstrap.auditfilter.frontend.auditAllHeaders" -> true
+            "bootstrap.auditfilter.frontend.auditAllHeaders" -> true,
+            "bootstrap.auditfilter.frontend.redactedHeaders" -> Seq("some-header-2"),
+            "bootstrap.auditfilter.frontend.redactedCookies" -> Seq("c1"),
           ).withFallback(Configuration(ConfigFactory.load()))
 
         await(filter.apply(nextAction)(request).run())
@@ -212,8 +215,9 @@ class FrontendAuditFilterSpec
           val event = verifyAndRetrieveEvent
           event.detail.as(Reads.at[JsValue](__ \ "requestHeaders")) shouldBe Json.obj(
               "host" -> Json.arr("localhost"),
+              "cookie" -> Json.arr("c1=########; c2=v"),
               "some-header-1" -> Json.arr("some-value", "some-other-value"),
-              "some-header-2" -> Json.arr("some-value")
+              "some-header-2" -> Json.arr("########")
           )
         }(fiveSecondsPatience, implicitly, implicitly)
       }
@@ -286,7 +290,7 @@ class FrontendAuditFilterSpec
         FakeRequest("GET", "/foo").withCookies(
           Cookie(
             DeviceFingerprint.deviceFingerprintCookieName,
-            "THIS IS SOME JUST THAT SHOULDN'T BE DECRYPTABLE *!@&£$)B__!@£$"))
+            "THIS-IS-JUST-SOME-VALUE-THAT-SHOULDN'T-BE-DECRYPTABLE-*!@&$)B__!@$"))
 
       "the request succeeds" taggedAs NonStrictCookies in {
         await(filter.apply(nextAction)(request).run())

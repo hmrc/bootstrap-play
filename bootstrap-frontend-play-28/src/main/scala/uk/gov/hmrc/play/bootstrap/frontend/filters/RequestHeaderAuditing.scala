@@ -26,7 +26,7 @@ import javax.inject.{Inject, Singleton}
 
 @Singleton
 class RequestHeaderAuditing @Inject()(
-  config: RequestHeaderAuditing.Config,
+  val config: RequestHeaderAuditing.Config,
   cookieHeaderEncoding: CookieHeaderEncoding
 ) {
 
@@ -59,12 +59,6 @@ class RequestHeaderAuditing @Inject()(
 
     AuditableRequestHeadersImpl(redactedHeaders, redactedHeaderNames)
   }
-
-  def auditableHeadersAsJsObject(headers: Headers, cookies: Cookies): JsObject =
-    if (config.enabled)
-      Json.obj("requestHeaders" -> auditableHeaders(headers, cookies))
-    else
-      JsObject.empty
 }
 
 object RequestHeaderAuditing {
