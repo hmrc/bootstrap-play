@@ -21,6 +21,7 @@ import play.api.{Configuration, Environment}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.LoggerFactory
+import com.typesafe.config.ConfigFactory
 
 class LoggerModuleSpec
   extends AnyWordSpec
@@ -66,6 +67,58 @@ class LoggerModuleSpec
 
       LoggerFactory.getLogger(logger1).asInstanceOf[Logger].getLevel shouldBe loggerLevel1
       LoggerFactory.getLogger(logger2).asInstanceOf[Logger].getLevel shouldBe loggerLevel2
+    }
+
+    "support nested when quoted" in {
+      val logger1       = "asd"
+      val logger2       = "asd.xyz"
+
+      val configuration =
+        Configuration(
+          s"""logger."$logger1"""" -> Level.WARN.toString,
+          s"""logger."$logger2"""" -> Level.INFO.toString
+        )
+      new LoggerModule()
+        .bindings(
+          environment   = Environment.simple(),
+          configuration = configuration
+        )
+
+      LoggerFactory.getLogger(logger1).asInstanceOf[Logger].getLevel shouldBe Level.WARN
+      LoggerFactory.getLogger(logger2).asInstanceOf[Logger].getLevel shouldBe Level.INFO
+    }
+
+    "support nested when provided as system.properties" in {
+      val logger1       = "asd"
+      val logger2       = "asd.xyz"
+
+      val configuration =
+        Configuration(
+          ConfigFactory.parseString(
+            s"""
+               |logger.$logger1: ${Level.WARN}
+               |logger.$logger2: ${Level.INFO}
+            """.stripMargin
+          )
+        )
+      // when merging an object with a value (here "asd") - the second one wins
+      configuration.entrySet.collect { case (k, v) if k.startsWith("logger.") => k -> v.unwrapped} shouldBe Set(s"logger.$logger2" -> Level.INFO.toString)
+
+      // but if the values are available as System.properites - they should be preserved (without needing to quote)
+      val init = System.getProperties
+      System.setProperty(s"logger.$logger1", Level.WARN.toString)
+      System.setProperty(s"logger.$logger2", Level.INFO.toString)
+
+      new LoggerModule()
+        .bindings(
+          environment   = Environment.simple(),
+          configuration = configuration
+        )
+
+      LoggerFactory.getLogger(logger1).asInstanceOf[Logger].getLevel shouldBe Level.WARN
+      LoggerFactory.getLogger(logger2).asInstanceOf[Logger].getLevel shouldBe Level.INFO
+
+      System.setProperties(init)
     }
   }
 }
