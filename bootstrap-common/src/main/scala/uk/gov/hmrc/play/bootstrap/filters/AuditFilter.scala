@@ -28,7 +28,7 @@ import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import play.api.routing.Router.Attrs
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.hooks.Body
+import uk.gov.hmrc.http.hooks.Data
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
@@ -79,7 +79,7 @@ trait CommonAuditFilter extends AuditFilter {
     }
   }
 
-  private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
+  private def performAudit(requestHeader: RequestHeader)(requestBody: Data[String], result: Either[Throwable, (Result, Data[String])]): Unit = {
     val details =
       result match {
         case Right((result, responseBody)) =>
@@ -127,10 +127,10 @@ trait CommonAuditFilter extends AuditFilter {
 
   protected def onCompleteWithInput(
     next          : Accumulator[ByteString, Result],
-    handler       : (Body[String], Either[Throwable, (Result, Body[String])]) => Unit
+    handler       : (Data[String], Either[Throwable, (Result, Data[String])]) => Unit
   )(implicit ec: ExecutionContext
   ): Accumulator[ByteString, Result] = {
-    val requestBodyPromise  = Promise[Body[String]]()
+    val requestBodyPromise  = Promise[Data[String]]()
 
     // grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody https://github.com/playframework/playframework/blob/2.8.13/web/play-filters-helpers/src/main/scala/play/filters/csrf/CSRFActions.scala#L161-L185)
     // we don't just use `next.through(BodyCaptor.flow)` since the stream wouldn't be audited without the controller pulling the content
@@ -151,7 +151,7 @@ trait CommonAuditFilter extends AuditFilter {
 
     wrappedAcc
       .map { result =>
-        val responseBodyPromise = Promise[Body[String]]()
+        val responseBodyPromise = Promise[Data[String]]()
 
         lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
           BodyCaptor.sink(
@@ -192,9 +192,9 @@ trait CommonAuditFilter extends AuditFilter {
       }
   }
 
-  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Details
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Data[String]): Details
 
-  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): Details
+  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Data[String], contentType: Option[String]): Details
 }
 
 final case class Details(

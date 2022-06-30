@@ -23,7 +23,7 @@ import play.api.Configuration
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.hooks.Body
+import uk.gov.hmrc.http.hooks.Data
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
@@ -37,23 +37,18 @@ trait BackendAuditFilter
   extends CommonAuditFilter
      with BackendHeaderCarrierProvider {
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Details =
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Data[String]): Details =
     Details.empty
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): Details = {
-    val (responseBodyStr, isResponseTruncated) = responseBody match {
-      case Body.Complete(b)  => (b, false)
-      case Body.Truncated(b) => (b, true)
-    }
-
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Data[String], contentType: Option[String]): Details = {
     val responseDetails =
       Json.obj(
         EventKeys.StatusCode      -> responseHeader.status.toString,
-        EventKeys.ResponseMessage -> responseBodyStr
+        EventKeys.ResponseMessage -> responseBody.value
        )
 
     val truncationLog =
-      TruncationLog.of(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
+      TruncationLog.of(truncatedFields = if (responseBody.isTruncated) List(EventKeys.ResponseMessage) else List.empty)
 
     Details(responseDetails, truncationLog, RedactionLog.Empty)
   }

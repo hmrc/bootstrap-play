@@ -24,9 +24,8 @@ import play.api.http.HeaderNames
 import play.api.libs.json.{JsObject, JsString, Json}
 import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.hooks.Body
+import uk.gov.hmrc.http.hooks.Data
 import uk.gov.hmrc.play.audit.EventKeys
-import uk.gov.hmrc.play.audit.http.Data
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
@@ -49,14 +48,9 @@ trait FrontendAuditFilter
 
   private val textHtml = ".*(text/html).*".r
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Details = {
-    val (requestBodyStr, isRequestTruncated) = requestBody match {
-      case Body.Complete(b)  => (b, false)
-      case Body.Truncated(b) => (b, true)
-    }
-
-    val requestBodyData =
-      stripPasswords(requestHeader.contentType, requestBodyStr, maskedFormFields)
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Data[String]): Details = {
+    val requestBody2 =
+      requestBody.flatMap(stripPasswords(requestHeader.contentType, _, maskedFormFields))
 
     val auditableRequestHeaders =
       requestHeaderAuditing
@@ -64,7 +58,7 @@ trait FrontendAuditFilter
 
     val requestDetails =
       Json.obj(
-        EventKeys.RequestBody -> requestBodyData.value,
+        EventKeys.RequestBody -> requestBody2.value,
         "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
         "host"                -> getHost(requestHeader),
         "port"                -> getPort,
@@ -72,27 +66,22 @@ trait FrontendAuditFilter
       ) ++ requestHeaderDetails(auditableRequestHeaders)
 
     val truncationLog =
-      TruncationLog.of(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
+      TruncationLog.of(truncatedFields = if (requestBody2.isTruncated) List(EventKeys.RequestBody) else List.empty)
 
     val redactionLog =
       RedactionLog.of(
         auditableRequestHeaders.redactedHeaderNames.toList ++
-          (if (requestBodyData.isRedacted) List(EventKeys.RequestBody) else List.empty)
+          (if (requestBody2.isRedacted) List(EventKeys.RequestBody) else List.empty)
       )
 
     Details(requestDetails, truncationLog, redactionLog)
   }
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): Details = {
-    val (responseBodyStr, isResponseTruncated) = responseBody match {
-      case Body.Complete(b)  => (b, false)
-      case Body.Truncated(b) => (b, true)
-    }
-
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Data[String], contentType: Option[String]): Details = {
     val responseDetails =
       Json.obj(
         EventKeys.StatusCode      -> responseHeader.status.toString,
-        EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBodyStr)
+        EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBody.value)
       ) ++
         JsObject(
           responseHeader
@@ -103,7 +92,7 @@ trait FrontendAuditFilter
         )
 
     val truncationLog =
-      TruncationLog.of(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
+      TruncationLog.of(truncatedFields = if (responseBody.isTruncated) List(EventKeys.ResponseMessage) else List.empty)
 
     Details(responseDetails, truncationLog, RedactionLog.Empty)
   }
