@@ -25,24 +25,32 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerSuite {
 
-  "The code to generate an audit event" should {
+  "The code to generate audit events" should {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     object HttpAuditEventForTest extends HttpAuditEvent {
       override def appName: String = "my-test-app"
     }
 
-    "create a valid audit event with optional headers" in {
+    "create valid audit events with optional headers" in {
       val request =
         FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool")
-      val event = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
-      event.detail.as(Reads.at[String](__ \ "surrogate")) shouldBe "Cool,Cool"
+
+      val extendedEvent = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
+      extendedEvent.detail.as(Reads.at[String](__ \ "surrogate")) shouldBe "Cool,Cool"
+
+      val event = HttpAuditEventForTest.dataEvent("foo", "bar", request)
+      event.detail.get("surrogate") shouldBe Some("Cool,Cool")
     }
 
-    "create a valid audit event with no optional headers" in {
-      val request     = FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh")
-      val event = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
-      event.detail.as(Reads.nullable[String](__ \ "surrogate")) shouldBe None
+    "create valid audit events with no optional headers" in {
+      val request = FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh")
+
+      val extendedEvent = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
+      extendedEvent.detail.as(Reads.nullable[String](__ \ "surrogate")) shouldBe None
+
+      val event = HttpAuditEventForTest.dataEvent("foo", "bar", request)
+      event.detail.get("surrogate") shouldBe None
     }
   }
 }
