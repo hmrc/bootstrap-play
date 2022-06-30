@@ -39,7 +39,7 @@ import uk.gov.hmrc.auth.core.AuthorisationException
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 
 import java.util.UUID
@@ -68,7 +68,7 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> notFoundException.getMessage)),
-          truncationLog   = eqTo(None)
+          truncationLog   = eqTo(TruncationLog.Empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -89,7 +89,7 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> authorisationException.getMessage)),
-          truncationLog   = eqTo(None)
+          truncationLog   = eqTo(TruncationLog.Empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -113,7 +113,7 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(None)
+          truncationLog   = eqTo(TruncationLog.Empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -137,7 +137,7 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(None)
+          truncationLog   = eqTo(TruncationLog.Empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -162,7 +162,7 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(None)
+          truncationLog   = eqTo(TruncationLog.Empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -187,7 +187,7 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(None)
+          truncationLog   = eqTo(TruncationLog.Empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -360,7 +360,7 @@ class JsonErrorHandlerSpec
             transactionName = eqTo("Request bad format exception"),
             request         = eqTo(requestHeader),
             detail          = eqTo(Map.empty),
-            truncationLog   = eqTo(None)
+            truncationLog   = eqTo(TruncationLog.Empty)
           )(any[HeaderCarrier]))
           .thenReturn(createdDataEvent)
 
@@ -381,7 +381,7 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Resource Endpoint Not Found"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map.empty),
-          truncationLog   = eqTo(None)
+          truncationLog   = eqTo(TruncationLog.Empty)
         )(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
@@ -403,7 +403,7 @@ class JsonErrorHandlerSpec
             transactionName = eqTo(s"A client error occurred, status: $statusCode"),
             request         = eqTo(requestHeader),
             detail          = eqTo(Map.empty),
-            truncationLog   = eqTo(None)
+            truncationLog   = eqTo(TruncationLog.Empty)
           )(any[HeaderCarrier]))
           .thenReturn(createdDataEvent)
 

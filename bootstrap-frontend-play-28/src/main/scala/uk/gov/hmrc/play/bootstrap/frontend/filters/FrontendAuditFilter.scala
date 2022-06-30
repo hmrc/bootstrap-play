@@ -72,7 +72,7 @@ trait FrontendAuditFilter
       ) ++ requestHeaderDetails(auditableRequestHeaders)
 
     val truncationLog =
-      TruncationLog(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
+      TruncationLog.of(truncatedFields = if (isRequestTruncated) List(EventKeys.RequestBody) else List.empty)
 
     val redactionLog =
       RedactionLog.of(
@@ -103,7 +103,7 @@ trait FrontendAuditFilter
         )
 
     val truncationLog =
-      TruncationLog(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
+      TruncationLog.of(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
 
     (responseDetails, truncationLog, RedactionLog.Empty)
   }
@@ -176,7 +176,7 @@ class DefaultFrontendAuditFilter @Inject()(
     transactionName: String,
     request        : RequestHeader,
     detail         : JsObject,
-    truncationLog  : Option[TruncationLog],
+    truncationLog  : TruncationLog,
     redactionLog   : RedactionLog
   )(implicit hc: HeaderCarrier): ExtendedDataEvent =
     httpAuditEvent.extendedEvent(

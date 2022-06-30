@@ -38,7 +38,7 @@ trait BackendAuditFilter
      with BackendHeaderCarrierProvider {
 
   override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, RedactionLog) =
-    (JsObject.empty, TruncationLog(List.empty), RedactionLog.Empty)
+    (JsObject.empty, TruncationLog.Empty, RedactionLog.Empty)
 
   override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, RedactionLog) = {
     val (responseBodyStr, isResponseTruncated) = responseBody match {
@@ -53,7 +53,7 @@ trait BackendAuditFilter
        )
 
     val truncationLog =
-      TruncationLog(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
+      TruncationLog.of(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
 
     (responseDetails, truncationLog, RedactionLog.Empty)
   }
@@ -76,7 +76,7 @@ class DefaultBackendAuditFilter @Inject()(
     transactionName: String,
     request        : RequestHeader,
     detail         : JsObject,
-    truncationLog  : Option[TruncationLog],
+    truncationLog  : TruncationLog,
     redactionLog   : RedactionLog
   )(implicit hc: HeaderCarrier): ExtendedDataEvent =
     httpAuditEvent.extendedEvent(

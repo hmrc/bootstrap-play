@@ -51,9 +51,9 @@ trait CommonAuditFilter extends AuditFilter {
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : JsObject              = JsObject.empty,
-    truncationLog  : Option[TruncationLog] = None,
-    redaction      : RedactionLog          = RedactionLog.Empty
+    detail         : JsObject       = JsObject.empty,
+    truncationLog  : TruncationLog  = TruncationLog.Empty,
+    redaction      : RedactionLog   = RedactionLog.Empty
 
   )(implicit
     hc: HeaderCarrier
@@ -89,7 +89,7 @@ trait CommonAuditFilter extends AuditFilter {
           val (responseDetail, responseTruncationLog, responseRedaction) =
             buildResponseDetails(result.header, responseBody, result.body.contentType)
           ( requestDetail ++ responseDetail,
-            TruncationLog(requestTruncationLog.truncatedFields ++ responseTruncationLog.truncatedFields),
+            TruncationLog.of(requestTruncationLog.truncatedFields ++ responseTruncationLog.truncatedFields),
             RedactionLog.of(requestRedaction.redactedFields ++ responseRedaction.redactedFields)
           )
         case Left(ex) =>
@@ -102,7 +102,7 @@ trait CommonAuditFilter extends AuditFilter {
           )
       }
 
-    val truncationLog2 = TruncationLog(truncatedFields = truncationLog.truncatedFields.map("detail." + _))
+    val truncationLog2 = TruncationLog.of(truncatedFields = truncationLog.truncatedFields.map("detail." + _))
     if (truncationLog2.truncatedFields.nonEmpty)
       logger.info(s"Inbound ${requestHeader.method} ${requestHeader.uri} - the following fields were truncated for auditing: ${truncationLog2.truncatedFields.mkString(", ")}")
 
@@ -115,7 +115,7 @@ trait CommonAuditFilter extends AuditFilter {
         transactionName = requestHeader.uri,
         request         = requestHeader,
         detail          = detail,
-        truncationLog   = Some(truncationLog2),
+        truncationLog   = truncationLog2,
         redaction       = redaction2
       )
     )

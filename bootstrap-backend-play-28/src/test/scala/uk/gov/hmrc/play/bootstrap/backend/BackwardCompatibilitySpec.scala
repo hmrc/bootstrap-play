@@ -87,7 +87,7 @@ class BackwardCompatibilitySpec
           transactionName: String,
           request        : RequestHeader,
           detail         : JsObject,
-          truncationLog  : Option[TruncationLog],
+          truncationLog  : TruncationLog,
           redactionLog   : RedactionLog
         )(implicit hc: HeaderCarrier): ExtendedDataEvent = mock[ExtendedDataEvent]
       }

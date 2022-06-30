@@ -50,8 +50,8 @@ trait HttpAuditEvent {
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String]   = Map.empty,
-    truncationLog  : Option[TruncationLog] = None
+    detail         : Map[String, String] = Map.empty,
+    truncationLog  : TruncationLog       = TruncationLog.Empty
     )(implicit
       hc: HeaderCarrier
     ): DataEvent = {
@@ -72,9 +72,9 @@ trait HttpAuditEvent {
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : JsObject              = JsObject.empty,
-    truncationLog  : Option[TruncationLog] = None,
-    redactionLog   : RedactionLog          = RedactionLog.Empty
+    detail         : JsObject      = JsObject.empty,
+    truncationLog  : TruncationLog = TruncationLog.Empty,
+    redactionLog   : RedactionLog  = RedactionLog.Empty
   )(implicit
     hc: HeaderCarrier
   ): ExtendedDataEvent = {
