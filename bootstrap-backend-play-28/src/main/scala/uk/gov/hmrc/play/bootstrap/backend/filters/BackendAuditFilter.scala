@@ -48,7 +48,10 @@ trait BackendAuditFilter
        )
 
     val truncationLog =
-      TruncationLog.of(truncatedFields = if (responseBody.isTruncated) List(EventKeys.ResponseMessage) else List.empty)
+      if (responseBody.isTruncated)
+        TruncationLog.Entry(List(EventKeys.ResponseMessage))
+      else
+        TruncationLog.Empty
 
     Details(responseDetails, truncationLog, RedactionLog.Empty)
   }
