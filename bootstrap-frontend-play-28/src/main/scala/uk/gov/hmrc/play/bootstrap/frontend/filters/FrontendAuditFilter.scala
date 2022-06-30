@@ -30,7 +30,7 @@ import uk.gov.hmrc.play.audit.http.Data
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
-import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
+import uk.gov.hmrc.play.bootstrap.filters.{CommonAuditFilter, Details}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.AuditableRequestHeaders
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
@@ -49,7 +49,7 @@ trait FrontendAuditFilter
 
   private val textHtml = ".*(text/html).*".r
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, RedactionLog) = {
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Details = {
     val (requestBodyStr, isRequestTruncated) = requestBody match {
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
@@ -80,10 +80,10 @@ trait FrontendAuditFilter
           (if (requestBodyData.isRedacted) List(EventKeys.RequestBody) else List.empty)
       )
 
-    (requestDetails, truncationLog, redactionLog)
+    Details(requestDetails, truncationLog, redactionLog)
   }
 
-  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, RedactionLog) = {
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): Details = {
     val (responseBodyStr, isResponseTruncated) = responseBody match {
       case Body.Complete(b)  => (b, false)
       case Body.Truncated(b) => (b, true)
@@ -105,7 +105,7 @@ trait FrontendAuditFilter
     val truncationLog =
       TruncationLog.of(truncatedFields = if (isResponseTruncated) List(EventKeys.ResponseMessage) else List.empty)
 
-    (responseDetails, truncationLog, RedactionLog.Empty)
+    Details(responseDetails, truncationLog, RedactionLog.Empty)
   }
 
   private[filters] def getHost(request: RequestHeader): String =

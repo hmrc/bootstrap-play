@@ -80,33 +80,33 @@ trait CommonAuditFilter extends AuditFilter {
   }
 
   private def performAudit(requestHeader: RequestHeader)(requestBody: Body[String], result: Either[Throwable, (Result, Body[String])]): Unit = {
-    val (detail, truncationLog, redactionLog) =
+    val details =
       result match {
         case Right((result, responseBody)) =>
-          val (requestDetail , requestTruncationLog, requestRedaction) =
+          val requestDetails =
             buildRequestDetails(requestHeader, requestBody)
-
-          val (responseDetail, responseTruncationLog, responseRedaction) =
+          val responseDetails =
             buildResponseDetails(result.header, responseBody, result.body.contentType)
-          ( requestDetail ++ responseDetail,
-            TruncationLog.of(requestTruncationLog.truncatedFields ++ responseTruncationLog.truncatedFields),
-            RedactionLog.of(requestRedaction.redactedFields ++ responseRedaction.redactedFields)
-          )
+
+          requestDetails ++ responseDetails
         case Left(ex) =>
-          val (requestDetail, requestTruncationLog, requestRedaction) =
+          val requestDetails =
             buildRequestDetails(requestHeader, requestBody)
 
-          ( requestDetail ++ Json.obj(EventKeys.FailedRequestMessage -> ex.getMessage),
-            requestTruncationLog,
-            requestRedaction
-          )
+          requestDetails
+            .copy(
+              details = requestDetails.details ++ Json.obj(EventKeys.FailedRequestMessage -> ex.getMessage)
+            )
       }
 
-    val truncationLog2 = TruncationLog.of(truncatedFields = truncationLog.truncatedFields.map("detail." + _))
-    if (truncationLog2.truncatedFields.nonEmpty)
-      logger.info(s"Inbound ${requestHeader.method} ${requestHeader.uri} - the following fields were truncated for auditing: ${truncationLog2.truncatedFields.mkString(", ")}")
+    val truncationLog =
+      TruncationLog.of(truncatedFields = details.truncationLog.truncatedFields.map("detail." + _))
 
-    val redaction2 = RedactionLog.of(redactionLog.redactedFields.map("detail." + _))
+    if (truncationLog.truncatedFields.nonEmpty)
+      logger.info(s"Inbound ${requestHeader.method} ${requestHeader.uri} - the following fields were truncated for auditing: ${truncationLog.truncatedFields.mkString(", ")}")
+
+    val redactionLog =
+      RedactionLog.of(details.redactionLog.redactedFields.map("detail." + _))
 
     implicit val r = requestHeader
     auditConnector.sendExtendedEvent(
@@ -114,9 +114,9 @@ trait CommonAuditFilter extends AuditFilter {
         eventType       = requestReceived,
         transactionName = requestHeader.uri,
         request         = requestHeader,
-        detail          = detail,
-        truncationLog   = truncationLog2,
-        redaction       = redaction2
+        detail          = details.details,
+        truncationLog   = truncationLog,
+        redaction       = redactionLog
       )
     )
   }
@@ -192,7 +192,31 @@ trait CommonAuditFilter extends AuditFilter {
       }
   }
 
-  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): (JsObject, TruncationLog, RedactionLog)
+  protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Body[String]): Details
 
-  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): (JsObject, TruncationLog, RedactionLog)
+  protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Body[String], contentType: Option[String]): Details
+}
+
+final case class Details(
+  details: JsObject,
+  truncationLog: TruncationLog,
+  redactionLog : RedactionLog
+) {
+
+  def ++(other: Details): Details =
+    Details(
+      details       = details ++ other.details,
+      truncationLog = TruncationLog.of(truncationLog.truncatedFields ++ other.truncationLog.truncatedFields),
+      redactionLog  = RedactionLog.of(redactionLog.redactedFields ++ other.redactionLog.redactedFields)
+    )
+}
+
+object Details {
+
+  val empty: Details =
+    Details(
+      details       = JsObject.empty,
+      truncationLog = TruncationLog.Empty,
+      redactionLog  = RedactionLog.Empty
+    )
 }
