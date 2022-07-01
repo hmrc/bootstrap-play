@@ -211,7 +211,14 @@ http-verbs's `HookData` has been updated to identify when audit data has been tr
 
 Builds update dependencies to Play 2.8.15 and Jackson 2.12.6.  Also drops support for using `bindFormRequest` with `application/json` and
 `application/multipart` content types - if this is required, add `with WithUrlEncodedAndMultipartFormBinding` or `with WithDefaultFormBinding` to your
-controller.  Please speak to PlatOps if you have issues.
+controller.
+
+Note, that in unit tests, you will need to use `withFormUrlEncodedBody` rather than `withJsonBody`. And also ensure you are setting the correct HTTP Method, otherwise you may fall foul of CORS checks. e.g.
+```scala
+FakeRequest().withMethod("POST").withFormUrlEncodedBody("username" -> username)
+```
+
+Please speak to PlatOps if you have issues.
 
 ### Version 5.21.0
 
