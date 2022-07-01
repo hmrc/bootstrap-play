@@ -17,17 +17,21 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
+
 import javax.inject.Inject
 import play.api.Configuration
 import play.api.http.HeaderNames
-import play.api.mvc.{RequestHeader, ResponseHeader, Result}
+import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.mvc.{RequestHeader, ResponseHeader}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.hooks.Data
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
-import uk.gov.hmrc.play.bootstrap.filters.CommonAuditFilter
+import uk.gov.hmrc.play.bootstrap.filters.{CommonAuditFilter, Details}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendHeaderCarrierProvider
+import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing.AuditableRequestHeaders
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
 
 import scala.concurrent.ExecutionContext
@@ -40,32 +44,61 @@ trait FrontendAuditFilter
 
   def applicationPort: Option[Int]
 
+  def requestHeaderAuditing: RequestHeaderAuditing
 
   private val textHtml = ".*(text/html).*".r
 
-  override protected def filterResponseBody(result: Result, response: ResponseHeader, responseBody: String) =
-    result.body.contentType
-      .collect { case textHtml(a) => "<HTML>...</HTML>" }
-      .getOrElse(responseBody)
+  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: Data[String]): Details = {
+    val requestBody2 =
+      requestBody.flatMap(stripPasswords(requestHeader.contentType, _, maskedFormFields))
 
-  override protected def buildRequestDetails(requestHeader: RequestHeader, requestBody: String): Map[String, String] =
-    Map(
-      EventKeys.RequestBody -> stripPasswords(requestHeader.contentType, requestBody, maskedFormFields),
-      "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
-      "host"                -> getHost(requestHeader),
-      "port"                -> getPort,
-      "queryString"         -> getQueryString(requestHeader.queryString)
-    )
+    val auditableRequestHeaders =
+      requestHeaderAuditing
+        .auditableHeaders(requestHeader.headers, requestHeader.cookies)
 
-  override protected def buildResponseDetails(response: ResponseHeader): Map[String, String] =
-    response.headers.get(HeaderNames.LOCATION)
-      .map(HeaderNames.LOCATION -> _)
-      .toMap
+    val requestDetails =
+      Json.obj(
+        EventKeys.RequestBody -> requestBody2.value,
+        "deviceFingerprint"   -> DeviceFingerprint.deviceFingerprintFrom(requestHeader),
+        "host"                -> getHost(requestHeader),
+        "port"                -> getPort,
+        "queryString"         -> getQueryString(requestHeader.queryString)
+      ) ++ requestHeaderDetails(auditableRequestHeaders)
 
-  private[filters] def getQueryString(queryString: Map[String, Seq[String]]): String =
-    cleanQueryStringForDatastream(
-      queryString.map { case (k, vs) => k + ":" + vs.mkString(",") }.mkString("&")
-    )
+    val truncationLog =
+      TruncationLog.of(truncatedFields = if (requestBody2.isTruncated) List(EventKeys.RequestBody) else List.empty)
+
+    val redactionLog =
+      RedactionLog.of(
+        auditableRequestHeaders.redactedHeaderNames.toList ++
+          (if (requestBody2.isRedacted) List(EventKeys.RequestBody) else List.empty)
+      )
+
+    Details(requestDetails, truncationLog, redactionLog)
+  }
+
+  override protected def buildResponseDetails(responseHeader: ResponseHeader, responseBody: Data[String], contentType: Option[String]): Details = {
+    val responseDetails =
+      Json.obj(
+        EventKeys.StatusCode      -> responseHeader.status.toString,
+        EventKeys.ResponseMessage -> filterResponseBody(contentType, responseBody.value)
+      ) ++
+        JsObject(
+          responseHeader
+            .headers
+            .get(HeaderNames.LOCATION)
+            .map(loc => HeaderNames.LOCATION -> JsString(loc))
+            .toSeq
+        )
+
+    val truncationLog =
+      if (responseBody.isTruncated)
+        TruncationLog.Entry(List(EventKeys.ResponseMessage))
+      else
+        TruncationLog.Empty
+
+    Details(responseDetails, truncationLog, RedactionLog.Empty)
+  }
 
   private[filters] def getHost(request: RequestHeader): String =
     request.headers.get("Host").map(_.takeWhile(_ != ':')).getOrElse("-")
@@ -73,17 +106,16 @@ trait FrontendAuditFilter
   private[filters] def getPort: String =
     applicationPort.map(_.toString).getOrElse("-")
 
-  private[filters] def stripPasswords(
-    contentType: Option[String],
-    requestBody: String,
-    maskedFormFields: Seq[String]
-  ): String =
-    contentType match {
-      case Some("application/x-www-form-urlencoded") =>
-        maskedFormFields.foldLeft(requestBody)((maskedBody, field) =>
-          maskedBody.replaceAll(field + """=.*?(?=&|$|\s)""", field + "=#########"))
-      case _ => requestBody
-    }
+  private[filters] def getQueryString(queryString: Map[String, Seq[String]]): String =
+    cleanQueryStringForDatastream(
+      queryString.map { case (k, vs) => k + ":" + vs.mkString(",") }.mkString("&")
+    )
+
+  private def requestHeaderDetails(auditableRequestHeaders: AuditableRequestHeaders): JsObject =
+    if (requestHeaderAuditing.config.enabled)
+      Json.obj("requestHeaders" -> auditableRequestHeaders)
+    else
+      JsObject.empty
 
   private def cleanQueryStringForDatastream(queryString: String): String =
     queryString.trim match {
@@ -91,6 +123,26 @@ trait FrontendAuditFilter
       case ":"   => "-" // play 2.5 FakeRequest now parses an empty query string into a two empty string params
       case other => other
     }
+
+  private[filters] def stripPasswords(
+    contentType     : Option[String],
+    requestBody     : String,
+    maskedFormFields: Seq[String]
+  ): Data[String] =
+    contentType match {
+      case Some("application/x-www-form-urlencoded") =>
+        val maskedBody =
+          maskedFormFields
+            .foldLeft(requestBody)((maskedBody, field) =>
+              maskedBody.replaceAll(field + """=.*?(?=&|$|\s)""", field + "=#########"))
+        if (maskedBody != requestBody) Data.redacted(maskedBody) else Data.pure(requestBody)
+      case _ => Data.pure(requestBody)
+    }
+
+  private[filters] def filterResponseBody(contentType: Option[String], responseBody: String) =
+    contentType
+      .collect { case textHtml(a) => "<HTML>...</HTML>" }
+      .getOrElse(responseBody)
 }
 
 class DefaultFrontendAuditFilter @Inject()(
@@ -98,6 +150,7 @@ class DefaultFrontendAuditFilter @Inject()(
   controllerConfigs: ControllerConfigs,
   override val auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
+  override val requestHeaderAuditing: RequestHeaderAuditing,
   override val mat: Materializer
 )(implicit protected val ec: ExecutionContext
 ) extends FrontendAuditFilter {
@@ -110,11 +163,20 @@ class DefaultFrontendAuditFilter @Inject()(
   override def controllerNeedsAuditing(controllerName: String): Boolean =
     controllerConfigs.controllerNeedsAuditing(controllerName)
 
-  override def dataEvent(
+  override def extendedDataEvent(
     eventType      : String,
     transactionName: String,
     request        : RequestHeader,
-    detail         : Map[String, String]
-  )(implicit hc: HeaderCarrier): DataEvent =
-    httpAuditEvent.dataEvent(eventType, transactionName, request, detail)
+    detail         : JsObject,
+    truncationLog  : TruncationLog,
+    redactionLog   : RedactionLog
+  )(implicit hc: HeaderCarrier): ExtendedDataEvent =
+    httpAuditEvent.extendedEvent(
+      eventType,
+      transactionName,
+      request,
+      detail,
+      truncationLog,
+      redactionLog
+    )
 }

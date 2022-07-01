@@ -24,9 +24,11 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import play.api.i18n.MessagesApi
+import play.api.libs.json.JsObject
 import play.api.mvc.{MessagesControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing
 
 import scala.concurrent.ExecutionContext
 
@@ -171,29 +173,33 @@ class BackwardCompatibilitySpec
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.FrontendAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.FrontendAuditFilter {
         override def ec             = mock[ExecutionContext]
-        override def config         = mock[Configuration]
+        override def config         = Configuration(ConfigFactory.load())
         override def auditConnector = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector]
         override def mat            = mock[Materializer]
         override def controllerNeedsAuditing(controllerName: String): Boolean = true
-        override def dataEvent(
+        override def extendedDataEvent(
           eventType      : String,
           transactionName: String,
           request        : RequestHeader,
-          detail         : Map[String,String]
-        )(implicit hc: HeaderCarrier): DataEvent = mock[DataEvent]
+          detail         : JsObject,
+          truncationLog  : TruncationLog,
+          redactionLog   : RedactionLog
+        )(implicit hc: HeaderCarrier): ExtendedDataEvent = mock[ExtendedDataEvent]
         override def maskedFormFields = mock[Seq[String]]
         override def applicationPort  = mock[Option[Int]]
+        override def requestHeaderAuditing = mock[RequestHeaderAuditing]
       }
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.DefaultFrontendAuditFilter(
-        config            = Configuration.reference,
-        controllerConfigs = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
-        auditConnector    = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
-        httpAuditEvent    = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],
-        mat               = mock[Materializer]
-      )(ec                = mock[ExecutionContext])
+        config                = Configuration(ConfigFactory.load()),
+        controllerConfigs     = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
+        auditConnector        = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
+        httpAuditEvent        = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],
+        requestHeaderAuditing = mock[uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing],
+        mat                   = mock[Materializer]
+      )(ec                    = mock[ExecutionContext])
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter" in {

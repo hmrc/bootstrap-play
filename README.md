@@ -89,29 +89,60 @@ play.modules.enabled += "uk.gov.hmrc.play.bootstrap.backend.BackendModule"
 
 ```
 
-## Default HTTP client
+## Default HTTP clients
 
-A default http client with pre-configured auditing hook can be injected into any connector. The http client uses http-verbs
-For more http-verbs examples see https://github.com/hmrc/http-verbs-example
+Two http clients are available and can be injected into any connector by enabling the appropriate modules.
 
+### uk.gov.hmrc.http.HttpClient
 
-Make sure you have the following modules in your application.conf file:
+This is the original http client provided by http-verbs.
+
+To use, enable the following modules in your application.conf file:
 
 ```properties
 play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 ```
 
+example usage:
 
 ```scala
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpClient
 import javax.inject.Inject
 
-class SomeConnector @Inject() (client: HttpClient) {
+class SomeConnector @Inject() (httpClient: HttpClient) {
 
-  client.GET[Option[MyCaseClass]]("http://localhost/my-api")
+  httpClient.GET[Option[MyCaseClass]]("http://localhost/my-api")
 }
 ```
+
+### uk.gov.hmrc.http.client.HttpClientV2
+
+This is a new http client provided by http-verbs which supports streaming and has a more flexible API, making it simpler to enable Proxies etc.
+
+To use, enable the following modules in your application.conf file:
+
+```properties
+play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientV2Module"
+```
+
+example usage:
+
+```scala
+import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.client.HttpClientV2
+import javax.inject.Inject
+
+class SomeConnector @Inject() (httpClientV2: HttpClientV2) {
+
+  httpClientV2.get(url"http://localhost/my-api").execute[Option[MyCaseClass]]
+}
+```
+
+Note, you can safely enable both http clients.
+
+For documentation and more usage examples see [http-verbs](https://github.com/hmrc/http-verbs)
 
 ## User Authorisation
 
@@ -163,9 +194,22 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 6.0.0
+
+#### http-verbs
+
+Http-verbs has been updated to version 14.0.0, which adds `HttpClientV2`. See [http-verbs](https://github.com/hmrc/http-verbs) for details.
+
+#### Auditing of truncated payloads
+
+http-verbs's `HookData` has been updated to identify when audit data has been truncated. This should have little impact on clients as long as they rely on `bootstrap-play` to provide compatible versions of `http-verbs` and `play-auditing`.
+
+`AuditFilter`s have been updated to identify when audit data has been truncated. Most clients will be using the provided AuditFilters and should not be impacted.
+
+
 ### Version 5.24.0
 
-Builds update dependencies to Play 2.8.15 and Jackson 2.12.6.  Also drops support for using `bindFormRequest` with `application/json` and 
+Builds update dependencies to Play 2.8.15 and Jackson 2.12.6.  Also drops support for using `bindFormRequest` with `application/json` and
 `application/multipart` content types - if this is required, add `with WithUrlEncodedAndMultipartFormBinding` or `with WithDefaultFormBinding` to your
 controller.  Please speak to PlatOps if you have issues.
 

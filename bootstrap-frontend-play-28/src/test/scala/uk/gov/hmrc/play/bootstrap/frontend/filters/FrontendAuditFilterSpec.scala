@@ -21,9 +21,12 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import com.typesafe.config.ConfigFactory
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar.{mock, verify}
 import org.mockito.captor.ArgCaptor
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite, Tag, TestData}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Tag, TestData}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
@@ -31,6 +34,7 @@ import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.{Application, Configuration}
 import play.api.http.{HttpChunk, HttpEntity}
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.{JsValue, Json, Reads, __}
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcWSClient
 import play.api.mvc.Results.NotFound
@@ -38,10 +42,11 @@ import play.api.mvc.{Action => _, _}
 import play.api.routing.Router
 import play.api.test.Helpers._
 import play.api.test.{FakeHeaders, FakeRequest}
+import uk.gov.hmrc.http.hooks.Data
 import uk.gov.hmrc.http.{CookieNames, HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
 
@@ -50,13 +55,30 @@ import scala.concurrent.duration.DurationLong
 
 class FrontendAuditFilterSpec
   extends AnyWordSpec
-     with FrontendAuditFilterInstance
      with Matchers
      with Eventually
      with ScalaFutures
      with MockitoSugar
      with GuiceOneAppPerTest
-     with BeforeAndAfterEach {
+     with BeforeAndAfterAll
+     with BeforeAndAfterEach
+     with FrontendAuditFilterInstance {
+
+  implicit val system =
+    ActorSystem("FrontendAuditFilterSpec")
+
+  implicit val ec: ExecutionContext =
+    system.dispatcher
+
+  override def afterAll(): Unit = {
+    system.terminate()
+    super.afterAll()
+  }
+
+  override def beforeEach(): Unit = {
+    reset(auditConnector)
+    super.beforeEach()
+  }
 
   private val Action = stubControllerComponents().actionBuilder
 
@@ -67,10 +89,6 @@ class FrontendAuditFilterSpec
 
   private def exceptionThrowingAction = Action { _ =>
     throw new RuntimeException("Something went wrong")
-  }
-
-  override def beforeEach(): Unit = {
-    reset(auditConnector)
   }
 
   private object NonStrictCookies extends Tag("NonStringCookies")
@@ -91,41 +109,50 @@ class FrontendAuditFilterSpec
   "A password" should {
     "be obfuscated with the password at the beginning" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "password=p2ssword%26adkj&csrfToken=123&userId=113244018119",
-        Seq("password")) shouldBe "password=#########&csrfToken=123&userId=113244018119"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "password=p2ssword%26adkj&csrfToken=123&userId=113244018119",
+        maskedFormFields = Seq("password")
+      ) shouldBe Data.redacted("password=#########&csrfToken=123&userId=113244018119")
     }
 
     "be obfuscated with the password in the end" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "csrfToken=123&userId=113244018119&password=p2ssword%26adkj",
-        Seq("password")) shouldBe "csrfToken=123&userId=113244018119&password=#########"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "csrfToken=123&userId=113244018119&password=p2ssword%26adkj",
+        maskedFormFields = Seq("password")
+      ) shouldBe Data.redacted("csrfToken=123&userId=113244018119&password=#########")
     }
 
     "be obfuscated with the password in the middle" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "csrfToken=123&password=p2ssword%26adkj&userId=113244018119",
-        Seq("password")) shouldBe "csrfToken=123&password=#########&userId=113244018119"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "csrfToken=123&password=p2ssword%26adkj&userId=113244018119",
+        maskedFormFields = Seq("password")
+      ) shouldBe Data.redacted("csrfToken=123&password=#########&userId=113244018119")
     }
 
     "be obfuscated even if the password is empty" in {
       filter.stripPasswords(
-        Some("application/x-www-form-urlencoded"),
-        "csrfToken=123&password=&userId=113244018119",
-        Seq("password")) shouldBe "csrfToken=123&password=#########&userId=113244018119"
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = "csrfToken=123&password=&userId=113244018119",
+        maskedFormFields = Seq("password")
+      ) shouldBe Data.redacted("csrfToken=123&password=#########&userId=113244018119")
     }
 
     "not be obfuscated if content type is not application/x-www-form-urlencoded" in {
-      filter.stripPasswords(Some("text/json"), "{ password=p2ssword%26adkj }", Seq("password")) shouldBe "{ password=p2ssword%26adkj }"
+      filter.stripPasswords(
+        contentType      = Some("text/json"),
+        requestBody      = "{ password=p2ssword%26adkj }",
+        maskedFormFields = Seq("password")
+      ) shouldBe Data.pure("{ password=p2ssword%26adkj }")
     }
 
     "be obfuscated using multiple fields" in {
-      val body   = """companyNumber=05448736&password=secret&authCode=code"""
-      val result = filter.stripPasswords(Some("application/x-www-form-urlencoded"), body, Seq("password", "authCode"))
-
-      result shouldBe """companyNumber=05448736&password=#########&authCode=#########"""
+      filter.stripPasswords(
+        contentType      = Some("application/x-www-form-urlencoded"),
+        requestBody      = """companyNumber=05448736&password=secret&authCode=code""",
+        maskedFormFields = Seq("password", "authCode")
+      ) shouldBe Data.redacted("""companyNumber=05448736&password=#########&authCode=#########""")
     }
   }
 
@@ -154,8 +181,55 @@ class FrontendAuditFilterSpec
         eventually {
           val event = verifyAndRetrieveEvent
           event.auditType shouldBe "RequestReceived"
-          event.detail    should contain("requestBody" -> "csrfToken=acb&userId=113244018119&password=#########&key1=")
+          event.detail.as(Reads.at[String](__ \ "requestBody")) shouldBe "csrfToken=acb&userId=113244018119&password=#########&key1="
+          event.redactionLog.redactedFields shouldBe List("detail.requestBody")
         }(fiveSecondsPatience, implicitly, implicitly)
+      }
+
+    "audit all request headers according to configuration" when {
+      val request =
+        FakeRequest()
+          .withHeaders(
+            "some-header-1" -> "some-value",
+            "some-header-1" -> "some-other-value",
+            "some-header-2" -> "some-value"
+          )
+          .withCookies(
+            Cookie("c1", "v"),
+            Cookie("c2", "v")
+          )
+
+      "if configured to do so" in new FrontendAuditFilterInstance {
+
+        override val config =
+          Configuration(
+            "auditing.enabled" -> true,
+            "bootstrap.auditfilter.frontend.auditAllHeaders" -> true,
+            "bootstrap.auditfilter.frontend.redactedHeaders" -> Seq("some-header-2"),
+            "bootstrap.auditfilter.frontend.redactedCookies" -> Seq("c1"),
+          ).withFallback(Configuration(ConfigFactory.load()))
+
+        await(filter.apply(nextAction)(request).run())
+
+        eventually {
+          val event = verifyAndRetrieveEvent
+          event.detail.as(Reads.at[JsValue](__ \ "requestHeaders")) shouldBe Json.obj(
+              "host" -> Json.arr("localhost"),
+              "cookie" -> Json.arr("c1=########; c2=v"),
+              "some-header-1" -> Json.arr("some-value", "some-other-value"),
+              "some-header-2" -> Json.arr("########")
+          )
+        }(fiveSecondsPatience, implicitly, implicitly)
+      }
+
+      "if not configured to do so" in {
+         await(filter.apply(nextAction)(request).run())
+
+         eventually {
+           val event = verifyAndRetrieveEvent
+           event.detail.as(Reads.nullable[JsValue](__ \ "requestHeaders")) shouldBe None
+         }(fiveSecondsPatience, implicitly, implicitly)
+      }
     }
 
     "generate audit events with the device finger print when it is supplied in a request cookie" when {
@@ -183,10 +257,9 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail should contain(
-          "deviceFingerprint" -> ("""{"userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.48 Safari/537.36",""" +
+        event.detail.as(Reads.at[String](__ \ "deviceFingerprint")) shouldBe ("""{"userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.48 Safari/537.36",""" +
             """"language":"en-US","colorDepth":24,"resolution":"800x1280","timezone":0,"sessionStorage":true,"localStorage":true,"indexedDB":true,"platform":"MacIntel",""" +
-            """"doNotTrack":true,"numberOfPlugins":5,"plugins":["Shockwave Flash","Chrome Remote Desktop Viewer","Native Client","Chrome PDF Viewer","QuickTime Plug-in 7.7.1"]}"""))
+            """"doNotTrack":true,"numberOfPlugins":5,"plugins":["Shockwave Flash","Chrome Remote Desktop Viewer","Native Client","Chrome PDF Viewer","QuickTime Plug-in 7.7.1"]}""")
       }
     }
 
@@ -208,7 +281,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceFingerprint" -> "-")
+        event.detail.as(Reads.at[String](__ \ "deviceFingerprint")) shouldBe "-"
       }
     }
 
@@ -217,7 +290,7 @@ class FrontendAuditFilterSpec
         FakeRequest("GET", "/foo").withCookies(
           Cookie(
             DeviceFingerprint.deviceFingerprintCookieName,
-            "THIS IS SOME JUST THAT SHOULDN'T BE DECRYPTABLE *!@&£$)B__!@£$"))
+            "THIS-IS-JUST-SOME-VALUE-THAT-SHOULDN'T-BE-DECRYPTABLE-*!@&$)B__!@$"))
 
       "the request succeeds" taggedAs NonStrictCookies in {
         await(filter.apply(nextAction)(request).run())
@@ -232,7 +305,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceFingerprint" -> "-")
+        event.detail.as(Reads.at[String](__ \ "deviceFingerprint")) shouldBe "-"
       }
     }
 
@@ -263,7 +336,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType               shouldBe "RequestReceived"
-        event.detail("Authorization") shouldBe "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE="
+        event.detail.as(Reads.at[String](__ \ "Authorization")) shouldBe "Bearer fNAao9C4kTby8cqa6g75emw1DZIyA5B72nr9oKHHetE="
         event.tags("X-Session-ID")    shouldBe "mySessionId"
       }
     }
@@ -278,7 +351,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("Location" -> "some url")
+        event.detail.as(Reads.at[String](__ \ "Location")) shouldBe "some url"
       }
     }
 
@@ -302,7 +375,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceID" -> deviceID)
+        event.detail.as(Reads.at[String](__ \ "deviceID")) shouldBe deviceID
       }
     }
 
@@ -324,7 +397,7 @@ class FrontendAuditFilterSpec
       def expected() = eventually {
         val event = verifyAndRetrieveEvent
         event.auditType shouldBe "RequestReceived"
-        event.detail    should contain("deviceID" -> deviceID)
+        event.detail.as(Reads.at[String](__ \ "deviceID")) shouldBe deviceID
       }
     }
   }
@@ -401,7 +474,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "<HTML>...</HTML>")
+        event.detail.as(Reads.at[String](__ \ "responseMessage")) shouldBe "<HTML>...</HTML>"
       }
     }
 
@@ -413,7 +486,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "<HTML>...</HTML>")
+        event.detail.as(Reads.at[String](__ \ "responseMessage")) shouldBe "<HTML>...</HTML>"
       }
     }
 
@@ -428,7 +501,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "<HTML>...</HTML>")
+        event.detail.as(Reads.at[String](__ \ "responseMessage")) shouldBe "<HTML>...</HTML>"
       }
     }
 
@@ -442,7 +515,7 @@ class FrontendAuditFilterSpec
 
       eventually {
         val event = verifyAndRetrieveEvent
-        event.detail should contain("responseMessage" -> "....the response...")
+        event.detail.as(Reads.at[String](__ \ "responseMessage")) shouldBe "....the response..."
       }
     }
   }
@@ -450,33 +523,37 @@ class FrontendAuditFilterSpec
 
 class FrontendAuditFilterServerSpec
   extends AnyWordSpec
-     with FrontendAuditFilterInstance
      with Matchers
      with Eventually
      with IntegrationPatience
      with MockitoSugar
      with GuiceOneServerPerTest
      with BeforeAndAfterEach
-     with BeforeAndAfterAll {
+     with BeforeAndAfterAll
+     with FrontendAuditFilterInstance {
 
-  override def beforeEach(): Unit = {
-    reset(auditConnector)
-  }
+  implicit val system =
+    ActorSystem("FrontendAuditFilterServerSpec")
+
+  implicit val ec: ExecutionContext =
+    system.dispatcher
 
   val client: WSClient = AhcWSClient()
 
   override def afterAll(): Unit = {
     client.close()
+    system.terminate()
     super.afterAll()
   }
 
-  val random                  = new scala.util.Random
-  val largeContent: String    = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize * 3)
-  val standardContent: String = randomString("abcdefghijklmnopqrstuvwxyz0123456789")(filter.maxBodySize - 1)
+  override def beforeEach(): Unit = {
+    reset(auditConnector)
+    super.beforeEach()
+  }
 
-  // Generate a random string of length n from the given alphabet
-  def randomString(alphabet: String)(n: Int): String =
-    Stream.continually(random.nextInt(alphabet.length)).map(alphabet).take(n).mkString
+  val random          = new scala.util.Random
+  val largeContent    = random.alphanumeric.take(filter.maxBodySize * 3).mkString
+  val standardContent = random.alphanumeric.take(filter.maxBodySize - 1).mkString
 
   val Action = stubControllerComponents().actionBuilder
 
@@ -573,40 +650,47 @@ class FrontendAuditFilterServerSpec
 
   def verifyDetailPropertyLength(detailKey: String, length: Int): Unit = {
     val event = verifyAndRetrieveEvent
-    event.detail                                 should not be null
-    event.detail.getOrElse(detailKey, "").length should equal(length)
+    event.detail should not be null
+    val valueAsString =
+      event
+        .detail
+        .as(Reads.nullable[String](__ \ detailKey))
+        .getOrElse("")
+
+    valueAsString.length should equal(length)
   }
 }
 
-trait FrontendAuditFilterInstance extends BeforeAndAfterAll {
-  this: Suite =>
+trait FrontendAuditFilterInstance {
 
-  private val ms = new MockitoSugar {}
-  import ms._
+  val config =
+    Configuration(
+      "auditing.enabled" -> true,
+    ).withFallback(Configuration(ConfigFactory.load()))
 
-  protected implicit val system: ActorSystem = ActorSystem("FrontendAuditFilterInstance")
-  private implicit val ec: ExecutionContext  = system.dispatcher
-  val config                                 = Configuration("auditing.enabled" -> true).withFallback(Configuration.reference)
-  val auditConnector                         = mock[AuditConnector]
-  val controllerConfigs                      = mock[ControllerConfigs]
-  val httpAuditEvent                         = new HttpAuditEvent { override val appName = "app" }
+  val auditConnector             = mock[AuditConnector]
+  val controllerConfigs          = mock[ControllerConfigs]
+  val httpAuditEvent             = new HttpAuditEvent { override val appName = "app" }
+  lazy val requestHeaderAuditing = new RequestHeaderAuditing(
+                                     new RequestHeaderAuditing.Config(config), new DefaultCookieHeaderEncoding()
+                                   )
 
-  when(controllerConfigs.controllerNeedsAuditing(any[String]))
-    .thenReturn(false)
-
-  protected val filter: FrontendAuditFilter =
-    new DefaultFrontendAuditFilter(config, controllerConfigs, auditConnector, httpAuditEvent, implicitly[Materializer]) {
+  protected def filter(implicit system: ActorSystem, ec: ExecutionContext): FrontendAuditFilter =
+    new DefaultFrontendAuditFilter(
+      config,
+      controllerConfigs,
+      auditConnector,
+      httpAuditEvent,
+      requestHeaderAuditing,
+      implicitly[Materializer]
+    ) {
       override val maskedFormFields: Seq[String] = Seq("password")
       override val applicationPort: Option[Int]  = Some(80)
     }
 
-  protected def verifyAndRetrieveEvent: DataEvent = {
-    val captor = ArgCaptor[DataEvent]
-    verify(auditConnector).sendEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
+  protected def verifyAndRetrieveEvent: ExtendedDataEvent = {
+    val captor = ArgCaptor[ExtendedDataEvent]
+    verify(auditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
     captor.value
-  }
-
-  override def afterAll(): Unit = {
-    system.terminate()
   }
 }

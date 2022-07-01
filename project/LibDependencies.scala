@@ -2,10 +2,10 @@ import sbt._
 
 object LibDependencies {
 
-  private val play28Version  = "2.8.15"
-  private val httpVerbsVersion = "13.12.0"
-  private val akkaVersion = "2.6.19"
-  private val jacksonVersion = "2.12.6"
+  private val play28Version          = "2.8.15"
+  private val httpVerbsVersion       = "14.3.0"
+  private val akkaVersion            = "2.6.19"
+  private val jacksonVersion         = "2.12.6"
   private val jacksonDatabindVersion = "2.12.6.1"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
@@ -21,12 +21,11 @@ object LibDependencies {
       "ch.qos.logback"          %  "logback-core"               % "1.2.3",
       "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2", // this is compatible with play 2.8
       "com.typesafe.play"       %% "play-guice"                 % playVersion,
-      "com.typesafe.play"       %% "play-ahc-ws"                % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
-      "uk.gov.hmrc"             %% "auth-client"                % s"5.10.0-$playSuffix",
+      "uk.gov.hmrc"             %% "auth-client"                % s"5.12.0-$playSuffix",
       "uk.gov.hmrc"             %% "crypto"                     % "6.1.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "7.11.0",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.3.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",

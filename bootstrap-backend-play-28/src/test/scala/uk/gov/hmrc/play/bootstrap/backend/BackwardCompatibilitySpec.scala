@@ -23,10 +23,10 @@ import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
-import play.api.libs.json.OFormat
+import play.api.libs.json.{JsObject, OFormat}
 import play.api.mvc.{ControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.model.DataEvent
+import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 
 import scala.concurrent.ExecutionContext
 
@@ -78,22 +78,24 @@ class BackwardCompatibilitySpec
     "preserve uk.gov.hmrc.play.bootstrap.filters.microservice.MicroserviceAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.microservice.MicroserviceAuditFilter {
         override def ec             = mock[ExecutionContext]
-        override def config         = mock[Configuration]
+        override def config         = Configuration(ConfigFactory.load())
         override def auditConnector = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector]
         override def mat            = mock[Materializer]
         override def controllerNeedsAuditing(controllerName: String): Boolean = true
-        override def dataEvent(
+        override def extendedDataEvent(
           eventType      : String,
           transactionName: String,
           request        : RequestHeader,
-          detail         : Map[String,String]
-        )(implicit hc: HeaderCarrier): DataEvent = mock[DataEvent]
+          detail         : JsObject,
+          truncationLog  : TruncationLog,
+          redactionLog   : RedactionLog
+        )(implicit hc: HeaderCarrier): ExtendedDataEvent = mock[ExtendedDataEvent]
       }
     }
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.microservice.DefaultMicroserviceAuditFilter" in {
       new uk.gov.hmrc.play.bootstrap.filters.microservice.DefaultMicroserviceAuditFilter(
-        config            = mock[Configuration],
+        config            = Configuration(ConfigFactory.load()),
         controllerConfigs = mock[uk.gov.hmrc.play.bootstrap.config.ControllerConfigs],
         auditConnector    = mock[uk.gov.hmrc.play.audit.http.connector.AuditConnector],
         httpAuditEvent    = mock[uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent],

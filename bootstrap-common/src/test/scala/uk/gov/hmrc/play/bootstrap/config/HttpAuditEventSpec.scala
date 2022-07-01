@@ -19,27 +19,36 @@ package uk.gov.hmrc.play.bootstrap.config
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.libs.json.{Reads, __}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
 class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerSuite {
 
-  "The code to generate an audit event" should {
+  "The code to generate audit events" should {
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     object HttpAuditEventForTest extends HttpAuditEvent {
       override def appName: String = "my-test-app"
     }
 
-    "create a valid audit event with optional headers" in {
+    "create valid audit events with optional headers" in {
       val request =
         FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh", "Surrogate" -> "Cool", "Surrogate" -> "Cool")
+
+      val extendedEvent = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
+      extendedEvent.detail.as(Reads.at[String](__ \ "surrogate")) shouldBe "Cool,Cool"
+
       val event = HttpAuditEventForTest.dataEvent("foo", "bar", request)
-      event.detail.get("surrogate") shouldBe Some("Cool,Cool") //FRIC - play 2.5 now comman delimits multiple headers with the same name into a single header
+      event.detail.get("surrogate") shouldBe Some("Cool,Cool")
     }
 
-    "create a valid audit event with no optional headers" in {
-      val request     = FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh")
+    "create valid audit events with no optional headers" in {
+      val request = FakeRequest().withHeaders("Foo" -> "Bar", "Ehh" -> "Meh")
+
+      val extendedEvent = HttpAuditEventForTest.extendedEvent("foo", "bar", request)
+      extendedEvent.detail.as(Reads.nullable[String](__ \ "surrogate")) shouldBe None
+
       val event = HttpAuditEventForTest.dataEvent("foo", "bar", request)
       event.detail.get("surrogate") shouldBe None
     }
