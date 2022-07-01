@@ -194,7 +194,7 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
-### Version 8.0.0
+### Version 6.0.0
 
 #### http-verbs
 

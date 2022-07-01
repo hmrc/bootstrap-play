@@ -8,7 +8,7 @@ val scala2_13 = "2.13.8"
 
 lazy val commonSettings = Seq(
   organization := "uk.gov.hmrc",
-  majorVersion := 5,
+  majorVersion := 6,
   isPublicArtefact := true,
   scalaVersion := scala2_12,
   crossScalaVersions := Seq(scala2_12, scala2_13),
