@@ -3,7 +3,7 @@ import sbt._
 object LibDependencies {
 
   private val play28Version          = "2.8.15"
-  private val httpVerbsVersion       = "14.4.0"
+  private val httpVerbsVersion       = "14.5.0"
   private val akkaVersion            = "2.6.19"
   private val jacksonVersion         = "2.12.6"
   private val jacksonDatabindVersion = "2.12.6.1"
