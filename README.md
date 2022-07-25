@@ -194,6 +194,16 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 7.0.0
+
+#### crypto
+
+Crypto has been updated to version 7.0.0.
+
+If clients have been using `json-encryption`, they should use `crypto-play-xx` instead for compatibility.
+
+See [crypto](https://github.com/hmrc/crypto).
+
 ### Version 6.0.0
 
 #### http-verbs

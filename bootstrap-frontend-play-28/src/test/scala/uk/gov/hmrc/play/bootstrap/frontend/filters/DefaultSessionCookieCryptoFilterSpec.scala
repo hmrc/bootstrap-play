@@ -82,7 +82,11 @@ class DefaultSessionCookieCryptoFilterSpec
     val Action = stubControllerComponents().actionBuilder
 
     new GuiceApplicationBuilder()
-      .configure("cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==")
+      .configure(
+        "cookie.encryption.key"         -> "gvBoGdgzqG1AarzF1LY0zQ==",
+        "sso.encryption.key"            -> "gvBoGdgzqG1AarzF1LY0zQ==",
+        "queryParameter.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
+      )
       .router(Router.from {
         case GET(p"/") =>
           Action { implicit request =>
