@@ -204,6 +204,8 @@ If clients have been using `json-encryption`, they should use `crypto-play-xx` i
 
 See [crypto](https://github.com/hmrc/crypto).
 
+Note, `commons-codec` is no longer provided as a transitive dependency, and will need adding explicitly if clients require it.
+
 ### Version 6.0.0
 
 #### http-verbs

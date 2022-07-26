@@ -29,7 +29,6 @@ object LibDependencies {
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
-      "commons-codec"           %  "commons-codec"              % "1.15",
 
       //jackson overrides (CVE-2020-36518 mitigation)
       "com.fasterxml.jackson.core"       %  "jackson-core"                   % jacksonVersion,
