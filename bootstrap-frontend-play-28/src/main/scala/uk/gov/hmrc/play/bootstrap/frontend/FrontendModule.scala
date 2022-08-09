@@ -20,7 +20,7 @@ import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.crypto.ApplicationCrypto
 import uk.gov.hmrc.play.bootstrap.BootstrapModule
-import uk.gov.hmrc.play.bootstrap.config.{CryptoValidation, DeprecatedConfigChecker}
+import uk.gov.hmrc.play.bootstrap.config.DeprecatedConfigChecker
 import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
 import uk.gov.hmrc.play.bootstrap.frontend.filters.{DefaultFrontendAuditFilter, SessionTimeoutFilterConfig}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.{ApplicationCryptoProvider, DefaultSessionCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoFilter, SessionCookieCryptoProvider}
@@ -36,7 +36,6 @@ class FrontendModule extends BootstrapModule {
       bind[SessionCookieCryptoFilter ].to[DefaultSessionCookieCryptoFilter],
       bind[DeviceIdFilter            ].to[DefaultDeviceIdFilter],
       bind[SessionTimeoutFilterConfig].toInstance(SessionTimeoutFilterConfig.fromConfig(configuration)),
-      bind[CryptoValidation          ].toSelf.eagerly(),
       bind[DeprecatedConfigChecker   ].toInstance(
           new DeprecatedConfigChecker(
             configuration,

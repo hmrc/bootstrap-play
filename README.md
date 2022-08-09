@@ -194,6 +194,22 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 7.0.0
+
+#### crypto
+
+Crypto has been updated to version 7.0.0.
+
+If clients are using `json-encryption`, they should ensure they are using at least version `5.0.0`, or `crypto-play-xx` instead for compatibility.
+
+See [crypto](https://github.com/hmrc/crypto).
+
+Note, `commons-codec` is no longer provided as a transitive dependency, and will need adding explicitly if clients require it.
+
+#### form bindings
+
+`WithDefaultFormBinding` has been removed. `WithUnsafeDefaultFormBinding` should be used instead.
+
 ### Version 6.0.0
 
 #### http-verbs

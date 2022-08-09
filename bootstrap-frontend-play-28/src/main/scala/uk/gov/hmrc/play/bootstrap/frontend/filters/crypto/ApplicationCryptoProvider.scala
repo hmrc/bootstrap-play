@@ -20,6 +20,12 @@ import javax.inject.{Inject, Provider}
 import play.api.Configuration
 import uk.gov.hmrc.crypto.ApplicationCrypto
 
-class ApplicationCryptoProvider @Inject()(configuration: Configuration) extends Provider[ApplicationCrypto] {
-  def get(): ApplicationCrypto = new ApplicationCrypto(configuration.underlying)
+class ApplicationCryptoProvider @Inject()(
+  configuration: Configuration
+) extends Provider[ApplicationCrypto] {
+
+  private val crypto = new ApplicationCrypto(configuration.underlying)
+  crypto.verifyConfiguration()
+
+  def get(): ApplicationCrypto = crypto
 }

@@ -17,15 +17,16 @@
 package uk.gov.hmrc.play.bootstrap.config
 
 import com.typesafe.config.{ConfigException, ConfigValue, ConfigValueType}
-import org.apache.commons.codec.binary.Base64
 import play.api.Configuration
+
+import java.util.Base64
 
 trait Base64ConfigDecoder {
 
   private val suffix: String = ".base64"
 
   private def decode(value: String): String =
-    new String(Base64.decodeBase64(value))
+    new String(Base64.getDecoder.decode(value))
 
   private def decode(value: ConfigValue): Option[Any] = {
 

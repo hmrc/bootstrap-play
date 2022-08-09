@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
-import java.security.MessageDigest
-import java.util.UUID
-
-import org.apache.commons.codec.binary.Base64
 import play.api.mvc.Cookie
 
+import java.security.MessageDigest
+import java.util.{Base64, UUID}
 import scala.util.Try
 
 /**
@@ -53,7 +51,7 @@ object DeviceId {
   def generateHash(uuid: String, timestamp: Long, secret: String) = {
     val oneWayHash = s"$MdtpDeviceId$Token1$uuid$Token1$timestamp"
     val digest     = MessageDigest.getInstance("MD5").digest((oneWayHash + secret).getBytes)
-    new String(Base64.encodeBase64(digest))
+    Base64.getEncoder.encodeToString(digest)
   }
 
   def deviceIdHashIsValid(hash: String, uuid: String, timestamp: Long, secret: String, previousSecrets: Seq[String]) = {
@@ -63,8 +61,8 @@ object DeviceId {
   }
 
   def from(value: String, secret: String, previousSecrets: Seq[String]) = {
-
-    def isValidPrefix(prefix: String) = prefix == MdtpDeviceId
+    def isValidPrefix(prefix: String) =
+      prefix == MdtpDeviceId
 
     def isValid(prefix: String, uuid: String, timestamp: String, hash: String) =
       isValidPrefix(prefix) && validUuid(uuid) && validLongTime(timestamp) && deviceIdHashIsValid(
@@ -81,8 +79,9 @@ object DeviceId {
     }
   }
 
-  private def validUuid(uuid: String) = Try { UUID.fromString(uuid) }.isSuccess
+  private def validUuid(uuid: String) =
+    Try(UUID.fromString(uuid)).isSuccess
 
-  private def validLongTime(timestamp: String) = Try { timestamp.toLong }.isSuccess
-
+  private def validLongTime(timestamp: String) =
+    Try(timestamp.toLong).isSuccess
 }

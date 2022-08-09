@@ -30,12 +30,6 @@ trait WithUrlEncodedOnlyFormBinding { self: BaseControllerHelpers =>
   override implicit lazy val defaultFormBinding: FormBinding = new UrlEncodedOnlyFormBinding
 }
 
-@deprecated("Use uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding instead", "6.3.1")
-trait WithDefaultFormBinding { self: BaseControllerHelpers =>
-
-  override implicit lazy val defaultFormBinding: FormBinding = new DefaultFormBinding(parse.DefaultMaxTextLength)
-}
-
 trait WithUnsafeDefaultFormBinding { self: BaseControllerHelpers =>
 
   override implicit lazy val defaultFormBinding: FormBinding = new DefaultFormBinding(parse.DefaultMaxTextLength)
