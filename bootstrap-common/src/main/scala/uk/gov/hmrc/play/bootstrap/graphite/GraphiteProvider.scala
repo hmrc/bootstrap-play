@@ -17,7 +17,6 @@
 package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.codahale.metrics.graphite.Graphite
-import com.github.ghik.silencer.silent
 import javax.inject.{Inject, Provider}
 import play.api.Configuration
 
@@ -36,7 +35,7 @@ object GraphiteProviderConfig {
       port = graphiteConfiguration.get[Int]("port")
     )
 
-  @silent("deprecated")
+  @annotation.nowarn("msg=deprecated")
   def fromRootConfig(config: Configuration): GraphiteProviderConfig =
     fromConfig(
       config
