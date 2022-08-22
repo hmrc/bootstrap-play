@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play
 
-import com.github.ghik.silencer.silent
 import javax.inject.{Inject, Named, Provider, Singleton}
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 
@@ -85,7 +84,7 @@ package bootstrap {
 }
 
 package object bootstrap {
-  @silent("deprecated")
+  @annotation.nowarn("msg=deprecated")
   val deprecatedClasses: Map[String, String] =
     Map(
       classOf[uk.gov.hmrc.play.bootstrap.AuditModule].getName -> classOf[uk.gov.hmrc.play.audit.AuditModule].getName,

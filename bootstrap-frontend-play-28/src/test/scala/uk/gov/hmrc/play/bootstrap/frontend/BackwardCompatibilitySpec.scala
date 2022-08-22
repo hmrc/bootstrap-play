@@ -17,7 +17,6 @@
 package uk.gov.hmrc.play.bootstrap.frontend
 
 import akka.stream.Materializer
-import com.github.ghik.silencer.silent
 import com.typesafe.config.ConfigFactory
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
@@ -32,7 +31,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing
 
 import scala.concurrent.ExecutionContext
 
-@silent("deprecated")
+@annotation.nowarn("msg=deprecated")
 class BackwardCompatibilitySpec
   extends AnyWordSpecLike
      with Matchers

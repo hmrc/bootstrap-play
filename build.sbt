@@ -1,5 +1,3 @@
-val silencerVersion = "1.7.9"
-
 val scala2_12 = "2.12.16"
 val scala2_13 = "2.13.8"
 
@@ -9,11 +7,7 @@ lazy val commonSettings = Seq(
   isPublicArtefact := true,
   scalaVersion := scala2_12,
   crossScalaVersions := Seq(scala2_12, scala2_13),
-  scalacOptions ++= Seq("-feature"),
-  libraryDependencies ++= Seq(
-    compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-    "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-  )
+  scalacOptions ++= Seq("-feature")
 )
 
 lazy val library = (project in file("."))
