@@ -47,7 +47,6 @@ object LibDependencies {
       "org.mockito"             %% "mockito-scala-scalatest"    % "1.16.23"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.35.10"      % Test,
       "org.scalacheck"          %% "scalacheck"                 % "1.15.2"       % Test,
-      "org.mockito"             %% "mockito-scala-scalatest"    % "1.16.49"      % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playVersion) % Test,
       "org.scalatestplus"       %% "scalatestplus-scalacheck"   % "3.1.0.0-RC2"  % Test
     )
