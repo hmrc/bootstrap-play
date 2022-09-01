@@ -20,37 +20,21 @@ import java.util.UUID
 
 import javax.inject.Inject
 import akka.stream.Materializer
-import play.api.Logger
 import play.api.mvc._
-import uk.gov.hmrc.http.HeaderNames.{xRequestId, xRequestTimestamp}
+import uk.gov.hmrc.http.HeaderNames
 
 import scala.concurrent.Future
 
 class HeadersFilter @Inject()(override val mat: Materializer) extends Filter {
 
-  private val logger = Logger(this.getClass)
+  override def apply(next: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
+    def ifMissing(header: String, value: => String): Seq[(String, String)] =
+      if (!rh.headers.hasHeader(header)) Seq(header -> value) else Seq.empty
 
-  override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+    val newHeaders =
+      ifMissing(HeaderNames.xRequestId       , s"govuk-tax-${UUID.randomUUID().toString}") ++
+      ifMissing(HeaderNames.xRequestTimestamp, System.nanoTime().toString)
 
-    val request = rh.session.get(xRequestId) match {
-      case Some(_) =>
-        // BDOG-836: safety check monitoring prior to removal of (what we believe is) an unnecessary session lookup
-        logger.warn(s"Not allocating an $xRequestId header as one unexpectedly exists in the session")
-        rh
-      case None =>
-        rh.withHeaders(rh.headers.add(newHeaders: _*))
-    }
-
-    next(request)
-  }
-
-  protected def newHeaders: Seq[(String, String)] = {
-
-    val rid = s"govuk-tax-${UUID.randomUUID().toString}"
-
-    Seq(
-      xRequestId        -> rid,
-      xRequestTimestamp -> System.nanoTime().toString
-    )
+    next(rh.withHeaders(rh.headers.add(newHeaders: _*)))
   }
 }
