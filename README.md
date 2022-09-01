@@ -194,6 +194,10 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 7.2.0
+
+Adds `AsyncFrontendErrorHandler` as an async alternative to `FrontendErrorHandler`
+
 ### Version 7.0.0
 
 #### crypto

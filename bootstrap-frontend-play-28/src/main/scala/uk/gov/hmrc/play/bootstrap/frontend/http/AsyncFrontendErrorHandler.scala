@@ -20,56 +20,55 @@ import play.api.http.HeaderNames.CACHE_CONTROL
 import play.api.http.HttpErrorHandler
 import play.api.i18n.{I18nSupport, Messages}
 import play.api.mvc.Results.{BadRequest, InternalServerError, NotFound}
-import play.api.mvc.{Request, RequestHeader, Result, Results}
+import play.api.mvc.{RequestHeader, Result, Results}
 import play.api.{Logger, PlayException}
 import play.twirl.api.Html
 
-import scala.concurrent.Future
-import scala.language.implicitConversions
+import scala.concurrent.{ExecutionContext, Future}
 
-abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
+abstract class AsyncFrontendErrorHandler extends HttpErrorHandler with I18nSupport {
 
   private val logger = Logger(getClass)
 
+  protected implicit val ec: ExecutionContext
+
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
     statusCode match {
-      case play.mvc.Http.Status.BAD_REQUEST => Future.successful(BadRequest(badRequestTemplate(request)))
-      case play.mvc.Http.Status.NOT_FOUND   => Future.successful(NotFound(notFoundTemplate(request)))
-      case _                                => Future.successful(Results.Status(statusCode)(fallbackClientErrorTemplate(request)))
+      case play.mvc.Http.Status.BAD_REQUEST => badRequestTemplate(request).map(BadRequest(_))
+      case play.mvc.Http.Status.NOT_FOUND   => notFoundTemplate(request).map(NotFound(_))
+      case _                                => fallbackClientErrorTemplate(request).map(Results.Status(statusCode)(_))
     }
 
   override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = {
     logError(request, exception)
-    Future.successful(resolveError(request, exception))
+    resolveError(request, exception)
   }
 
-  private implicit def rhToRequest(rh: RequestHeader): Request[_] = Request(rh, "")
-
   /** To be provided to wire up to a View */
-  def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: Request[_]): Html
+  def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: RequestHeader): Future[Html]
 
-  def badRequestTemplate(implicit request: Request[_]): Html =
+  def badRequestTemplate(implicit request: RequestHeader): Future[Html] =
     standardErrorTemplate(
       Messages("global.error.badRequest400.title"),
       Messages("global.error.badRequest400.heading"),
       Messages("global.error.badRequest400.message")
     )
 
-  def notFoundTemplate(implicit request: Request[_]): Html =
+  def notFoundTemplate(implicit request: RequestHeader): Future[Html] =
     standardErrorTemplate(
       Messages("global.error.pageNotFound404.title"),
       Messages("global.error.pageNotFound404.heading"),
       Messages("global.error.pageNotFound404.message")
     )
 
-  def fallbackClientErrorTemplate(implicit request: Request[_]): Html =
+  def fallbackClientErrorTemplate(implicit request: RequestHeader): Future[Html] =
     standardErrorTemplate(
       Messages("global.error.fallbackClientError4xx.title"),
       Messages("global.error.fallbackClientError4xx.heading"),
       Messages("global.error.fallbackClientError4xx.message")
     )
 
-  def internalServerErrorTemplate(implicit request: Request[_]): Html =
+  def internalServerErrorTemplate(implicit request: RequestHeader): Future[Html] =
     standardErrorTemplate(
       Messages("global.error.InternalServerError500.title"),
       Messages("global.error.InternalServerError500.heading"),
@@ -83,7 +82,8 @@ abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
           |! %sInternal server error, for (%s) [%s] ->
           | """
         .stripMargin
-        .format(ex match {
+        .format(
+          ex match {
             case p: PlayException => "@" + p.id + " - "
             case _                => ""
           },
@@ -93,12 +93,11 @@ abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
       ex
     )
 
-  def resolveError(rh: RequestHeader, ex: Throwable): Result =
+  def resolveError(rh: RequestHeader, ex: Throwable): Future[Result] =
     ex match {
-      case ApplicationException(result, _) => result
+      case ApplicationException(result, _) => Future.successful(result)
       case _ =>
-        InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
+        internalServerErrorTemplate(rh)
+          .map(html => InternalServerError(html).withHeaders(CACHE_CONTROL -> "no-cache"))
     }
 }
-
-case class ApplicationException(result: Result, message: String) extends Exception(message)
