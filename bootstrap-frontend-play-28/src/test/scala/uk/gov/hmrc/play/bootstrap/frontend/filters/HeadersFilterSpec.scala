@@ -18,13 +18,13 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import javax.inject.Inject
 import org.scalatest.OptionValues
-import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsNull, Json}
+import play.api.libs.json.Json
 import play.api.mvc.Results
 import play.api.routing.Router
 import play.api.test.FakeRequest
@@ -56,13 +56,12 @@ class HeadersFilterSpec
           case GET(p"/test") =>
             Action { request =>
               val headers = request.headers.toMap
-                .filterKeys(Seq(HeaderNames.xRequestId, HeaderNames.xRequestTimestamp).contains)
-
               Results.Ok(
                 Json.obj(
                   HeaderNames.xRequestId        -> headers.get(HeaderNames.xRequestId),
                   HeaderNames.xRequestTimestamp -> headers.get(HeaderNames.xRequestTimestamp)
-                ))
+                )
+              )
             }
         }
       )
@@ -73,21 +72,33 @@ class HeadersFilterSpec
   }
 
   ".apply" must {
-
-    "add headers to a request which doesn't already have an xRequestId header" in {
+    "add x-request-id to a request which doesn't already have an x-request-id header" in {
       val result = route(app, FakeRequest(GET, "/test")).value
       val body   = contentAsJson(result)
 
-      (body \ HeaderNames.xRequestId).toOption mustBe defined
-      (body \ HeaderNames.xRequestTimestamp).toOption mustBe defined
+      println(s"x=" + (body \ HeaderNames.xRequestId).toOption)
+      (body \ HeaderNames.xRequestId).as[Seq[String]] should not be empty
     }
 
-    "not add headers to a request which already has an xRequestId header" in {
-      val result = route(app, FakeRequest(GET, "/test").withSession(HeaderNames.xRequestId -> "foo")).value
+    "not add x-request-id to a request which already has an x-request-id header" in {
+      val result = route(app, FakeRequest(GET, "/test").withHeaders(HeaderNames.xRequestId -> "foo")).value
       val body   = contentAsJson(result)
 
-      (body \ HeaderNames.xRequestId).get mustEqual JsNull
-      (body \ HeaderNames.xRequestTimestamp).get mustEqual JsNull
+      (body \ HeaderNames.xRequestId).get.as[Seq[String]] shouldBe Seq("foo")
+    }
+
+    "add x-request-timestamp to a request which doesn't already have an x-request-timestamp header" in {
+      val result = route(app, FakeRequest(GET, "/test")).value
+      val body   = contentAsJson(result)
+
+      (body \ HeaderNames.xRequestTimestamp).as[Seq[String]] should not be empty
+    }
+
+    "not add x-request-timestamp to a request which already has an x-request-timestamp header" in {
+      val result = route(app, FakeRequest(GET, "/test").withHeaders(HeaderNames.xRequestTimestamp -> "foo")).value
+      val body   = contentAsJson(result)
+
+      (body \ HeaderNames.xRequestTimestamp).as[Seq[String]] shouldBe Seq("foo")
     }
   }
 }
