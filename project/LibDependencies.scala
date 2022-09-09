@@ -23,7 +23,7 @@ object LibDependencies {
       "com.typesafe.play"       %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
       "uk.gov.hmrc"             %% "auth-client"                % s"5.12.0-$playSuffix",
-      "uk.gov.hmrc"             %% "crypto"                     % "7.1.0",
+      "uk.gov.hmrc"             %% "crypto"                     % "7.2.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.3.0",
       // the following are not used by bootstrap - but transitively added for clients
@@ -47,7 +47,6 @@ object LibDependencies {
       "org.mockito"             %% "mockito-scala-scalatest"    % "1.16.23"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.35.10"      % Test,
       "org.scalacheck"          %% "scalacheck"                 % "1.15.2"       % Test,
-      "org.mockito"             %% "mockito-scala-scalatest"    % "1.16.49"      % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playVersion) % Test,
       "org.scalatestplus"       %% "scalatestplus-scalacheck"   % "3.1.0.0-RC2"  % Test
     )
