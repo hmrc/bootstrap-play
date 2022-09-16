@@ -55,7 +55,10 @@ class FrontendFilters @Inject()(
     Seq(
       metricsFilter,
       sessionCookieCryptoFilter,
-      headersFilter,
+      headersFilter
+    ) ++
+    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
+    Seq(
       deviceIdFilter,
       loggingFilter,
       frontendAuditFilter,
@@ -66,8 +69,8 @@ class FrontendFilters @Inject()(
       cacheControlFilter,
       mdcFilter
     ) ++
-    whenEnabled("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig) ++
-    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
+    whenEnabled("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig)
+
 
   private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =
     if (configuration.get[Boolean](key)) Seq(filter)

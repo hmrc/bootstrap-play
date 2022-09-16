@@ -17,12 +17,15 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import javax.inject.Inject
+import play.api.Logger
 import play.api.http.HttpFilters
 
 class FiltersVerifier @Inject() (
   filters: HttpFilters
 ) {
+  private val logger = Logger(getClass)
+
   if (filters.filters.map(_.getClass.getSimpleName).filter(_ == "SessionIdFilter").size > 1)
     // or just warn if this is harmless
-    sys.error("Two SessionIdFilters have been enabled. If you are explicitly adding this filter, you can probably remove this and rely on the one provided by bootstrap-play.")
+    logger.warn("Two SessionIdFilters have been enabled. If you are explicitly adding this filter, you can probably remove this and rely on the one provided by bootstrap-play.")
 }

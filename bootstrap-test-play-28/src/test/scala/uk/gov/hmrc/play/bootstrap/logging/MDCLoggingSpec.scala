@@ -29,7 +29,7 @@ import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Results
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames}
+import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames, SessionKeys}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -58,9 +58,6 @@ abstract class MDCLoggingSpec
       import play.api.routing._
       import play.api.routing.sird._
 
-      //implicit val mw: Writes[Map[String, String]] =
-      //  Writes.genericMapWrites
-
       Router.from {
         case GET(p"/") =>
           Action {
@@ -77,7 +74,6 @@ abstract class MDCLoggingSpec
     }
 
     "injected dispatchers should be ready to use without calling prepare" in {
-
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .build()
@@ -105,7 +101,6 @@ abstract class MDCLoggingSpec
     }
 
     "must pass MDC information between thread contexts" in {
-
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .build()
@@ -128,7 +123,6 @@ abstract class MDCLoggingSpec
     }
 
     "must add all request information to the MDC" in {
-
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .configure(
@@ -141,10 +135,9 @@ abstract class MDCLoggingSpec
 
         val request = FakeRequest(GET, "/")
           .withHeaders(
-            HMRCHeaderNames.xSessionId    -> "some session id",
             HMRCHeaderNames.xRequestId    -> "some request id",
             HMRCHeaderNames.xForwardedFor -> "some forwarded for"
-          )
+          ).withSession(SessionKeys.sessionId -> "some session id") // TODO This actually works for Backends too - it shouldn't...
 
         val result = route(app, request).value
 
@@ -163,7 +156,6 @@ abstract class MDCLoggingSpec
     }
 
     "must not include logger.json.dateformat in MDC if it is undefined" in {
-
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .router(router)
@@ -173,10 +165,9 @@ abstract class MDCLoggingSpec
 
         val request = FakeRequest(GET, "/")
           .withHeaders(
-            HMRCHeaderNames.xSessionId    -> "some session id",
             HMRCHeaderNames.xRequestId    -> "some request id",
             HMRCHeaderNames.xForwardedFor -> "some forwarded for"
-          )
+          ).withSession(SessionKeys.sessionId -> "some session id") // TODO This actually works for Backends too - it shouldn't...
 
         val result = route(app, request).value
 

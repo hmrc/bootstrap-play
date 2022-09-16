@@ -40,7 +40,7 @@ object SessionIdFilterSpec {
 
   val sessionId = "28836767-a008-46be-ac18-695ab140e705"
 
-  class Filters @Inject() (sessionId: SessionIdFilter) extends DefaultHttpFilters(sessionId)
+  class Filters @Inject() (sessionIdFilter: SessionIdFilter) extends DefaultHttpFilters(sessionIdFilter)
 
   class TestSessionIdFilter @Inject()(
     override val mat: Materializer,
@@ -82,11 +82,8 @@ class SessionIdFilterSpec extends AnyWordSpec with Matchers with OptionValues wi
 
     new GuiceApplicationBuilder()
       .overrides(
-        bind[HttpFilters].to[SessionIdFilterSpec.Filters], // TODO Should it be added to default filters?
+        bind[HttpFilters].to[Filters],
         bind[SessionIdFilter].to[TestSessionIdFilter]
-      )
-      .configure(
-        "play.filters.disabled" -> List("uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter")
       )
       .router(components.router)
       .build()
