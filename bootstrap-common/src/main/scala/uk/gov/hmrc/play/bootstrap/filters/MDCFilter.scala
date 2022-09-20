@@ -33,12 +33,6 @@ class MDCFilter @Inject()(
   @Named("appName") appName: String
 ) extends Filter {
 
-  private val dateFormat: Option[String] = config.getOptional[String]("logger.json.dateformat")
-
-  private val extras: Set[(String, String)] =
-    Set("appName" -> appName) ++
-    dateFormat.map("logger.json.dateformat" -> _).toSet
-
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
 
     val hc =
@@ -48,7 +42,7 @@ class MDCFilter @Inject()(
       hc.requestId.map(HeaderNames.xRequestId    -> _.value),
       hc.sessionId.map(HeaderNames.xSessionId    -> _.value),
       hc.forwarded.map(HeaderNames.xForwardedFor -> _.value)
-    ).flatten ++ extras
+    ).flatten
 
     data.foreach {
       case (k, v) =>
