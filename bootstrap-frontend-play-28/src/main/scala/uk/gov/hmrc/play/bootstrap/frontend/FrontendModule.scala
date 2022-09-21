@@ -21,8 +21,8 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.crypto.ApplicationCrypto
 import uk.gov.hmrc.play.bootstrap.BootstrapModule
 import uk.gov.hmrc.play.bootstrap.config.DeprecatedConfigChecker
-import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
-import uk.gov.hmrc.play.bootstrap.frontend.filters.{DefaultFrontendAuditFilter, FiltersVerifier, SessionTimeoutFilterConfig}
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, MDCFilter}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.{DefaultFrontendAuditFilter, FiltersVerifier, FrontendMdcFilter, SessionTimeoutFilterConfig}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.{ApplicationCryptoProvider, DefaultSessionCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoFilter, SessionCookieCryptoProvider}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.{DefaultDeviceIdFilter, DeviceIdFilter}
 
@@ -31,6 +31,7 @@ class FrontendModule extends BootstrapModule {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     super.bindings(environment, configuration) ++ Seq(
       bind[AuditFilter               ].to[DefaultFrontendAuditFilter],
+      bind[MDCFilter                 ].to[FrontendMdcFilter],
       bind[ApplicationCrypto         ].toProvider[ApplicationCryptoProvider],
       bind[SessionCookieCrypto       ].toProvider[SessionCookieCryptoProvider],
       bind[SessionCookieCryptoFilter ].to[DefaultSessionCookieCryptoFilter],

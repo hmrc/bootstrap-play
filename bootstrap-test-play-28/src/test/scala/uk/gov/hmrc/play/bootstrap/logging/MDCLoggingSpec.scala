@@ -41,22 +41,21 @@ abstract class MDCLoggingSpec
      with OptionValues
      with BeforeAndAfterEach {
 
-  private val Action = stubControllerComponents().actionBuilder
-
   override def beforeEach(): Unit =
     MDC.clear()
 
   override def afterEach(): Unit =
     MDC.clear()
 
-  def anApplicationWithMDCLogging(configFile: String): Unit = {
+  def anApplicationWithMDCLogging(configFile: String, isFrontend: Boolean): Unit = {
 
     val config = Configuration(ConfigFactory.load(configFile))
 
     lazy val router = {
-
       import play.api.routing._
       import play.api.routing.sird._
+
+      val Action = stubControllerComponents().actionBuilder
 
       Router.from {
         case GET(p"/") =>
@@ -126,11 +125,19 @@ abstract class MDCLoggingSpec
 
       running(app) {
         val request =
-          FakeRequest(GET, "/")
-            .withHeaders(
-              HMRCHeaderNames.xRequestId    -> "some request id",
-              HMRCHeaderNames.xForwardedFor -> "some forwarded for"
-            ).withSession(SessionKeys.sessionId -> "some session id") // TODO This actually works for Backends too - it shouldn't...
+          if (isFrontend)
+            FakeRequest(GET, "/")
+              .withHeaders(
+                HMRCHeaderNames.xRequestId    -> "some request id",
+                HMRCHeaderNames.xForwardedFor -> "some forwarded for"
+              ).withSession(SessionKeys.sessionId -> "some session id")
+          else
+            FakeRequest(GET, "/")
+              .withHeaders(
+                HMRCHeaderNames.xSessionId    -> "some session id",
+                HMRCHeaderNames.xRequestId    -> "some request id",
+                HMRCHeaderNames.xForwardedFor -> "some forwarded for"
+              )
 
         val result = route(app, request).value
 

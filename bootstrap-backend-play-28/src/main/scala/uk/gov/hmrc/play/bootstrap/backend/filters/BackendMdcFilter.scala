@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.backend.logging
+package uk.gov.hmrc.play.bootstrap.backend.filters
 
-import uk.gov.hmrc.play.bootstrap.logging.MDCLoggingSpec
+import akka.stream.Materializer
+import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
+import uk.gov.hmrc.play.bootstrap.filters.MDCFilter
 
-class MDCBackendLoggingSpec extends MDCLoggingSpec {
-  "a microservice" must {
-    behave like anApplicationWithMDCLogging("backend.test.conf", isFrontend = false)
-  }
-}
+@Singleton
+class BackendMdcFilter @Inject()(
+  override val mat: Materializer
+) extends MDCFilter
+     with BackendHeaderCarrierProvider
