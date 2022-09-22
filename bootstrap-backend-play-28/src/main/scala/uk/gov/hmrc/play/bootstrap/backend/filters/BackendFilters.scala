@@ -39,5 +39,5 @@ class BackendFilters @Inject()(
   mdcFilter
 ) {
   private val logger = Logger(getClass)
-  logger.warn("play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required and can be removed. Filters are configured using play's default filter system: https://www.playframework.com/documentation/2.7.x/Filters#Default-Filters")
+  logger.warn("play.http.filters = \"uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters\" is no longer required and can be removed. Filters are configured using play's default filter system: https://www.playframework.com/documentation/2.8.x/Filters#Default-Filters")
 }

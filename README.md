@@ -204,6 +204,8 @@ It's position by default ensures the sessionId is available to all auditing in t
 
 - `MDCFilter` is now a trait. `FrontendMdcFilter` and `BackendMdcFilter` will be bound accordingly to ensure the the data is populated consistently.
 
+- `http-verbs` and `play-auditing` have been updated to fix some MDC data loss.
+
 ### Version 7.0.0
 
 #### crypto
