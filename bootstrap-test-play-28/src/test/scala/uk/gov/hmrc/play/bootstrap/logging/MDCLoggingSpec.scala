@@ -29,7 +29,7 @@ import play.api.libs.json.{Json, Writes}
 import play.api.mvc.Results
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames}
+import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames, SessionKeys}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -41,25 +41,21 @@ abstract class MDCLoggingSpec
      with OptionValues
      with BeforeAndAfterEach {
 
-  private val Action = stubControllerComponents().actionBuilder
-
   override def beforeEach(): Unit =
     MDC.clear()
 
   override def afterEach(): Unit =
     MDC.clear()
 
-  def anApplicationWithMDCLogging(configFile: String): Unit = {
+  def anApplicationWithMDCLogging(configFile: String, isFrontend: Boolean): Unit = {
 
     val config = Configuration(ConfigFactory.load(configFile))
 
     lazy val router = {
-
       import play.api.routing._
       import play.api.routing.sird._
 
-      //implicit val mw: Writes[Map[String, String]] =
-      //  Writes.genericMapWrites
+      val Action = stubControllerComponents().actionBuilder
 
       Router.from {
         case GET(p"/") =>
@@ -77,27 +73,23 @@ abstract class MDCLoggingSpec
     }
 
     "injected dispatchers should be ready to use without calling prepare" in {
-
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .build()
 
       running(app) {
-
         val dispatcher = app.injector.instanceOf[ActorSystem].dispatcher
+
         val promise = Promise[Map[String, String]]()
 
         MDC.put("foo", "bar")
 
-        dispatcher.execute(new Runnable() {
-
-          override def run(): Unit = {
-
-            val data = Option(MDC.getCopyOfContextMap)
+        dispatcher.execute(() => {
+          val data =
+            Option(MDC.getCopyOfContextMap)
               .fold(Map.empty[String, String])(_.asScala.toMap)
 
-            promise.success(data)
-          }
+           promise.success(data)
         })
 
         promise.future.futureValue must contain ("foo" -> "bar")
@@ -105,13 +97,11 @@ abstract class MDCLoggingSpec
     }
 
     "must pass MDC information between thread contexts" in {
-
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .build()
 
       running(app) {
-
         implicit val ec: ExecutionContext =
           app.injector.instanceOf[ExecutionContext]
 
@@ -128,23 +118,26 @@ abstract class MDCLoggingSpec
     }
 
     "must add all request information to the MDC" in {
-
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
-        .configure(
-          "logger.json.dateformat" -> "YYYY-mm-DD"
-        )
         .router(router)
         .build()
 
       running(app) {
-
-        val request = FakeRequest(GET, "/")
-          .withHeaders(
-            HMRCHeaderNames.xSessionId    -> "some session id",
-            HMRCHeaderNames.xRequestId    -> "some request id",
-            HMRCHeaderNames.xForwardedFor -> "some forwarded for"
-          )
+        val request =
+          if (isFrontend)
+            FakeRequest(GET, "/")
+              .withHeaders(
+                HMRCHeaderNames.xRequestId    -> "some request id",
+                HMRCHeaderNames.xForwardedFor -> "some forwarded for"
+              ).withSession(SessionKeys.sessionId -> "some session id")
+          else
+            FakeRequest(GET, "/")
+              .withHeaders(
+                HMRCHeaderNames.xSessionId    -> "some session id",
+                HMRCHeaderNames.xRequestId    -> "some request id",
+                HMRCHeaderNames.xForwardedFor -> "some forwarded for"
+              )
 
         val result = route(app, request).value
 
@@ -153,39 +146,6 @@ abstract class MDCLoggingSpec
         val mdc = contentAsJson(result).as[Map[String, String]]
 
         mdc must contain.only(
-          "appName"                     -> "test-application",
-          "logger.json.dateformat"      -> "YYYY-mm-DD",
-          HMRCHeaderNames.xSessionId    -> "some session id",
-          HMRCHeaderNames.xRequestId    -> "some request id",
-          HMRCHeaderNames.xForwardedFor -> "some forwarded for"
-        )
-      }
-    }
-
-    "must not include logger.json.dateformat in MDC if it is undefined" in {
-
-      lazy val app = new GuiceApplicationBuilder()
-        .configure(config)
-        .router(router)
-        .build()
-
-      running(app) {
-
-        val request = FakeRequest(GET, "/")
-          .withHeaders(
-            HMRCHeaderNames.xSessionId    -> "some session id",
-            HMRCHeaderNames.xRequestId    -> "some request id",
-            HMRCHeaderNames.xForwardedFor -> "some forwarded for"
-          )
-
-        val result = route(app, request).value
-
-        status(result) mustBe OK
-
-        val mdc = contentAsJson(result).as[Map[String, String]]
-
-        mdc must contain.only (
-          "appName"                     -> "test-application",
           HMRCHeaderNames.xSessionId    -> "some session id",
           HMRCHeaderNames.xRequestId    -> "some request id",
           HMRCHeaderNames.xForwardedFor -> "some forwarded for"

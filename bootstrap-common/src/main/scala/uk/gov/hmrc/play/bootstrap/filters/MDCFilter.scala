@@ -17,38 +17,26 @@
 package uk.gov.hmrc.play.bootstrap.filters
 
 import akka.stream.Materializer
-import javax.inject.{Inject, Named, Singleton}
 import org.slf4j.MDC
-import play.api.Configuration
 import play.api.mvc.{Filter, RequestHeader, Result}
-import uk.gov.hmrc.http.HeaderNames
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
 
 import scala.concurrent.Future
 
-@Singleton
-class MDCFilter @Inject()(
-  val mat: Materializer,
-  config: Configuration,
-  @Named("appName") appName: String
-) extends Filter {
+trait MDCFilter extends Filter {
 
-  private val dateFormat: Option[String] = config.getOptional[String]("logger.json.dateformat")
+  val mat: Materializer
 
-  private val extras: Set[(String, String)] =
-    Set("appName" -> appName) ++
-    dateFormat.map("logger.json.dateformat" -> _).toSet
+  protected def hc(implicit rh: RequestHeader): HeaderCarrier
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
-
-    val hc =
-      HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
+    val headerCarrier = hc(rh)
 
     val data = Set(
-      hc.requestId.map(HeaderNames.xRequestId    -> _.value),
-      hc.sessionId.map(HeaderNames.xSessionId    -> _.value),
-      hc.forwarded.map(HeaderNames.xForwardedFor -> _.value)
-    ).flatten ++ extras
+      headerCarrier.requestId.map(HeaderNames.xRequestId    -> _.value),
+      headerCarrier.sessionId.map(HeaderNames.xSessionId    -> _.value),
+      headerCarrier.forwarded.map(HeaderNames.xForwardedFor -> _.value)
+    ).flatten
 
     data.foreach {
       case (k, v) =>

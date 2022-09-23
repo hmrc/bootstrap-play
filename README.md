@@ -194,6 +194,18 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 7.4.0
+
+- `SessionIdFilter` is enabled in `frontend.conf` by default.
+
+Any explicit addition of this filter can now be removed.
+
+It's position by default ensures the sessionId is available to all auditing in the first request, something which isn't true if the filter is added manually at the end of the filter chain.
+
+- `MDCFilter` is now a trait. `FrontendMdcFilter` and `BackendMdcFilter` will be bound accordingly to ensure the the data is populated consistently.
+
+- `http-verbs` and `play-auditing` have been updated to fix some MDC data loss.
+
 ### Version 7.0.0
 
 #### crypto

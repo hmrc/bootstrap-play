@@ -48,14 +48,17 @@ class FrontendFilters @Inject()(
 
   private val logger = Logger(getClass)
 
-  logger.warn("play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilter\" is no longer required and can be removed. Filters are configured using play's default filter system: https://www.playframework.com/documentation/2.7.x/Filters#Default-Filters")
+  logger.warn("play.http.filters = \"uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilter\" is no longer required and can be removed. Filters are configured using play's default filter system: https://www.playframework.com/documentation/2.8.x/Filters#Default-Filters")
 
   override val filters: Seq[EssentialFilter] =
     whenEnabled("security.headers.filter.enabled", securityFilter) ++
     Seq(
       metricsFilter,
       sessionCookieCryptoFilter,
-      headersFilter,
+      headersFilter
+    ) ++
+    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
+    Seq(
       deviceIdFilter,
       loggingFilter,
       frontendAuditFilter,
@@ -66,8 +69,8 @@ class FrontendFilters @Inject()(
       cacheControlFilter,
       mdcFilter
     ) ++
-    whenEnabled("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig) ++
-    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
+    whenEnabled("bootstrap.filters.allowlist.enabled", allowlistFilter.loadConfig)
+
 
   private def whenEnabled(key: String, filter: => EssentialFilter): Seq[EssentialFilter] =
     if (configuration.get[Boolean](key)) Seq(filter)

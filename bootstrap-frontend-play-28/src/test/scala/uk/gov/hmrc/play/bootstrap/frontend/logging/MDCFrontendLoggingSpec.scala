@@ -20,6 +20,6 @@ import uk.gov.hmrc.play.bootstrap.logging.MDCLoggingSpec
 
 class MDCFrontendLoggingSpec extends MDCLoggingSpec {
   "a frontend" must {
-    behave like anApplicationWithMDCLogging("frontend.test.conf")
+    behave like anApplicationWithMDCLogging("frontend.test.conf", isFrontend = true)
   }
 }

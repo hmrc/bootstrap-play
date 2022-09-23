@@ -20,13 +20,14 @@ import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.bootstrap.BootstrapModule
 import uk.gov.hmrc.play.bootstrap.config.DeprecatedConfigChecker
-import uk.gov.hmrc.play.bootstrap.filters.AuditFilter
-import uk.gov.hmrc.play.bootstrap.backend.filters.DefaultBackendAuditFilter
+import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, MDCFilter}
+import uk.gov.hmrc.play.bootstrap.backend.filters.{DefaultBackendAuditFilter, BackendMdcFilter}
 
 class BackendModule extends BootstrapModule {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     super.bindings(environment, configuration) ++ Seq(
       bind[AuditFilter].to[DefaultBackendAuditFilter],
+      bind[MDCFilter].to[BackendMdcFilter],
       bind[DeprecatedConfigChecker]
         .toInstance(
           new DeprecatedConfigChecker(

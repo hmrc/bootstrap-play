@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.play.bootstrap.backend.logging
+package uk.gov.hmrc.play.bootstrap.frontend.filters
 
-import uk.gov.hmrc.play.bootstrap.logging.MDCLoggingSpec
+import javax.inject.Inject
+import play.api.Logger
+import play.api.http.HttpFilters
 
-class MDCBackendLoggingSpec extends MDCLoggingSpec {
-  "a microservice" must {
-    behave like anApplicationWithMDCLogging("backend.test.conf", isFrontend = false)
-  }
+class FiltersVerifier @Inject() (
+  filters: HttpFilters
+) {
+  private val logger = Logger(getClass)
+
+  if (filters.filters.map(_.getClass.getSimpleName).filter(_ == "SessionIdFilter").size > 1)
+    // or just warn if this is harmless
+    logger.warn("Two SessionIdFilters have been enabled. If you are explicitly adding this filter, you can probably remove this and rely on the one provided by bootstrap-play.")
 }
