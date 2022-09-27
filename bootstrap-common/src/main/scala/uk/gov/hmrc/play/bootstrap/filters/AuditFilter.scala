@@ -33,6 +33,7 @@ import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
+import uk.gov.hmrc.play.http.logging.Mdc
 
 import scala.concurrent.{ExecutionContext, Promise}
 
@@ -109,6 +110,7 @@ trait CommonAuditFilter extends AuditFilter {
       RedactionLog.of(details.redactionLog.redactedFields.map("detail." + _))
 
     implicit val r = requestHeader
+
     auditConnector.sendExtendedEvent(
       extendedDataEvent(
         eventType       = requestReceived,
@@ -177,8 +179,8 @@ trait CommonAuditFilter extends AuditFilter {
         }
 
         for {
-          auditRequestBody  <- requestBodyPromise.future
-          auditResponseBody <- responseBodyPromise.future
+          auditRequestBody  <- Mdc.preservingMdc(requestBodyPromise.future)
+          auditResponseBody <- Mdc.preservingMdc(responseBodyPromise.future)
         } yield handler(auditRequestBody, Right((result, auditResponseBody)))
 
         result.copy(body = auditedBody)
@@ -186,7 +188,7 @@ trait CommonAuditFilter extends AuditFilter {
       .recover[Result] {
         case ex: Throwable =>
           for {
-            auditRequestBody  <- requestBodyPromise.future
+            auditRequestBody  <- Mdc.preservingMdc(requestBodyPromise.future)
           } yield handler(auditRequestBody, Left(ex))
           throw ex
       }
