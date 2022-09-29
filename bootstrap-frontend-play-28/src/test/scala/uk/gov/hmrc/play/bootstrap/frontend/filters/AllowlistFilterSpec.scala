@@ -25,7 +25,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.Configuration
-import play.api.mvc.Call
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.{Call, Results}
+import play.api.test.FakeRequest
+import play.api.test.Helpers._
+
+import scala.concurrent.Future
 
 class AllowlistFilterSpec
   extends AnyWordSpecLike
@@ -56,7 +61,8 @@ class AllowlistFilterSpec
               val config = Configuration(
                 (otherConfig +
                   ("bootstrap.filters.allowlist.destination" -> destination) +
-                  ("bootstrap.filters.allowlist.excluded"    -> excluded)
+                  ("bootstrap.filters.allowlist.excluded"    -> excluded) +
+                  ("bootstrap.filters.allowlist.enabled"     -> true)
                 ).toSeq: _*
               )
 
@@ -79,7 +85,8 @@ class AllowlistFilterSpec
               (otherConfig +
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                ("bootstrap.filters.allowlist.ips"         -> "")
+                ("bootstrap.filters.allowlist.ips"         -> "") +
+                ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
 
@@ -105,7 +112,8 @@ class AllowlistFilterSpec
               (otherConfig +
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                ("bootstrap.filters.allowlist.ips"         -> ipString)
+                ("bootstrap.filters.allowlist.ips"         -> ipString) +
+                ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
 
@@ -131,7 +139,8 @@ class AllowlistFilterSpec
               val config = Configuration(
                 (otherConfig +
                   ("bootstrap.filters.allowlist.ips"      -> destination) +
-                  ("bootstrap.filters.allowlist.excluded" -> excluded)
+                  ("bootstrap.filters.allowlist.excluded" -> excluded) +
+                  ("bootstrap.filters.allowlist.enabled"     -> true)
                   ).toSeq: _*
               )
 
@@ -152,7 +161,8 @@ class AllowlistFilterSpec
             (otherConfig +
               ("bootstrap.filters.allowlist.ips"         -> destination) +
               ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-              ("bootstrap.filters.allowlist.destination" -> destination)
+              ("bootstrap.filters.allowlist.destination" -> destination) +
+              ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
           )
 
@@ -177,7 +187,8 @@ class AllowlistFilterSpec
               val config = Configuration(
                 (otherConfig +
                   ("bootstrap.filters.allowlist.destination" -> destination) +
-                  ("bootstrap.filters.allowlist.ips"         -> excluded)
+                  ("bootstrap.filters.allowlist.ips"         -> excluded) +
+                  ("bootstrap.filters.allowlist.enabled"     -> true)
                   ).toSeq: _*
               )
 
@@ -204,7 +215,8 @@ class AllowlistFilterSpec
               (otherConfig +
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excludedPathString) +
-                ("bootstrap.filters.allowlist.ips"         -> ips)
+                ("bootstrap.filters.allowlist.ips"         -> ips) +
+                ("bootstrap.filters.allowlist.enabled"     -> true)
                 ).toSeq: _*
             )
 
@@ -214,6 +226,66 @@ class AllowlistFilterSpec
 
             allowlistFilter.excludedPaths should contain theSameElementsAs expectedCalls
         }
+      }
+    }
+
+    "pass through requests" when {
+
+      "the filter is disabled" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.destination" -> "",
+            "bootstrap.filters.allowlist.excluded" -> "",
+            "bootstrap.filters.allowlist.ips" -> "",
+            "bootstrap.filters.allowlist.enabled" -> false
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(FakeRequest())
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "not require the filter to be configured" when {
+
+      "the filter is disabled" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.enabled" -> false
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(FakeRequest())
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "filter requests" when {
+
+      "the filter is enabled" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.destination" -> "",
+            "bootstrap.filters.allowlist.excluded" -> "",
+            "bootstrap.filters.allowlist.ips" -> "",
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(FakeRequest())
+
+        status(result) shouldBe NOT_IMPLEMENTED
       }
     }
   }
