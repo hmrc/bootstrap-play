@@ -57,7 +57,7 @@ class FrontendFilters @Inject()(
       sessionCookieCryptoFilter,
       headersFilter
     ) ++
-    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter)
+    whenEnabled("bootstrap.filters.sessionId.enabled", sessionIdFilter) ++
     Seq(
       deviceIdFilter,
       loggingFilter,
