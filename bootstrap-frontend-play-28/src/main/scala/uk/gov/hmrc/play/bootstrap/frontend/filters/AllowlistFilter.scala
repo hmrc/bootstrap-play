@@ -19,8 +19,10 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import akka.stream.Materializer
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.mvc.Call
+import play.api.mvc.{Call, RequestHeader, Result}
 import uk.gov.hmrc.allowlist.AkamaiAllowlistFilter
+
+import scala.concurrent.Future
 
 @Singleton
 class AllowlistFilter @Inject() (
@@ -73,4 +75,14 @@ class AllowlistFilter @Inject() (
 
   override lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
+
+  private val enabled: Boolean = config.get[Boolean]("bootstrap.filters.allowlist.enabled")
+
+  override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
+    if (enabled) {
+      super.apply(f)(rh)
+    } else {
+      f(rh)
+    }
+  }
 }
