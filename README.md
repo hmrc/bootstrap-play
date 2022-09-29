@@ -192,15 +192,25 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
+Experimental:
+
 There is a `bootstrap.mdcdataloss.warn` configuration, which is `false` by default. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. This often indicates that an `Mdc.preservingMdc` across an async boundary is missing.
+
+This is experimental, since we're still seeing unexplained MDC loss.
 
 ## Changes
 
-### Version 7.5.0
+### Version 7.7.0
 
 More MDC data loss fixes.
 
 Adds `bootstrap.mdcdataloss.warn` configuration (by default is `false`) which can help identify if MDC data is going missing.
+
+### Version 7.5.0
+
+The `AllowlistFilter` is added by default but now requires explicit enabling.
+
+You will need to replace `play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"` with `bootstrap.filters.allowlist.enabled = true`
 
 ### Version 7.4.0
 
@@ -330,7 +340,7 @@ If you are using `play.http.filters = uk.gov.hmrc.play.bootstrap.frontend.filter
 | `bootstrap.filters.csrf.enabled=false`         | Replace with  `play.filters.disabled += "play.filters.csrf.CSRFFilter"`
 | `bootstrap.filters.sessionId.enabled=true`     | Replace with  `play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.SessionIdFilter"`
 | `bootstrap.filters.sessionId.enabled=false`    | Just remove - this is the default
-| `bootstrap.filters.allowlist.enabled=true`     | Replace with  `play.filters.enabled += "uk.gov.hmrc.play.bootstrap.frontend.filters.AllowlistFilter"`
+| `bootstrap.filters.allowlist.enabled=true`     | Still required
 | `bootstrap.filters.allowlist.enabled=false`    | Just remove - this is the default
 
 If you have set `play.http.filters` to a custom filter, we recommend that you remove this, and use `play.filters.enabled` instead. You can append extra filters with `play.filters.enabled += ` or remove filters with `play.filters.disabled += `.
