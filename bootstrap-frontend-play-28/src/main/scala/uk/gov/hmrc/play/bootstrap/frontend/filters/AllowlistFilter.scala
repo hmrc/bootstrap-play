@@ -76,13 +76,12 @@ class AllowlistFilter @Inject() (
   override lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
 
-  private val enabled: Boolean = config.get[Boolean]("bootstrap.filters.allowlist.enabled")
+  private val enabled: Boolean =
+    config.get[Boolean]("bootstrap.filters.allowlist.enabled")
 
-  override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
-    if (enabled) {
+  override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
+    if (enabled)
       super.apply(f)(rh)
-    } else {
+    else
       f(rh)
-    }
-  }
 }

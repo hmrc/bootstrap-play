@@ -18,11 +18,16 @@ package uk.gov.hmrc.play.bootstrap.backend.filters
 
 import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
+import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.filters.MDCFilter
 
+import scala.concurrent.ExecutionContext
+
 @Singleton
 class BackendMdcFilter @Inject()(
-  override val mat: Materializer
+  override val mat          : Materializer,
+  override val configuration: Configuration,
+  override val ec           : ExecutionContext
 ) extends MDCFilter
      with BackendHeaderCarrierProvider

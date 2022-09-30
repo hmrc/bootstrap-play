@@ -26,6 +26,10 @@ class FiltersVerifier @Inject() (
   private val logger = Logger(getClass)
 
   if (filters.filters.map(_.getClass.getSimpleName).filter(_ == "SessionIdFilter").size > 1)
-    // or just warn if this is harmless
-    logger.warn("Two SessionIdFilters have been enabled. If you are explicitly adding this filter, you can probably remove this and rely on the one provided by bootstrap-play.")
+    logger.warn("Two SessionIdFilters have been configured. If you are explicitly adding this filter, you can probably remove this and rely on the one provided by bootstrap-play.")
+
+  if (filters.filters.map(_.getClass.getSimpleName).filter(_ == "AllowlistFilter").size > 1)
+    logger.warn(
+      "Two AllowlistFilters have been configured. If you are explicitly adding this filter, you can probably remove this and rely on the one provided by bootstrap-play. It will need enabling with `bootstrap.filters.allowlist.enabled=true`"
+    )
 }
