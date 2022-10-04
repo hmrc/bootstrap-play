@@ -35,6 +35,10 @@ trait MDCFilter extends Filter {
 
   private val warnMdcDataLoss = configuration.get[Boolean]("bootstrap.mdcdataloss.warn")
 
+  import scala.collection.JavaConverters._
+  logger.info(s"bootstrap.sysprops = ${System.getProperties.asScala.filter{ case (k, v) => k.startsWith("bootstrap") }.mkString(", ")}")
+  logger.info(s"bootstrap.configuration=${configuration.get[Configuration]("bootstrap")}")
+
   protected def hc(implicit rh: RequestHeader): HeaderCarrier
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
@@ -55,6 +59,9 @@ trait MDCFilter extends Filter {
       val mdcData = Mdc.mdcData.toSet
       if (warnMdcDataLoss && !data.forall(mdcData.contains)) {
         logger.warn(s"MDC Data has been dropped. endpoint: ${rh.method} ${rh.uri}")
+      }
+      if (!warnMdcDataLoss && !data.forall(mdcData.contains)) {
+        logger.info(s"MDC Data has been dropped (but warnMdcDataLoss = $warnMdcDataLoss). endpoint: ${rh.method} ${rh.uri}")
       }
       res
     }
