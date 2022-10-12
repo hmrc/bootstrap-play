@@ -18,22 +18,16 @@ package uk.gov.hmrc.play.bootstrap.filters
 
 import akka.stream.Materializer
 import org.slf4j.MDC
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import play.api.mvc.{Filter, RequestHeader, Result}
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
-import uk.gov.hmrc.play.http.logging.Mdc
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait MDCFilter extends Filter {
-
-  private val logger = Logger(getClass)
-
   val mat: Materializer
   val configuration: Configuration
   implicit val ec: ExecutionContext
-
-  private val warnMdcDataLoss = configuration.get[Boolean]("bootstrap.mdcdataloss.warn")
 
   protected def hc(implicit rh: RequestHeader): HeaderCarrier
 
@@ -51,12 +45,6 @@ trait MDCFilter extends Filter {
         MDC.put(k, v)
     }
 
-    f(rh).map { res =>
-      val mdcData = Mdc.mdcData.toSet
-      if (warnMdcDataLoss && !data.forall(mdcData.contains)) {
-        logger.warn(s"MDC Data has been dropped. endpoint: ${rh.method} ${rh.uri}")
-      }
-      res
-    }
+    f(rh)
   }
 }

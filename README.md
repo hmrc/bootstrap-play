@@ -192,19 +192,11 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
-Experimental:
-
-There is a `bootstrap.mdcdataloss.warn` configuration, which is `false` by default. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. This often indicates that an `Mdc.preservingMdc` across an async boundary is missing.
-
-This is experimental, since we're still seeing unexplained MDC loss.
-
 ## Changes
 
 ### Version 7.7.0
 
 More MDC data loss fixes.
-
-Adds `bootstrap.mdcdataloss.warn` configuration (by default is `false`) which can help identify if MDC data is going missing.
 
 ### Version 7.5.0
 
