@@ -19,7 +19,6 @@ package uk.gov.hmrc.play.bootstrap.filters
 import java.util.{Date, TimeZone}
 
 import akka.stream.Materializer
-import org.apache.commons.lang3.time.FastDateFormat
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually
@@ -27,25 +26,24 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
+import play.api.{LoggerLike, MarkerContext}
 import play.api.mvc.{RequestHeader, Results}
 import play.api.routing.HandlerDef
 import play.api.routing.Router.Attrs
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
-import play.api.{LoggerLike, MarkerContext}
-import uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorService
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls
 
 class LoggingFilterSpec
-    extends AnyWordSpecLike
-    with MockitoSugar
-    with Matchers
-    with OptionValues
-    with FutureAwaits
-    with DefaultAwaitTimeout
-    with Eventually
-    with BeforeAndAfterAll {
+  extends AnyWordSpecLike
+     with MockitoSugar
+     with Matchers
+     with OptionValues
+     with FutureAwaits
+     with DefaultAwaitTimeout
+     with Eventually
+     with BeforeAndAfterAll {
 
   var defaultJvmTimezone = TimeZone.getDefault
 
@@ -53,7 +51,6 @@ class LoggingFilterSpec
     super.beforeAll()
 
   "the LoggingFilter should" should {
-
     "log when a request's path matches a controller which is configured to log" in new Setup {
       val logger        = createLogger()
       val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true)
@@ -136,14 +133,12 @@ class LoggingFilterSpec
   }
 
   trait Setup {
-
-    val testReqToResp = (_: RequestHeader) => Future.successful(Results.NoContent)
+    val testReqToResp =
+      (_: RequestHeader) => Future.successful(Results.NoContent)
 
     val handlerDef = mock[HandlerDef](withSettings.lenient)
     when(handlerDef.controller)
       .thenReturn("controller-name")
-
-    val dateFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSSZZ")
 
     val requestWithHandlerInAttrs = FakeRequest().addAttr(Attrs.HandlerDef, handlerDef)
   }
@@ -155,9 +150,7 @@ class LoggingFilterSpec
   ) extends LoggingFilter {
 
     override implicit val mat: Materializer = null
-    override implicit val ec                = ExecutionContext.fromExecutorService(
-                                                new MDCPropagatingExecutorService(
-                                                  ExecutionContext.fromExecutorService(null)))
+    override implicit val ec                = ExecutionContext.fromExecutorService(null)
     override def logger: LoggerLike         = loggerIn
     override val now: () => Long            = () => currentTime()
     override def controllerNeedsLogging(controllerName: String): Boolean =

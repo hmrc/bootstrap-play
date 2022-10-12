@@ -172,7 +172,7 @@ class MyController @Inject() (val authConnector: AuthConnector) extends BaseCont
 
 By default the logging MDC will be passed between threads by a custom `ExecutorService`.
 While this works in both test and production configurations it _does not work_ in `Dev`
-mode using the `AkkaHttpServer` in Play 2.6.
+mode using the `AkkaHttpServer`.
 
 If you would like the same functionality in `Dev` mode, you must use the older
 `NettyHttpServer`.

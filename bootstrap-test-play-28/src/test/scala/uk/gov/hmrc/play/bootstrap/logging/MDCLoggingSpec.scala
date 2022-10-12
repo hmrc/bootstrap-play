@@ -72,30 +72,6 @@ abstract class MDCLoggingSpec
       }
     }
 
-    "injected dispatchers should be ready to use without calling prepare" in {
-      lazy val app = new GuiceApplicationBuilder()
-        .configure(config)
-        .build()
-
-      running(app) {
-        val dispatcher = app.injector.instanceOf[ActorSystem].dispatcher
-
-        val promise = Promise[Map[String, String]]()
-
-        MDC.put("foo", "bar")
-
-        dispatcher.execute(() => {
-          val data =
-            Option(MDC.getCopyOfContextMap)
-              .fold(Map.empty[String, String])(_.asScala.toMap)
-
-           promise.success(data)
-        })
-
-        promise.future.futureValue must contain ("foo" -> "bar")
-      }
-    }
-
     "must pass MDC information between thread contexts" in {
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
