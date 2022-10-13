@@ -33,7 +33,6 @@ import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
-import uk.gov.hmrc.play.http.logging.Mdc
 
 import scala.concurrent.{ExecutionContext, Promise}
 
@@ -74,7 +73,7 @@ trait CommonAuditFilter extends AuditFilter {
     override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
       val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
       if (needsAuditing(requestHeader))
-        onCompleteWithInput(next, performAudit(requestHeader))
+        onCompleteWithInput(next, performAudit(requestHeader))(ec)
       else
         next
     }
@@ -130,8 +129,11 @@ trait CommonAuditFilter extends AuditFilter {
   protected def onCompleteWithInput(
     next          : Accumulator[ByteString, Result],
     handler       : (Data[String], Either[Throwable, (Result, Data[String])]) => Unit
-  )(implicit ec: ExecutionContext
+  )(ec: ExecutionContext
   ): Accumulator[ByteString, Result] = {
+    // prepare execution context as body handler may cross thread boundary
+    implicit val pec = ec.prepare()
+
     val requestBodyPromise  = Promise[Data[String]]()
 
     // grabbed from plays csrf filter (play.filters.csrf.CSRFAction#checkBody https://github.com/playframework/playframework/blob/2.8.13/web/play-filters-helpers/src/main/scala/play/filters/csrf/CSRFActions.scala#L161-L185)
@@ -179,8 +181,8 @@ trait CommonAuditFilter extends AuditFilter {
         }
 
         for {
-          auditRequestBody  <- Mdc.preservingMdc(requestBodyPromise.future)
-          auditResponseBody <- Mdc.preservingMdc(responseBodyPromise.future)
+          auditRequestBody  <- requestBodyPromise.future
+          auditResponseBody <- responseBodyPromise.future
         } yield handler(auditRequestBody, Right((result, auditResponseBody)))
 
         result.copy(body = auditedBody)
@@ -188,7 +190,7 @@ trait CommonAuditFilter extends AuditFilter {
       .recover[Result] {
         case ex: Throwable =>
           for {
-            auditRequestBody  <- Mdc.preservingMdc(requestBodyPromise.future)
+            auditRequestBody  <- requestBodyPromise.future
           } yield handler(auditRequestBody, Left(ex))
           throw ex
       }

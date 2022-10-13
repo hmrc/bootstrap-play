@@ -172,7 +172,7 @@ class MyController @Inject() (val authConnector: AuthConnector) extends BaseCont
 
 By default the logging MDC will be passed between threads by a custom `ExecutorService`.
 While this works in both test and production configurations it _does not work_ in `Dev`
-mode using the `AkkaHttpServer` in Play 2.6.
+mode using the `AkkaHttpServer`.
 
 If you would like the same functionality in `Dev` mode, you must use the older
 `NettyHttpServer`.
@@ -192,19 +192,24 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
-Experimental:
+#### `ExecutionContext.prepare()`
 
-There is a `bootstrap.mdcdataloss.warn` configuration, which is `false` by default. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. This often indicates that an `Mdc.preservingMdc` across an async boundary is missing.
+Occasionally you may find you have an async boundary, where MDC is lost when a different Thread picks up the execution.
+If this is the case, you can call `prepare()` on the execution context while the MDC is available. e.g.
 
-This is experimental, since we're still seeing unexplained MDC loss.
+```scala
+implicit val pec = ec.prepare()
+asyncBoundary // e.g. Akka flow
+  .map(next)// this will run next with `pec` which has had the MDC preserved
+```
+
+This should hopefully be rare since prepare is already called in many occasions. (Note, `prepare` is deprecated, but no alternative has been provided yet, and it continues to work.)
 
 ## Changes
 
-### Version 7.7.0
+### Version 7.8.0
 
 More MDC data loss fixes.
-
-Adds `bootstrap.mdcdataloss.warn` configuration (by default is `false`) which can help identify if MDC data is going missing.
 
 ### Version 7.5.0
 
