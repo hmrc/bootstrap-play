@@ -192,18 +192,6 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
-#### `ExecutionContext.prepare()`
-
-Occasionally you may find you have an async boundary, where MDC is lost when a different Thread picks up the execution.
-If this is the case, you can call `prepare()` on the execution context while the MDC is available. e.g.
-
-```scala
-implicit val pec = ec.prepare()
-asyncBoundary // e.g. Akka flow
-  .map(next)// this will run next with `pec` which has had the MDC preserved
-```
-
-This should hopefully be rare since prepare is already called in many occasions. (Note, `prepare` is deprecated, but no alternative has been provided yet, and it continues to work.)
 
 ## Changes
 
