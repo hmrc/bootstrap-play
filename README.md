@@ -195,6 +195,14 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 ## Changes
 
+### Version 7.11.0
+
+Updates http-verbs to fix case insensitivity of returned headers for Scala 2.13.
+
+### Version 7.9.0
+
+Updates playframework to 2.8.18
+
 ### Version 7.8.0
 
 More MDC data loss fixes.
