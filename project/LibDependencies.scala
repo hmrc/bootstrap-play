@@ -2,8 +2,8 @@ import sbt._
 
 object LibDependencies {
 
-  private val play28Version          = "2.8.18"
-  private val httpVerbsVersion       = "14.8.0"
+  private val play28Version          = "2.8.19"
+  private val httpVerbsVersion       = "14.9.0"
   private val akkaVersion            = "2.6.20"
   private val jacksonVersion         = "2.12.6"
   private val jacksonDatabindVersion = "2.12.6.1"
@@ -25,7 +25,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% "auth-client"                % s"5.12.0-$playSuffix",
       "uk.gov.hmrc"             %% "crypto"                     % "7.3.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.5.0",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.6.0",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% "filters-helpers"            % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
