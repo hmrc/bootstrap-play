@@ -285,7 +285,7 @@ class SessionTimeoutFilterSpec
 
   "SessionTimeoutFilterConfig.fromConfig" should {
     "return defaults when there is no config" in {
-      val config = Configuration(ConfigFactory.load("frontend.conf"))
+      val config = Configuration(ConfigFactory.load("frontend.test.conf"))
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be (empty)
       result.onlyWipeAuthToken     shouldBe false
