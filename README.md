@@ -37,30 +37,6 @@ In your application.conf file, add:
 
 ```properties
 include "frontend.conf"
-
-# An ApplicationLoader that uses Guice to bootstrap the application.
-play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
-
-# Primary entry point for all HTTP requests on Play applications
-play.http.requestHandler = "uk.gov.hmrc.play.bootstrap.http.RequestHandler"
-
-# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.audit.AuditModule` or create your own.
-# An audit connector must be provided.
-play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
-
-# Provides an implementation of MetricsFilter. Use `uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule` or create your own.
-# A metric filter must be provided
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule"
-
-# Provides an implementation and configures all filters required by a Platform frontend microservice.
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.frontend.FrontendModule"
-
-```
-
-And in your SBT build add:
-
-```scala
-libraryDependencies += "uk.gov.hmrc" %% "play-frontend-hmrc" % "x.x.x"
 ```
 
 ## Configure as a backend microservice
@@ -69,24 +45,6 @@ In your application.conf file, add:
 
 ```properties
 include "backend.conf"
-
-# An ApplicationLoader that uses Guice to bootstrap the application.
-play.application.loader = "uk.gov.hmrc.play.bootstrap.ApplicationLoader"
-
-# Primary entry point for all HTTP requests on Play applications
-play.http.requestHandler = "uk.gov.hmrc.play.bootstrap.http.RequestHandler"
-
-# Provides an implementation of AuditConnector. Use `uk.gov.hmrc.play.audit.AuditModule` or create your own.
-# An audit connector must be provided.
-play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
-
-# Provides an implementation of MetricsFilter. Use `uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule` or create your own.
-# A metric filter must be provided
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule"
-
-# Provides an implementation and configures all filters required by a Platform backend microservice.
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.backend.BackendModule"
-
 ```
 
 ## Default HTTP clients
@@ -97,10 +55,9 @@ Two http clients are available and can be injected into any connector by enablin
 
 This is the original http client provided by http-verbs.
 
-To use, enable the following modules in your application.conf file:
+To use, enable the following module in your application.conf file:
 
 ```properties
-play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 ```
 
@@ -123,7 +80,6 @@ This is a new http client provided by http-verbs which supports streaming and ha
 To use, enable the following modules in your application.conf file:
 
 ```properties
-play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientV2Module"
 ```
 
@@ -150,9 +106,7 @@ The library supports user authorisation on microservices
 
 Make sure you have the following modules in your application.conf file:
 
-```
-play.modules.enabled += "uk.gov.hmrc.play.audit.AuditModule"
-play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
+```properties
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuthModule"
 ```
 
@@ -194,6 +148,23 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
 
 ## Changes
+
+### Version 7.15.0
+
+- Updates default configuration in frontend.conf and backend.conf.
+
+  The following modules are enabled by default:
+  - uk.gov.hmrc.play.audit.AuditModule
+  - uk.gov.hmrc.play.bootstrap.graphite.GraphiteMetricsModule
+  - uk.gov.hmrc.play.bootstrap.frontend.FrontendModule
+
+  They can be disabled by adding to `play.modules.disabled` if required.
+
+- `play.filters.csp.directives` - tightens the play defaults slightly
+
+- Improves default values for `microservice.metrics.graphite`
+
+
 
 ### Version 7.11.0
 
