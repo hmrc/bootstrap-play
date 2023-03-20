@@ -65,7 +65,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.FrontendFilters" in {
       new uk.gov.hmrc.play.bootstrap.filters.FrontendFilters(
-        configuration             = Configuration(ConfigFactory.load("frontend.conf")),
+        configuration             = Configuration(ConfigFactory.load("frontend.test.conf")),
         loggingFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
         headersFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter],
         securityFilter            = mock[play.filters.headers.SecurityHeadersFilter],
@@ -87,7 +87,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.ApplicationCryptoProvider" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.ApplicationCryptoProvider(
-        configuration = Configuration(ConfigFactory.load("frontend.conf"))
+        configuration = Configuration(ConfigFactory.load("frontend.test.conf"))
       )
     }
 
