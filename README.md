@@ -111,6 +111,7 @@ The library supports user authorisation on microservices
 Make sure you have the following modules in your application.conf file:
 
 ```properties
+play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientModule"
 play.modules.enabled += "uk.gov.hmrc.play.bootstrap.AuthModule"
 ```
 
