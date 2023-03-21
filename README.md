@@ -37,6 +37,8 @@ In your application.conf file, add:
 
 ```properties
 include "frontend.conf"
+
+appName = "my-frontend"
 ```
 
 ## Configure as a backend microservice
@@ -45,6 +47,8 @@ In your application.conf file, add:
 
 ```properties
 include "backend.conf"
+
+appName = "my-backend"
 ```
 
 ## Default HTTP clients
@@ -160,11 +164,12 @@ play.server.provider = play.core.server.AkkaHttpServerProvider
 
   They can be disabled by adding to `play.modules.disabled` if required.
 
-- `play.filters.csp.directives` - tightens the play defaults slightly
+- `play.filters.csp.directives` for frontends
+
+  - Tightens the play defaults slightly by removing `'unsafe-eval'` from `script-src`
+  - Adds `report-uri`
 
 - Improves default values for `microservice.metrics.graphite`
-
-
 
 ### Version 7.11.0
 
