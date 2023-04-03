@@ -25,6 +25,8 @@ import org.slf4j.Logger
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
 
+import java.util.concurrent.TimeUnit
+
 class DatastreamMetricsProviderSpec
   extends AnyWordSpec
      with Matchers
@@ -49,7 +51,7 @@ class DatastreamMetricsProviderSpec
 
   "EnabledDatastreamMetricsProvider" should {
     "register the correct metrics key and counters" in {
-      val configuration  = GraphiteReporterProviderConfig(prefix = "play.service", None, None)
+      val configuration  = GraphiteReporterProviderConfig(prefix = "play.service", TimeUnit.MILLISECONDS, TimeUnit.SECONDS)
       val metricRegistry = mock[MetricRegistry]
       val metrics        = mock[Metrics]
       val successCounter = mock[Counter]

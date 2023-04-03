@@ -41,7 +41,7 @@ class EnabledGraphiteReporting @Inject()(
 
   private val logger = Logger(getClass)
 
-  protected def interval: Long = config.getOptional[Long]("microservice.metrics.graphite.interval").getOrElse(10L)
+  protected def interval: Long = config.get[Long]("microservice.metrics.graphite.interval")
 
   logger.info("Graphite metrics enabled, starting the reporter")
 

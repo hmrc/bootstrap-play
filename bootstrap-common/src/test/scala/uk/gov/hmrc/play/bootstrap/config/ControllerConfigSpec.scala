@@ -23,7 +23,6 @@ import play.api.Configuration
 class ControllerConfigSpec extends AnyWordSpec with Matchers {
 
   "ControllerConfig.fromConfig" must {
-
     "return defaults when no config is found" in {
 
       val config = ControllerConfig.fromConfig(Configuration())
@@ -33,7 +32,6 @@ class ControllerConfigSpec extends AnyWordSpec with Matchers {
     }
 
     "return defaults when config is set to defaults" in {
-
       val config = ControllerConfig.fromConfig(Configuration("needsAuditing" -> true, "needsLogging" -> true))
 
       config.auditing mustBe true
@@ -41,17 +39,14 @@ class ControllerConfigSpec extends AnyWordSpec with Matchers {
     }
 
     "return all `false` when config is set to that" in {
-
       val config = ControllerConfig.fromConfig(Configuration("needsAuditing" -> false, "needsLogging" -> false))
 
       config.auditing mustBe false
       config.logging mustBe false
     }
-
   }
 
   "ControllerConfigs.fromConfig" must {
-
     val controllerConfigs = ControllerConfigs.fromConfig(
       Configuration(
         "controllers.foo.needsAuditing"       -> false,
@@ -73,7 +68,6 @@ class ControllerConfigSpec extends AnyWordSpec with Matchers {
     }
 
     "return default configuration for missing controllers" in {
-
       val config = controllerConfigs.get("bar")
 
       config.auditing mustBe true
@@ -83,7 +77,6 @@ class ControllerConfigSpec extends AnyWordSpec with Matchers {
     "not fail if there are primitive values with controllers. prefix" in {
       val controllerConfigsWithPrimitiveValues = ControllerConfigs.fromConfig(
         Configuration(
-          "controllers.confidenceLevel"   -> 300,
           "controllers.foo.needsAuditing" -> false,
           "controllers.foo.needsLogging"  -> false
         ))

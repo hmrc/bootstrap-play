@@ -26,20 +26,7 @@ import play.api.Configuration
 class GraphiteReporterProviderConfigSpec extends AnyWordSpec with Matchers {
 
   "GraphiteReporterProviderConfig.fromConfig" should {
-    "return a valid `GraphiteReporterProviderConfig` when given a prefix" in {
-      val config = Configuration(
-        "microservice.metrics.graphite.prefix" -> "test",
-        "appName"                              -> "testApp"
-      )
-
-      GraphiteReporterProviderConfig.fromConfig(config) shouldBe GraphiteReporterProviderConfig(
-        prefix    = "test",
-        rates     = None,
-        durations = None
-      )
-    }
-
-    "return a valid `GraphiteReporterProviderConfig` when given a prefix and optional config" in {
+    "return a valid `GraphiteReporterProviderConfig` when given config" in {
       val config = Configuration(
         "microservice.metrics.graphite.prefix"    -> "test",
         "microservice.metrics.graphite.durations" -> "SECONDS",
@@ -48,27 +35,13 @@ class GraphiteReporterProviderConfigSpec extends AnyWordSpec with Matchers {
 
       GraphiteReporterProviderConfig.fromConfig(config) shouldBe GraphiteReporterProviderConfig(
         prefix    = "test",
-        rates     = Some(TimeUnit.SECONDS),
-        durations = Some(TimeUnit.SECONDS)
-      )
-    }
-
-    "return a valid `GraphiteReporterProviderConfig` when given an appName" in {
-      val config = Configuration("appName" -> "testApp")
-
-      GraphiteReporterProviderConfig.fromConfig(config) shouldBe GraphiteReporterProviderConfig(
-        prefix    = "tax.testApp",
-        rates     = None,
-        durations = None
+        rates     = TimeUnit.SECONDS,
+        durations = TimeUnit.SECONDS
       )
     }
 
     "throw a configuration exception when relevant keys are missing" in {
-      val exception = intercept[ConfigException.Generic] {
-        GraphiteReporterProviderConfig.fromConfig(Configuration())
-      }
-
-      exception.getMessage shouldEqual "`microservice.metrics.graphite.prefix` in config or `appName` as parameter required"
+      an [ConfigException.Missing] should be thrownBy GraphiteReporterProviderConfig.fromConfig(Configuration())
     }
   }
 }
