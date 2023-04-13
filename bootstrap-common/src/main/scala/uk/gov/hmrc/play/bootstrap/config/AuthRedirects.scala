@@ -31,7 +31,9 @@ trait AuthRedirects {
   def env: Environment
 
   private lazy val envPrefix =
-    if (env.mode.equals(Mode.Test)) "Test" else config.getOptional[String]("run.mode").getOrElse("Dev")
+    if (env.mode.equals(Mode.Test)) "Test"
+    else config.getOptional[String]("run.mode")
+           .getOrElse("Dev")
 
   private val hostDefaults: Map[String, String] = Map(
     "Dev.external-url.bas-gateway-frontend.host"           -> "http://localhost:9553",

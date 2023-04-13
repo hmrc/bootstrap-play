@@ -204,12 +204,15 @@ bootstrap.filters.allowlist.redirectUrlWhenDenied = "http://www.gov.uk"
 
 ## Changes
 
+### Version 7.20.0
+- Updates playframework to 2.8.20
+
 ### Version 7.16.0
 - Updates the Allowlist Filter
   - removes all references to Akamai
   - provides a allowlist filter implementation and no longer extends the play-allowlist-filter library
   - new error handling and logging for configuration errors.
-  - updated config values 
+  - updated config values
     - `bootstrap.filters.allowlist.destination` is now obsolete use `bootstrap.filters.allowlist.redirectUrlWhenDenied` instead
     - `bootstrap.filters.allowlist.ips` is now an array
     - `bootstrap.filters.allowlist.excluded` is now an array
