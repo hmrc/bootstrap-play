@@ -20,7 +20,6 @@ import akka.stream.Materializer
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.mvc.{Call, RequestHeader, Result}
-import uk.gov.hmrc.allowlist.AkamaiAllowlistFilter
 
 import scala.concurrent.Future
 
