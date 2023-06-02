@@ -19,14 +19,14 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import akka.stream.Materializer
 import org.scalatest.TestSuite
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
 import play.api.inject._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Results.Ok
 import play.api.mvc._
 import play.api.test.Helpers._
+import play.api.{Application, Configuration}
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 import scala.concurrent.Future
 
 trait TestAppWithCustomFailureDefault extends GuiceOneAppPerSuite {
@@ -36,10 +36,14 @@ trait TestAppWithCustomFailureDefault extends GuiceOneAppPerSuite {
 
   override implicit lazy val app: Application =
     new GuiceApplicationBuilder()
-      .bindings(bind(classOf[AkamaiAllowlistFilter]).to(classOf[TestAkamaiAllowlistFilterWithCustomFailureDefault]))
+      .bindings(bind(classOf[AllowlistFilter]).to(classOf[TestAkamaiAllowlistFilterWithCustomFailureDefault]))
       .configure(
         "metrics.jvm"       -> false,
-        "play.http.filters" -> "uk.gov.hmrc.play.bootstrap.frontend.filters.TestFilters"
+        "play.http.filters" -> "uk.gov.hmrc.play.bootstrap.frontend.filters.TestFilters",
+        "bootstrap.filters.allowlist.enabled" -> "true",
+        "bootstrap.filters.allowlist.ips" -> "127.0.0.1",
+        "bootstrap.filters.allowlist.destination" -> "/destination",
+        "bootstrap.filters.allowlist.excluded" -> "/healthcheck"
       )
       .routes {
         case ("GET", "/destination") => Action(Ok("destination"))
@@ -47,20 +51,26 @@ trait TestAppWithCustomFailureDefault extends GuiceOneAppPerSuite {
         case ("GET", "/healthcheck") => Action(Ok("ping"))
       }
       .build()
+
 }
 
-@Singleton
+
+//@Singleton
 private class TestAkamaiAllowlistFilterWithCustomFailureDefault @Inject()(
+  config: Configuration,
   override val mat: Materializer
-) extends AkamaiAllowlistFilter {
-  override lazy val allowlist: Seq[String] =
-    Seq("127.0.0.1")
+) extends AllowlistFilter(config, mat) {
 
-  override lazy val destination: Call =
-    Call("GET", "/destination")
+ //todo remove these as this is all injected via config
 
-  override lazy val excludedPaths: Seq[Call] =
-    Seq(Call("GET", "/healthcheck"))
+ // override lazy val allowlist: Seq[String] =
+ //   Seq("127.0.0.1")
+
+ // override lazy val destination: Call =
+ //   Call("GET", "/destination")
+
+ // override lazy val excludedPaths: Seq[Call] =
+ //   Seq(Call("GET", "/healthcheck"))
 
   override def noHeaderAction(f: RequestHeader => Future[Result], rh: RequestHeader): Future[Result] =
     f(rh)

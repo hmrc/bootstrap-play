@@ -20,4 +20,4 @@ import play.api.http.DefaultHttpFilters
 
 import javax.inject.Inject
 
-class TestFilters @Inject()(allowlist: AkamaiAllowlistFilter) extends DefaultHttpFilters(allowlist)
+class TestFilters @Inject()(allowlist: AllowlistFilter) extends DefaultHttpFilters(allowlist)

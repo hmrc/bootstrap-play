@@ -19,7 +19,8 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import akka.stream.Materializer
 import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
-import play.api.mvc.{Call, RequestHeader, Result}
+import play.api.mvc.Results.{Forbidden, NotImplemented, Redirect}
+import play.api.mvc.{Call, Filter, RequestHeader, Result}
 
 import scala.concurrent.Future
 
@@ -27,7 +28,10 @@ import scala.concurrent.Future
 class AllowlistFilter @Inject() (
   config: Configuration,
   override val mat: Materializer
-) extends AkamaiAllowlistFilter {
+) extends Filter {
+
+
+  val trueClient = "True-Client-IP"
 
   case class AllowlistFilterConfig(
     allowlist    : Seq[String],
@@ -62,25 +66,49 @@ class AllowlistFilter @Inject() (
     this
   }
 
-  override lazy val allowlist: Seq[String] =
+  lazy val allowlist: Seq[String] =
     allowlistFilterConfig.allowlist
 
   @deprecated("Use allowlist instead", "4.0.0")
   def whitelist: Seq[String] =
     allowlist
 
-  override lazy val destination: Call =
+  lazy val destination: Call =
     allowlistFilterConfig.destination
 
-  override lazy val excludedPaths: Seq[Call] =
+  lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
 
   private val enabled: Boolean =
     config.get[Boolean]("bootstrap.filters.allowlist.enabled")
 
+  private def toCall(rh: RequestHeader): Call =
+    Call(rh.method, rh.uri)
+
+  def noHeaderAction(f: RequestHeader => Future[Result], rh: RequestHeader): Future[Result] =
+    Future.successful(NotImplemented)
+
+  private def isCircularDestination(requestHeader: RequestHeader): Boolean =
+    requestHeader.uri == destination.url
+
+  def response: Result = Redirect(destination)
+
+  def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
+    if (excludedPaths.contains(toCall(rh)))
+      f(rh)
+    else
+      rh.headers.get(trueClient).fold(noHeaderAction(f, rh))(ip =>
+        if (allowlist.contains(ip))
+          f(rh)
+        else if (isCircularDestination(rh))
+          Future.successful(Forbidden)
+        else
+          Future.successful(response)
+      )
+
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (enabled)
-      super.apply(f)(rh)
+      processRequest(f)(rh)
     else
       f(rh)
 }
