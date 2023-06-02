@@ -19,15 +19,16 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-class AkamaiAllowlistFilterSpec
-  extends AkamaiAllowlistFilterCommonSpec
-     with TestApp {
+class AllowlistFilterWithCustomFailureDefaultITSpec
+  extends AllowlistFilterCommonITSpec
+     with TestAppWithCustomFailureDefault {
 
-  "AkamaiAllowlistFilter" must {
+  "AllowlistFilter" must {
 
-    "return a `NotImplemented` when no `True-Client-IP` header is found" in {
+    "return the success response when no `True-Client-IP` header is found" in {
       val result = route(app, FakeRequest("GET", "/index")).value
-      status(result) must be (NOT_IMPLEMENTED)
+      status(result) must be (OK)
+      contentAsString(result) must be ("success")
     }
   }
 }

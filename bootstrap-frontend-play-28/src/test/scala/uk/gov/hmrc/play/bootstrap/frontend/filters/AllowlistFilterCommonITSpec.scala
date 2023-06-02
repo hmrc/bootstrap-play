@@ -23,12 +23,12 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-trait AkamaiAllowlistFilterCommonSpec
+trait AllowlistFilterCommonITSpec
   extends PlaySpec
      with ScalaFutures
      with OptionValues { this: GuiceOneAppPerSuite =>
 
-  "AkamaiAllowlistFilter (Common)" must {
+  "AllowlistFilter (CommonISpec)" must {
     "return successfully when a valid `True-Client-IP` header is found" in {
       val result = route(app, FakeRequest("GET", "/index").withHeaders("True-Client-IP" -> "127.0.0.1")).value
       status(result) must be(OK)
