@@ -37,6 +37,7 @@ class AllowlistFilter @Inject() (
     allowlist    : Seq[String],
     destination  : Call,
     excludedPaths: Seq[Call],
+    excludedWildCardedPaths: Seq[Call],
     excludedHealthCheckPath: Call
   )
 
@@ -59,7 +60,17 @@ class AllowlistFilter @Inject() (
         .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty)
+        .filterNot(_.endsWith("/*"))
         .map(path => Call("GET", path)),
+
+    excludedWildCardedPaths =
+      config.get[String]("bootstrap.filters.allowlist.excluded")
+        .split(",")
+        .toIndexedSeq
+        .map(_.trim)
+        .filter(_.nonEmpty)
+        .filter(_.endsWith("/*"))
+        .map(path => Call("GET", path.dropRight(2))),
 
     excludedHealthCheckPath =
       Call("GET",
@@ -86,6 +97,9 @@ class AllowlistFilter @Inject() (
   lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
 
+  private lazy val excludedWildCardedPaths: Seq[Call] =
+    allowlistFilterConfig.excludedWildCardedPaths
+
   private lazy val excludedHealthCheckPath: Call =
     allowlistFilterConfig.excludedHealthCheckPath
 
@@ -104,7 +118,9 @@ class AllowlistFilter @Inject() (
   def response: Result = Redirect(destination)
 
   private def excluded(rh: RequestHeader) = {
-    (excludedPaths :+ excludedHealthCheckPath).contains(toCall(rh))
+    val call = toCall(rh)
+    (excludedPaths :+ excludedHealthCheckPath).contains(call) ||
+      excludedWildCardedPaths.exists(c => call.method == c.method && call.url.startsWith(c.url))
   }
 
   def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =

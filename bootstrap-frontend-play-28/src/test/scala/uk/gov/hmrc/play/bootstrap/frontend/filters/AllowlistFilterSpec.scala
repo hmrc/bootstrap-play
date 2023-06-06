@@ -428,7 +428,7 @@ class AllowlistFilterSpec
     }
 
     "return OK " when {
-      "the requested route matches a wildcard exclusion" in {
+      "the requested route matches a wildcarded exclusion" in {
 
         val app = new GuiceApplicationBuilder()
           .configure(
