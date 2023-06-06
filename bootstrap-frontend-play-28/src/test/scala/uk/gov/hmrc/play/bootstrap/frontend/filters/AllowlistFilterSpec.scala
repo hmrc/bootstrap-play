@@ -39,6 +39,7 @@ class AllowlistFilterSpec
      with MockitoSugar {
 
 
+  val nonAllowedIpAddress = "10.0.0.1"
   val govUkUrl = "https://www.gov.uk"
   val allowedIpAddress = "192.168.2.1"
   val mockMaterializer = mock[Materializer]
@@ -331,7 +332,7 @@ class AllowlistFilterSpec
 
           val result = filter(_ => Future.successful(Results.Ok))(
             FakeRequest()
-              .withHeaders("True-Client-Ip" -> "10.0.0.1")
+              .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
             )
 
           status(result) shouldBe SEE_OTHER
@@ -356,7 +357,7 @@ class AllowlistFilterSpec
 
         val result = filter(_ => Future.successful(Results.Ok))(
           FakeRequest("GET", "/service-frontend")
-            .withHeaders("True-Client-Ip" -> "10.0.0.1")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
           )
 
         status(result) shouldBe FORBIDDEN
@@ -366,7 +367,7 @@ class AllowlistFilterSpec
 
 
     "return OK " when {
-      "the route to be accessed is an exclueded path" in {
+      "the route to be accessed is an excluded path" in {
 
         val app = new GuiceApplicationBuilder()
           .configure(
@@ -381,8 +382,31 @@ class AllowlistFilterSpec
 
         val result = filter(_ => Future.successful(Results.Ok))(
           FakeRequest("GET", "/service-frontend/some/excluded/path")
-            .withHeaders("True-Client-Ip" -> "10.0.0.1")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
           )
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "return OK " when {
+      "the route to be accessed is the healthcheck /ping/ping endpoint" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.destination" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> "/service-frontend/some/excluded/path",
+            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("GET", "/ping/ping")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
 
         status(result) shouldBe OK
       }
