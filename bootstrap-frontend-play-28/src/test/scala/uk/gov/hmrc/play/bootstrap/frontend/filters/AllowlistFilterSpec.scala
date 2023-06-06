@@ -38,6 +38,9 @@ class AllowlistFilterSpec
      with ScalaCheckDrivenPropertyChecks
      with MockitoSugar {
 
+
+  val govUkUrl = "https://www.gov.uk"
+  val allowedIpAddress = "192.168.2.1"
   val mockMaterializer = mock[Materializer]
 
   val otherConfigGen = Gen.mapOf[String, String](
@@ -286,6 +289,102 @@ class AllowlistFilterSpec
         val result = filter(_ => Future.successful(Results.Ok))(FakeRequest())
 
         status(result) shouldBe NOT_IMPLEMENTED
+      }
+    }
+
+    "return successfully" when {
+      "a valid `True-Client-IP` header is found" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.destination" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> "",
+            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest()
+            .withHeaders("True-Client-Ip" -> allowedIpAddress)
+          )
+
+        status(result) shouldBe OK
+
+      }
+    }
+     "return a Redirect to the destination" when {
+        "an invalid True-Client-IP header is found" in {
+
+          val app = new GuiceApplicationBuilder()
+            .configure(
+              "bootstrap.filters.allowlist.destination" -> govUkUrl,
+              "bootstrap.filters.allowlist.excluded" -> "",
+              "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+              "bootstrap.filters.allowlist.enabled" -> true
+            )
+            .build()
+
+          val filter = app.injector.instanceOf[AllowlistFilter]
+
+          val result = filter(_ => Future.successful(Results.Ok))(
+            FakeRequest()
+              .withHeaders("True-Client-Ip" -> "10.0.0.1")
+            )
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(govUkUrl)
+
+        }
+     }
+
+    "return a Forbidden " when {
+      "the user would endup in a redirect loop" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.destination" -> "/service-frontend",
+            "bootstrap.filters.allowlist.excluded" -> "",
+            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("GET", "/service-frontend")
+            .withHeaders("True-Client-Ip" -> "10.0.0.1")
+          )
+
+        status(result) shouldBe FORBIDDEN
+
+      }
+    }
+
+
+    "return OK " when {
+      "the route to be accessed is an exclueded path" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.destination" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> "/service-frontend/some/excluded/path",
+            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("GET", "/service-frontend/some/excluded/path")
+            .withHeaders("True-Client-Ip" -> "10.0.0.1")
+          )
+
+        status(result) shouldBe OK
       }
     }
   }
