@@ -39,6 +39,7 @@ class AllowlistFilterSpec
      with MockitoSugar {
 
 
+  val healthCheckPath = "bootstrap.filters.allowlist.excludedHealthCheckPath" -> "/ping/ping"
   val nonAllowedIpAddress = "10.0.0.1"
   val govUkUrl = "https://www.gov.uk"
   val allowedIpAddress = "192.168.2.1"
@@ -66,7 +67,8 @@ class AllowlistFilterSpec
                 (otherConfig +
                   ("bootstrap.filters.allowlist.destination" -> destination) +
                   ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true)
+                  ("bootstrap.filters.allowlist.enabled"     -> true) +
+                  healthCheckPath
                 ).toSeq: _*
               )
 
@@ -90,7 +92,8 @@ class AllowlistFilterSpec
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
                 ("bootstrap.filters.allowlist.ips"         -> "") +
-                ("bootstrap.filters.allowlist.enabled"     -> true)
+                ("bootstrap.filters.allowlist.enabled"     -> true) +
+                healthCheckPath
               ).toSeq: _*
             )
 
@@ -117,7 +120,8 @@ class AllowlistFilterSpec
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
                 ("bootstrap.filters.allowlist.ips"         -> ipString) +
-                ("bootstrap.filters.allowlist.enabled"     -> true)
+                ("bootstrap.filters.allowlist.enabled"     -> true) +
+                healthCheckPath
               ).toSeq: _*
             )
 
@@ -144,7 +148,8 @@ class AllowlistFilterSpec
                 (otherConfig +
                   ("bootstrap.filters.allowlist.ips"      -> destination) +
                   ("bootstrap.filters.allowlist.excluded" -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true)
+                  ("bootstrap.filters.allowlist.enabled"     -> true) +
+                  healthCheckPath
                   ).toSeq: _*
               )
 
@@ -166,7 +171,8 @@ class AllowlistFilterSpec
               ("bootstrap.filters.allowlist.ips"         -> destination) +
               ("bootstrap.filters.allowlist.excluded"    -> excluded) +
               ("bootstrap.filters.allowlist.destination" -> destination) +
-              ("bootstrap.filters.allowlist.enabled"     -> true)
+              ("bootstrap.filters.allowlist.enabled"     -> true) +
+              healthCheckPath
               ).toSeq: _*
           )
 
@@ -192,7 +198,8 @@ class AllowlistFilterSpec
                 (otherConfig +
                   ("bootstrap.filters.allowlist.destination" -> destination) +
                   ("bootstrap.filters.allowlist.ips"         -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true)
+                  ("bootstrap.filters.allowlist.enabled"     -> true) +
+                  healthCheckPath
                   ).toSeq: _*
               )
 
@@ -220,7 +227,8 @@ class AllowlistFilterSpec
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excludedPathString) +
                 ("bootstrap.filters.allowlist.ips"         -> ips) +
-                ("bootstrap.filters.allowlist.enabled"     -> true)
+                ("bootstrap.filters.allowlist.enabled"     -> true) +
+                healthCheckPath
                 ).toSeq: _*
             )
 
@@ -281,7 +289,8 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> "",
             "bootstrap.filters.allowlist.excluded" -> "",
             "bootstrap.filters.allowlist.ips" -> "",
-            "bootstrap.filters.allowlist.enabled" -> true
+            "bootstrap.filters.allowlist.enabled" -> true,
+              healthCheckPath
           )
           .build()
 
@@ -301,7 +310,8 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> "",
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true
+            "bootstrap.filters.allowlist.enabled" -> true,
+            healthCheckPath
           )
           .build()
 
@@ -324,7 +334,8 @@ class AllowlistFilterSpec
               "bootstrap.filters.allowlist.destination" -> govUkUrl,
               "bootstrap.filters.allowlist.excluded" -> "",
               "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-              "bootstrap.filters.allowlist.enabled" -> true
+              "bootstrap.filters.allowlist.enabled" -> true,
+              healthCheckPath
             )
             .build()
 
@@ -349,7 +360,8 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> "/service-frontend",
             "bootstrap.filters.allowlist.excluded" -> "",
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true
+            "bootstrap.filters.allowlist.enabled" -> true,
+            healthCheckPath
           )
           .build()
 
@@ -374,7 +386,8 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> "/service-frontend/some/excluded/path",
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true
+            "bootstrap.filters.allowlist.enabled" -> true,
+            healthCheckPath
           )
           .build()
 
@@ -397,7 +410,8 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> "/service-frontend/some/excluded/path",
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true
+            "bootstrap.filters.allowlist.enabled" -> true,
+            healthCheckPath
           )
           .build()
 

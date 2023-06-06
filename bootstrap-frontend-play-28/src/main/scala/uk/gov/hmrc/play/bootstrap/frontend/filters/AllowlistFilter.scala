@@ -36,7 +36,8 @@ class AllowlistFilter @Inject() (
   case class AllowlistFilterConfig(
     allowlist    : Seq[String],
     destination  : Call,
-    excludedPaths: Seq[Call]
+    excludedPaths: Seq[Call],
+    excludedHealthCheckPath: Call
   )
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
@@ -58,7 +59,13 @@ class AllowlistFilter @Inject() (
         .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty)
-        .map(path => Call("GET", path))
+        .map(path => Call("GET", path)),
+
+    excludedHealthCheckPath =
+      Call("GET",
+      config.get[String](
+      "bootstrap.filters.allowlist.excludedHealthCheckPath")
+    )
   )
 
   def loadConfig: AllowlistFilter = {
@@ -79,6 +86,9 @@ class AllowlistFilter @Inject() (
   lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
 
+  private lazy val excludedHealthCheckPath: Call =
+    allowlistFilterConfig.excludedHealthCheckPath
+
   private val enabled: Boolean =
     config.get[Boolean]("bootstrap.filters.allowlist.enabled")
 
@@ -93,8 +103,12 @@ class AllowlistFilter @Inject() (
 
   def response: Result = Redirect(destination)
 
+  private def excluded(rh: RequestHeader) = {
+    (excludedPaths :+ excludedHealthCheckPath).contains(toCall(rh))
+  }
+
   def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
-    if (excludedPaths.contains(toCall(rh)))
+    if (excluded(rh))
       f(rh)
     else
       rh.headers.get(trueClient).fold(noHeaderAction(f, rh))(ip =>
@@ -105,6 +119,7 @@ class AllowlistFilter @Inject() (
         else
           Future.successful(response)
       )
+
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (enabled)
