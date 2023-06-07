@@ -412,6 +412,37 @@ class AllowlistFilterSpec
       }
     }
 
+    "be tolerant" when {
+      val app = new GuiceApplicationBuilder()
+        .configure(
+          "bootstrap.filters.allowlist.destination" -> govUkUrl,
+          "bootstrap.filters.allowlist.excluded" -> Seq("/ping/ping", "put:/some-excluded-path"),
+          "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+          "bootstrap.filters.allowlist.enabled" -> true
+        )
+        .build()
+
+      val filter = app.injector.instanceOf[AllowlistFilter]
+
+      "configuration for exclusions has the method defined as non-uppercase" in {
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("PUT", "/some-excluded-path")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+        status(result) shouldBe OK
+      }
+      "the request method is non-uppercase" in {
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("Put", "/some-excluded-path")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+        status(result) shouldBe OK
+      }
+
+    }
+
+
+
 
       "return OK " when {
         "the route to be accessed is the healthcheck /ping/ping endpoint" in {

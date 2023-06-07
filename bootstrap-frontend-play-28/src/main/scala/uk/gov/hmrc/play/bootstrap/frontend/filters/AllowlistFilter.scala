@@ -96,7 +96,7 @@ class AllowlistFilter @Inject() (
   protected def excluded(rh: RequestHeader): Boolean = {
     def wildcardMatch(c: Call) = c.url.endsWith("/*") && rh.uri.startsWith(c.url.dropRight(2))
 
-    excludedPaths.exists(c => c.method == rh.method && (c.url == rh.uri || wildcardMatch(c)))
+    excludedPaths.exists(c => c.method.equalsIgnoreCase(rh.method) && (c.url == rh.uri || wildcardMatch(c)))
   }
 
   private def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
