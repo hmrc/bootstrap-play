@@ -57,9 +57,12 @@ class AllowlistFilter @Inject() (
         .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty)
-        .map(path => Call("GET", path))
-
-  )
+        .map{_.split(":") match {
+                case Array(method, url) => Call(method, url)
+                case Array(url) => Call("GET", url)
+              }
+            }
+    )
 
   def loadConfig: AllowlistFilter = {
     allowlistFilterConfig
@@ -88,7 +91,7 @@ class AllowlistFilter @Inject() (
   private def isCircularDestination(requestHeader: RequestHeader): Boolean =
     requestHeader.uri == destination.url
 
-  private def response: Result = Redirect(destination)
+  protected def response: Result = Redirect(destination)
 
   protected def excluded(rh: RequestHeader): Boolean = {
     def wildcardMatch(c: Call) = c.url.endsWith("/*") && rh.uri.startsWith(c.url.dropRight(2))

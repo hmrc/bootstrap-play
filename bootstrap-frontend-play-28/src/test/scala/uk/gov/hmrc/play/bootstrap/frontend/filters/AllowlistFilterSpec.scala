@@ -390,7 +390,31 @@ class AllowlistFilterSpec
     }
 
     "return OK " when {
-      "the route to be accessed is the healthcheck /ping/ping endpoint" in {
+      "the route to be accessed is an excluded route accessed with an http method other than GET" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.destination" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> Seq("/ping/ping", "PUT:/some-excluded-path"),
+            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("PUT", "/some-excluded-path")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+
+        status(result) shouldBe OK
+      }
+    }
+
+
+      "return OK " when {
+        "the route to be accessed is the healthcheck /ping/ping endpoint" in {
 
         val app = new GuiceApplicationBuilder()
           .configure(
