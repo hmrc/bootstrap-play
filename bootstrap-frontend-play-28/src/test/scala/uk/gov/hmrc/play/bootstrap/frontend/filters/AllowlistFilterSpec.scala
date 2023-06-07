@@ -39,7 +39,7 @@ class AllowlistFilterSpec
      with MockitoSugar {
 
 
-  val exclusions = s"/ping/ping,/some-excluded-path"
+  val exclusions = Seq("/ping/ping", "/some-excluded-path")
 
   val nonAllowedIpAddress = "10.0.0.1"
   val govUkUrl = "https://www.gov.uk"
@@ -84,7 +84,7 @@ class AllowlistFilterSpec
 
       "the underlying config value is empty" in {
 
-        forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
+        forAll(otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
           (otherConfig, destination, excluded) =>
 
             val config = Configuration(
@@ -109,7 +109,7 @@ class AllowlistFilterSpec
 
         val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
 
-        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[String]) {
+        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
           (ips, otherConfig, destination, excluded) =>
 
             val ipString = ips.mkString(",")
@@ -160,12 +160,12 @@ class AllowlistFilterSpec
 
     "return a Call to the destination" in {
 
-      forAll(otherConfigGen, arbitrary[String], arbitrary[String], arbitrary[String]) {
+      forAll(otherConfigGen, arbitrary[String], arbitrary[String], arbitrary[Seq[String]]) {
         (otherConfig, ips, destination, excluded) =>
 
           val config = Configuration(
             (otherConfig +
-              ("bootstrap.filters.allowlist.ips"         -> destination) +
+              ("bootstrap.filters.allowlist.ips"         -> ips) +
               ("bootstrap.filters.allowlist.excluded"    -> excluded) +
               ("bootstrap.filters.allowlist.destination" -> destination) +
               ("bootstrap.filters.allowlist.enabled"     -> true)
@@ -208,19 +208,17 @@ class AllowlistFilterSpec
 
     "return Calls to all of the values" when {
 
-      "given a comma-separated list of values" in {
+      "given an array of excluded paths" in {
 
         val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
 
         forAll(gen, otherConfigGen, arbitrary[String], arbitrary[String]) {
           (excludedPaths, otherConfig, destination, ips) =>
 
-            val excludedPathString = excludedPaths.mkString(",")
-
             val config = Configuration(
               (otherConfig +
                 ("bootstrap.filters.allowlist.destination" -> destination) +
-                ("bootstrap.filters.allowlist.excluded"    -> excludedPathString) +
+                ("bootstrap.filters.allowlist.excluded"    -> excludedPaths) +
                 ("bootstrap.filters.allowlist.ips"         -> ips) +
                 ("bootstrap.filters.allowlist.enabled"     -> true)
                 ).toSeq: _*
@@ -281,7 +279,7 @@ class AllowlistFilterSpec
         val app = new GuiceApplicationBuilder()
           .configure(
             "bootstrap.filters.allowlist.destination" -> "",
-            "bootstrap.filters.allowlist.excluded" -> "",
+            "bootstrap.filters.allowlist.excluded" -> Seq.empty,
             "bootstrap.filters.allowlist.ips" -> "",
             "bootstrap.filters.allowlist.enabled" -> true
           )
@@ -301,7 +299,7 @@ class AllowlistFilterSpec
         val app = new GuiceApplicationBuilder()
           .configure(
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
-            "bootstrap.filters.allowlist.excluded" -> "",
+            "bootstrap.filters.allowlist.excluded" -> Seq.empty,
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
             "bootstrap.filters.allowlist.enabled" -> true
           )
@@ -324,7 +322,7 @@ class AllowlistFilterSpec
           val app = new GuiceApplicationBuilder()
             .configure(
               "bootstrap.filters.allowlist.destination" -> govUkUrl,
-              "bootstrap.filters.allowlist.excluded" -> "",
+              "bootstrap.filters.allowlist.excluded" -> Seq.empty,
               "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
               "bootstrap.filters.allowlist.enabled" -> true
             )
@@ -349,7 +347,7 @@ class AllowlistFilterSpec
         val app = new GuiceApplicationBuilder()
           .configure(
             "bootstrap.filters.allowlist.destination" -> "/service-frontend",
-            "bootstrap.filters.allowlist.excluded" -> "",
+            "bootstrap.filters.allowlist.excluded" -> Seq.empty,
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
             "bootstrap.filters.allowlist.enabled" -> true
           )
@@ -420,7 +418,7 @@ class AllowlistFilterSpec
         val app = new GuiceApplicationBuilder()
           .configure(
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
-            "bootstrap.filters.allowlist.excluded" -> (exclusions + ",/service/feature/*"),
+            "bootstrap.filters.allowlist.excluded" -> (exclusions :+ "/service/feature/*"),
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
             "bootstrap.filters.allowlist.enabled" -> true
           )

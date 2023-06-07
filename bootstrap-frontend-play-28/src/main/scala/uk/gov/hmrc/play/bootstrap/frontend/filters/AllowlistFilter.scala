@@ -54,8 +54,7 @@ class AllowlistFilter @Inject() (
     },
 
     excludedPaths =
-      config.get[String]("bootstrap.filters.allowlist.excluded")
-        .split(",")
+      config.get[Seq[String]]("bootstrap.filters.allowlist.excluded")
         .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty)
@@ -63,8 +62,7 @@ class AllowlistFilter @Inject() (
         .map(path => Call("GET", path)),
 
     excludedWildCardedPaths =
-      config.get[String]("bootstrap.filters.allowlist.excluded")
-        .split(",")
+      config.get[Seq[String]]("bootstrap.filters.allowlist.excluded")
         .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty)
