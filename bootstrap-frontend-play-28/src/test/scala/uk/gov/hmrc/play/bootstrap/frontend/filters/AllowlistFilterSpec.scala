@@ -39,8 +39,8 @@ class AllowlistFilterSpec
      with MockitoSugar {
 
 
-  val exclusion = "/some-excluded-path"
-  val healthCheckPath = "bootstrap.filters.allowlist.excludedHealthCheckPath" -> "/ping/ping"
+  val exclusions = s"/ping/ping,/some-excluded-path"
+
   val nonAllowedIpAddress = "10.0.0.1"
   val govUkUrl = "https://www.gov.uk"
   val allowedIpAddress = "192.168.2.1"
@@ -68,8 +68,7 @@ class AllowlistFilterSpec
                 (otherConfig +
                   ("bootstrap.filters.allowlist.destination" -> destination) +
                   ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true) +
-                  healthCheckPath
+                  ("bootstrap.filters.allowlist.enabled"     -> true)
                 ).toSeq: _*
               )
 
@@ -93,8 +92,7 @@ class AllowlistFilterSpec
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
                 ("bootstrap.filters.allowlist.ips"         -> "") +
-                ("bootstrap.filters.allowlist.enabled"     -> true) +
-                healthCheckPath
+                ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
 
@@ -121,8 +119,7 @@ class AllowlistFilterSpec
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
                 ("bootstrap.filters.allowlist.ips"         -> ipString) +
-                ("bootstrap.filters.allowlist.enabled"     -> true) +
-                healthCheckPath
+                ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
 
@@ -149,8 +146,7 @@ class AllowlistFilterSpec
                 (otherConfig +
                   ("bootstrap.filters.allowlist.ips"      -> destination) +
                   ("bootstrap.filters.allowlist.excluded" -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true) +
-                  healthCheckPath
+                  ("bootstrap.filters.allowlist.enabled"     -> true)
                   ).toSeq: _*
               )
 
@@ -172,8 +168,7 @@ class AllowlistFilterSpec
               ("bootstrap.filters.allowlist.ips"         -> destination) +
               ("bootstrap.filters.allowlist.excluded"    -> excluded) +
               ("bootstrap.filters.allowlist.destination" -> destination) +
-              ("bootstrap.filters.allowlist.enabled"     -> true) +
-              healthCheckPath
+              ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
           )
 
@@ -199,8 +194,7 @@ class AllowlistFilterSpec
                 (otherConfig +
                   ("bootstrap.filters.allowlist.destination" -> destination) +
                   ("bootstrap.filters.allowlist.ips"         -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true) +
-                  healthCheckPath
+                  ("bootstrap.filters.allowlist.enabled"     -> true)
                   ).toSeq: _*
               )
 
@@ -228,8 +222,7 @@ class AllowlistFilterSpec
                 ("bootstrap.filters.allowlist.destination" -> destination) +
                 ("bootstrap.filters.allowlist.excluded"    -> excludedPathString) +
                 ("bootstrap.filters.allowlist.ips"         -> ips) +
-                ("bootstrap.filters.allowlist.enabled"     -> true) +
-                healthCheckPath
+                ("bootstrap.filters.allowlist.enabled"     -> true)
                 ).toSeq: _*
             )
 
@@ -290,8 +283,7 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> "",
             "bootstrap.filters.allowlist.excluded" -> "",
             "bootstrap.filters.allowlist.ips" -> "",
-            "bootstrap.filters.allowlist.enabled" -> true,
-              healthCheckPath
+            "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
 
@@ -311,8 +303,7 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> "",
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true,
-            healthCheckPath
+            "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
 
@@ -335,8 +326,7 @@ class AllowlistFilterSpec
               "bootstrap.filters.allowlist.destination" -> govUkUrl,
               "bootstrap.filters.allowlist.excluded" -> "",
               "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-              "bootstrap.filters.allowlist.enabled" -> true,
-              healthCheckPath
+              "bootstrap.filters.allowlist.enabled" -> true
             )
             .build()
 
@@ -361,8 +351,7 @@ class AllowlistFilterSpec
             "bootstrap.filters.allowlist.destination" -> "/service-frontend",
             "bootstrap.filters.allowlist.excluded" -> "",
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true,
-            healthCheckPath
+            "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
 
@@ -385,17 +374,16 @@ class AllowlistFilterSpec
         val app = new GuiceApplicationBuilder()
           .configure(
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
-            "bootstrap.filters.allowlist.excluded" -> exclusion,
+            "bootstrap.filters.allowlist.excluded" -> exclusions,
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true,
-            healthCheckPath
+            "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
 
         val filter = app.injector.instanceOf[AllowlistFilter]
 
         val result = filter(_ => Future.successful(Results.Ok))(
-          FakeRequest("GET", exclusion)
+          FakeRequest("GET", "/some-excluded-path")
             .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
           )
 
@@ -409,10 +397,9 @@ class AllowlistFilterSpec
         val app = new GuiceApplicationBuilder()
           .configure(
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
-            "bootstrap.filters.allowlist.excluded" -> exclusion,
+            "bootstrap.filters.allowlist.excluded" -> exclusions,
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true,
-            healthCheckPath
+            "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
 
@@ -433,10 +420,9 @@ class AllowlistFilterSpec
         val app = new GuiceApplicationBuilder()
           .configure(
             "bootstrap.filters.allowlist.destination" -> govUkUrl,
-            "bootstrap.filters.allowlist.excluded" -> (exclusion + ",/service/feature/*"),
+            "bootstrap.filters.allowlist.excluded" -> (exclusions + ",/service/feature/*"),
             "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
-            "bootstrap.filters.allowlist.enabled" -> true,
-            healthCheckPath
+            "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
 

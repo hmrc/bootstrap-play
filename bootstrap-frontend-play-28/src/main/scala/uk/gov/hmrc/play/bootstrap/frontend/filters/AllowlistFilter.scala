@@ -37,8 +37,7 @@ class AllowlistFilter @Inject() (
     allowlist    : Seq[String],
     destination  : Call,
     excludedPaths: Seq[Call],
-    excludedWildCardedPaths: Seq[Call],
-    excludedHealthCheckPath: Call
+    excludedWildCardedPaths: Seq[Call]
   )
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
@@ -70,13 +69,7 @@ class AllowlistFilter @Inject() (
         .map(_.trim)
         .filter(_.nonEmpty)
         .filter(_.endsWith("/*"))
-        .map(path => Call("GET", path.dropRight(2))),
-
-    excludedHealthCheckPath =
-      Call("GET",
-      config.get[String](
-      "bootstrap.filters.allowlist.excludedHealthCheckPath")
-    )
+        .map(path => Call("GET", path.dropRight(2)))
   )
 
   def loadConfig: AllowlistFilter = {
@@ -100,30 +93,24 @@ class AllowlistFilter @Inject() (
   private lazy val excludedWildCardedPaths: Seq[Call] =
     allowlistFilterConfig.excludedWildCardedPaths
 
-  private lazy val excludedHealthCheckPath: Call =
-    allowlistFilterConfig.excludedHealthCheckPath
-
   private val enabled: Boolean =
     config.get[Boolean]("bootstrap.filters.allowlist.enabled")
 
-  private def toCall(rh: RequestHeader): Call =
-    Call(rh.method, rh.uri)
-
-  def noHeaderAction(f: RequestHeader => Future[Result], rh: RequestHeader): Future[Result] =
+ protected def noHeaderAction(f: RequestHeader => Future[Result], rh: RequestHeader): Future[Result] =
     Future.successful(NotImplemented)
 
   private def isCircularDestination(requestHeader: RequestHeader): Boolean =
     requestHeader.uri == destination.url
 
-  def response: Result = Redirect(destination)
+  private def response: Result = Redirect(destination)
 
-  private def excluded(rh: RequestHeader) = {
-    val call = toCall(rh)
-    (excludedPaths :+ excludedHealthCheckPath).contains(call) ||
+  protected def excluded(rh: RequestHeader): Boolean = {
+    val call = Call(rh.method, rh.uri)
+    excludedPaths.contains(call) ||
       excludedWildCardedPaths.exists(c => call.method == c.method && call.url.startsWith(c.url))
   }
 
-  def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
+  private def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (excluded(rh))
       f(rh)
     else
