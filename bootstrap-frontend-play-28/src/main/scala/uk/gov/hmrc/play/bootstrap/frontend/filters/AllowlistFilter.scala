@@ -36,8 +36,7 @@ class AllowlistFilter @Inject() (
   case class AllowlistFilterConfig(
     allowlist    : Seq[String],
     destination  : Call,
-    excludedPaths: Seq[Call],
-    excludedWildCardedPaths: Seq[Call]
+    excludedPaths: Seq[Call]
   )
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
@@ -58,16 +57,8 @@ class AllowlistFilter @Inject() (
         .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty)
-        .filterNot(_.endsWith("/*"))
-        .map(path => Call("GET", path)),
+        .map(path => Call("GET", path))
 
-    excludedWildCardedPaths =
-      config.get[Seq[String]]("bootstrap.filters.allowlist.excluded")
-        .toIndexedSeq
-        .map(_.trim)
-        .filter(_.nonEmpty)
-        .filter(_.endsWith("/*"))
-        .map(path => Call("GET", path.dropRight(2)))
   )
 
   def loadConfig: AllowlistFilter = {
@@ -88,9 +79,6 @@ class AllowlistFilter @Inject() (
   lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
 
-  private lazy val excludedWildCardedPaths: Seq[Call] =
-    allowlistFilterConfig.excludedWildCardedPaths
-
   private val enabled: Boolean =
     config.get[Boolean]("bootstrap.filters.allowlist.enabled")
 
@@ -103,9 +91,9 @@ class AllowlistFilter @Inject() (
   private def response: Result = Redirect(destination)
 
   protected def excluded(rh: RequestHeader): Boolean = {
-    val call = Call(rh.method, rh.uri)
-    excludedPaths.contains(call) ||
-      excludedWildCardedPaths.exists(c => call.method == c.method && call.url.startsWith(c.url))
+    def wildcardMatch(c: Call) = c.url.endsWith("/*") && rh.uri.startsWith(c.url.dropRight(2))
+
+    excludedPaths.exists(c => c.method == rh.method && (c.url == rh.uri || wildcardMatch(c)))
   }
 
   private def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
