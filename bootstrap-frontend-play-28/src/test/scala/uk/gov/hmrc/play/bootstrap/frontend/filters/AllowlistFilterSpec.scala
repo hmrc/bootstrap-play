@@ -91,7 +91,7 @@ class AllowlistFilterSpec
               (otherConfig +
                 ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                ("bootstrap.filters.allowlist.ips"         -> "") +
+                ("bootstrap.filters.allowlist.ips"         -> Seq.empty) +
                 ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
@@ -112,13 +112,11 @@ class AllowlistFilterSpec
         forAll(gen, otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
           (ips, otherConfig, redirectUrlWhenDenied, excluded) =>
 
-            val ipString = ips.mkString(",")
-
             val config = Configuration(
               (otherConfig +
                 ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                ("bootstrap.filters.allowlist.ips"         -> ipString) +
+                ("bootstrap.filters.allowlist.ips"         -> ips) +
                 ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
@@ -139,7 +137,7 @@ class AllowlistFilterSpec
 
         val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
 
-        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[String]) {
+        forAll(gen, otherConfigGen, arbitrary[Seq[String]], arbitrary[Seq[String]]) {
           (destination, otherConfig, ips, excluded) =>
 
             whenever(!otherConfig.contains("bootstrap.filters.allowlist.redirectUrlWhenDenied")) {
@@ -191,7 +189,7 @@ class AllowlistFilterSpec
 
     "return a Call to the redirectUrlWhenDenied" in {
 
-      forAll(otherConfigGen, arbitrary[String], arbitrary[String], arbitrary[Seq[String]]) {
+      forAll(otherConfigGen, arbitrary[Seq[String]], arbitrary[String], arbitrary[Seq[String]]) {
         (otherConfig, ips, redirectUrlWhenDenied, excluded) =>
 
           val config = Configuration(
@@ -243,7 +241,7 @@ class AllowlistFilterSpec
 
         val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
 
-        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[String]) {
+        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
           (excludedPaths, otherConfig, redirectUrlWhenDenied, ips) =>
 
             val config = Configuration(
@@ -311,7 +309,7 @@ class AllowlistFilterSpec
           .configure(
             "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> "",
             "bootstrap.filters.allowlist.excluded" -> Seq.empty,
-            "bootstrap.filters.allowlist.ips" -> "",
+            "bootstrap.filters.allowlist.ips" -> Seq.empty,
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
@@ -331,7 +329,7 @@ class AllowlistFilterSpec
           .configure(
             "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> Seq.empty,
-            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
@@ -354,7 +352,7 @@ class AllowlistFilterSpec
             .configure(
               "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
               "bootstrap.filters.allowlist.excluded" -> Seq.empty,
-              "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+              "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
               "bootstrap.filters.allowlist.enabled" -> true
             )
             .build()
@@ -379,7 +377,7 @@ class AllowlistFilterSpec
           .configure(
             "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> "/service-frontend",
             "bootstrap.filters.allowlist.excluded" -> Seq.empty,
-            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
@@ -404,7 +402,7 @@ class AllowlistFilterSpec
           .configure(
             "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> exclusions,
-            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
@@ -427,7 +425,7 @@ class AllowlistFilterSpec
           .configure(
             "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> Seq("/ping/ping", "PUT:/some-excluded-path"),
-            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
@@ -448,7 +446,7 @@ class AllowlistFilterSpec
         .configure(
           "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
           "bootstrap.filters.allowlist.excluded" -> Seq("/ping/ping", "put:/some-excluded-path"),
-          "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+          "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
           "bootstrap.filters.allowlist.enabled" -> true
         )
         .build()
@@ -482,7 +480,7 @@ class AllowlistFilterSpec
           .configure(
             "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> exclusions,
-            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
@@ -505,7 +503,7 @@ class AllowlistFilterSpec
           .configure(
             "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
             "bootstrap.filters.allowlist.excluded" -> (exclusions :+ "/service/feature/*"),
-            "bootstrap.filters.allowlist.ips" -> allowedIpAddress,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()

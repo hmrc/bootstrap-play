@@ -45,8 +45,7 @@ class AllowlistFilter @Inject() (
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
     allowlist =
-      config.get[String]("bootstrap.filters.allowlist.ips")
-        .split(",")
+      config.get[Seq[String]]("bootstrap.filters.allowlist.ips")
         .toIndexedSeq
         .map(_.trim)
         .filter(_.nonEmpty),
