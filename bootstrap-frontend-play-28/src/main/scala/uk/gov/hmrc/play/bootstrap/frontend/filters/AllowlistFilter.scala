@@ -52,7 +52,7 @@ class AllowlistFilter @Inject() (
 
     redirectUrlWhenDenied = {
       if (config.has(destinationKey)) {
-       throw config.reportError(destinationKey, s"Key is deprecated use $redirectUrlWhenDeniedKey instead")
+       throw config.reportError(destinationKey, s"$destinationKey is obsolete please use $redirectUrlWhenDeniedKey instead")
       } else {
         val path = config.get[String](redirectUrlWhenDeniedKey)
         Call("GET", path)
