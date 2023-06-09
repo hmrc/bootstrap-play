@@ -18,8 +18,8 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
 import com.google.inject.{Inject, Singleton}
-import play.api.Configuration
-import play.api.mvc.Results.{Forbidden, NotImplemented, Redirect}
+import play.api.{Configuration, Logger}
+import play.api.mvc.Results.{Forbidden, InternalServerError, NotImplemented, Redirect}
 import play.api.mvc.{Call, Filter, RequestHeader, Result}
 
 import scala.concurrent.Future
@@ -31,13 +31,17 @@ class AllowlistFilter @Inject() (
 ) extends Filter {
 
 
-  val trueClient = "True-Client-IP"
+  private val logger = Logger(getClass)
+  private val trueClient = "True-Client-IP"
 
   case class AllowlistFilterConfig(
     allowlist    : Seq[String],
-    destination  : Call,
+    redirectUrlWhenDenied  : Call,
     excludedPaths: Seq[Call]
   )
+
+  private val destinationKey = "bootstrap.filters.allowlist.destination"
+  private val redirectUrlWhenDeniedKey = "bootstrap.filters.allowlist.redirectUrlWhenDenied"
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
     allowlist =
@@ -47,9 +51,13 @@ class AllowlistFilter @Inject() (
         .map(_.trim)
         .filter(_.nonEmpty),
 
-    destination = {
-      val path = config.get[String]("bootstrap.filters.allowlist.destination")
-      Call("GET", path)
+    redirectUrlWhenDenied = {
+      if (config.has(destinationKey)) {
+       throw config.reportError(destinationKey, s"Key is deprecated use $redirectUrlWhenDeniedKey instead")
+      } else {
+        val path = config.get[String](redirectUrlWhenDeniedKey)
+        Call("GET", path)
+      }
     },
 
     excludedPaths =
@@ -76,8 +84,8 @@ class AllowlistFilter @Inject() (
   def whitelist: Seq[String] =
     allowlist
 
-  lazy val destination: Call =
-    allowlistFilterConfig.destination
+  lazy val redirectUrlWhenDenied: Call =
+    allowlistFilterConfig.redirectUrlWhenDenied
 
   lazy val excludedPaths: Seq[Call] =
     allowlistFilterConfig.excludedPaths
@@ -85,13 +93,12 @@ class AllowlistFilter @Inject() (
   private val enabled: Boolean =
     config.get[Boolean]("bootstrap.filters.allowlist.enabled")
 
- protected def noHeaderAction(f: RequestHeader => Future[Result], rh: RequestHeader): Future[Result] =
-    Future.successful(NotImplemented)
+ private def error(message: String): Future[Result] = {
+    logger.error(message)
+    Future.successful(InternalServerError)
+ }
 
-  private def isCircularDestination(requestHeader: RequestHeader): Boolean =
-    requestHeader.uri == destination.url
-
-  protected def response: Result = Redirect(destination)
+  protected def response: Result = Redirect(redirectUrlWhenDenied)
 
   protected def excluded(rh: RequestHeader): Boolean = {
     def wildcardMatch(c: Call) = c.url.endsWith("/*") && rh.uri.startsWith(c.url.dropRight(2))
@@ -99,15 +106,16 @@ class AllowlistFilter @Inject() (
     excludedPaths.exists(c => c.method.equalsIgnoreCase(rh.method) && (c.url == rh.uri || wildcardMatch(c)))
   }
 
+
   private def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (excluded(rh))
       f(rh)
     else
-      rh.headers.get(trueClient).fold(noHeaderAction(f, rh))(ip =>
+      rh.headers.get(trueClient).fold(error(s"No $trueClient Http Header Found in the request"))(ip =>
         if (allowlist.contains(ip))
           f(rh)
-        else if (isCircularDestination(rh))
-          Future.successful(Forbidden)
+        else if (rh.uri == redirectUrlWhenDenied.url)
+          error(s"Not allowed. Forwarding to '${rh.uri}' would result in a redirect loop, reconfigure $redirectUrlWhenDenied")
         else
           Future.successful(response)
       )
