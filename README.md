@@ -151,8 +151,94 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
+## Allow List Filter
+
+The library includes a frontend Filter that can block requests from IP address that are not on an _allow list_
+
+To enable this filter in your frontend add the following key in your application.conf file:
+
+`bootstrap.filters.allowlist.enabled = true`
+
+The filter will check the ip address supplied in the `True-Client-IP` http header in a list of allowed ip addresses.
+
+The filter when enabled uses the following configuration properties:
+
+| Property                                              | Type             | Mandatory | Desription                                                                                                                                                                                     |
+|-------------------------------------------------------|------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bootstrap.filters.allowlist.ips`                     | array of strings | Y         | Allows request from any one of these ip addresses                                                                                                                                              |
+| `bootstrap.filters.allowlist.excluded`                | array of strings | N         | Irrespective of IP address the filter will not block access to any of these paths<br/>Defaults to an array with `/ping/ping` at array position zero.<br/>Note see example below for defintion. |
+| `bootstrap.filters.allowlist.redirectUrlWhenExcluded` | string           | Y         | The filter will redirect any denied requests to this URL<br/>Note **if** this URL is relative it must also be on the excluded list.                                                            |
+
+
+### Example 1
+
+```hocon
+bootstrap.filters.allowlist.enabled = true
+bootstrap.filters.allowlist.ips.0 = "192.168.2.1"
+bootstrap.filters.allowlist.ips.1 = "10.0.0.1"
+bootstrap.filters.allowlist.excluded.1 = "/some/path"
+bootstrap.filters.allowlist.excluded.2 = "/some/other/path"
+bootstrap.filters.allowlist.redirectUrlWhenExcluded = "http://www.gov.uk"
+```
+
+### Example 2
+
+```hocon
+bootstrap {
+    filters {
+      allowlist {
+        enabled = true
+         ips = [
+               "127.0.0.1"
+               "10.0.0.1"
+               ]
+         redirectUrlWhenDenied = "https://www.gov.uk"
+         excluded = ${bootstrap.filters.allowlist.excluded}[
+                    "/some/path",
+                    "/some/other/path"
+                  ]
+      }
+    }
+  }
+```
+### Example 3
+```hocon
+bootstrap {
+    filters {
+      allowlist {
+        enabled = true
+         ips = [
+               "127.0.0.1"
+               "10.0.0.1"
+               ]
+         redirectUrlWhenDenied = "/platform-status/"
+         excluded.1 = "/some/path"
+         excluded.2 = "/some/other/path"
+      }
+    }
+  }
+```
+
+
+
+
+
 
 ## Changes
+
+### Version 7.16.0
+
+- Updates the Allowlist Filter
+  - config values 
+    - `bootstrap.filters.allowlist.destination` is now obsolete use `bootstrap.filters.allowlist.redirectUrlWhenDenied` instead
+    - `bootstrap.filters.allowlist.ips` is now an array
+    - `bootstrap.filters.allowlist.excluded` is now an array
+    - exclusions can, optionally, be defined with http methods in config, for example, `METHOD:/path`
+    - exclusions now support a trailing wildcard, for example, `/path/*` excludes everything _below_ /path
+    - frontend.conf includes a `/ping/ping` exclusion at `bootstrap.filters.allowlist.excluded[0]`
+    - removes all references to Akamai
+    - provides a allowlist filter implementation and no longer extends the play-allowlist-filter library
+    - new error handling and logging for configuration errors.
 
 ### Version 7.15.0
 
