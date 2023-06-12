@@ -24,7 +24,7 @@ import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import play.api.Configuration
+import play.api.{Configuration, PlayException}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{Call, Results}
 import play.api.test.FakeRequest
@@ -38,6 +38,12 @@ class AllowlistFilterSpec
      with ScalaCheckDrivenPropertyChecks
      with MockitoSugar {
 
+
+  val exclusions = Seq("/ping/ping", "/some-excluded-path")
+
+  val nonAllowedIpAddress = "10.0.0.1"
+  val govUkUrl = "https://www.gov.uk"
+  val allowedIpAddress = "192.168.2.1"
   val mockMaterializer = mock[Materializer]
 
   val otherConfigGen = Gen.mapOf[String, String](
@@ -78,14 +84,14 @@ class AllowlistFilterSpec
 
       "the underlying config value is empty" in {
 
-        forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
-          (otherConfig, destination, excluded) =>
+        forAll(otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
+          (otherConfig, redirectUrlWhenDenied, excluded) =>
 
             val config = Configuration(
               (otherConfig +
-                ("bootstrap.filters.allowlist.destination" -> destination) +
+                ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                ("bootstrap.filters.allowlist.ips"         -> "") +
+                ("bootstrap.filters.allowlist.ips"         -> Seq.empty) +
                 ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
@@ -103,16 +109,14 @@ class AllowlistFilterSpec
 
         val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
 
-        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[String]) {
-          (ips, otherConfig, destination, excluded) =>
-
-            val ipString = ips.mkString(",")
+        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
+          (ips, otherConfig, redirectUrlWhenDenied, excluded) =>
 
             val config = Configuration(
               (otherConfig +
-                ("bootstrap.filters.allowlist.destination" -> destination) +
+                ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
                 ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                ("bootstrap.filters.allowlist.ips"         -> ipString) +
+                ("bootstrap.filters.allowlist.ips"         -> ips) +
                 ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
             )
@@ -125,20 +129,51 @@ class AllowlistFilterSpec
     }
   }
 
-  "the destination for non-allowlisted visitors" should {
+  "the bootstrap.filters.allowlist.destination key is deprecated and" should {
+
+    "throw an exception" when {
+
+      "a value exists" in {
+
+        val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
+
+        forAll(gen, otherConfigGen, arbitrary[Seq[String]], arbitrary[Seq[String]]) {
+          (destination, otherConfig, ips, excluded) =>
+
+            whenever(!otherConfig.contains("bootstrap.filters.allowlist.redirectUrlWhenDenied")) {
+
+              val config = Configuration(
+                (otherConfig +
+                  ("bootstrap.filters.allowlist.ips" -> ips) +
+                  ("bootstrap.filters.allowlist.destination" -> destination) +
+                  ("bootstrap.filters.allowlist.excluded" -> excluded) +
+                  ("bootstrap.filters.allowlist.enabled" -> true)
+                  ).toSeq: _*
+              )
+
+              assertThrows[PlayException] {
+                new AllowlistFilter(config, mockMaterializer).loadConfig
+              }
+            }
+        }
+      }
+    }
+  }
+
+    "the redirectUrlWhenDenied for non-allowlisted visitors" should {
 
     "throw an exception" when {
 
       "the underlying config value is not there" in {
 
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
-          (otherConfig, destination, excluded) =>
+          (otherConfig, ips, excluded) =>
 
-            whenever(!otherConfig.contains("bootstrap.filters.allowlist.destination")) {
+            whenever(!otherConfig.contains("bootstrap.filters.allowlist.redirectUrlWhenDenied")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("bootstrap.filters.allowlist.ips"      -> destination) +
+                  ("bootstrap.filters.allowlist.ips"      -> ips) +
                   ("bootstrap.filters.allowlist.excluded" -> excluded) +
                   ("bootstrap.filters.allowlist.enabled"     -> true)
                   ).toSeq: _*
@@ -152,23 +187,23 @@ class AllowlistFilterSpec
       }
     }
 
-    "return a Call to the destination" in {
+    "return a Call to the redirectUrlWhenDenied" in {
 
-      forAll(otherConfigGen, arbitrary[String], arbitrary[String], arbitrary[String]) {
-        (otherConfig, ips, destination, excluded) =>
+      forAll(otherConfigGen, arbitrary[Seq[String]], arbitrary[String], arbitrary[Seq[String]]) {
+        (otherConfig, ips, redirectUrlWhenDenied, excluded) =>
 
           val config = Configuration(
             (otherConfig +
-              ("bootstrap.filters.allowlist.ips"         -> destination) +
+              ("bootstrap.filters.allowlist.ips"         -> ips) +
               ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-              ("bootstrap.filters.allowlist.destination" -> destination) +
+              ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
               ("bootstrap.filters.allowlist.enabled"     -> true)
               ).toSeq: _*
           )
 
           val allowlistFilter = new AllowlistFilter(config, mockMaterializer)
 
-          allowlistFilter.destination shouldEqual Call("GET", destination)
+          allowlistFilter.redirectUrlWhenDenied shouldEqual Call("GET", redirectUrlWhenDenied)
       }
     }
   }
@@ -180,14 +215,14 @@ class AllowlistFilterSpec
       "the underlying config value is not there" in {
 
         forAll(otherConfigGen, arbitrary[String], arbitrary[String]) {
-          (otherConfig, destination, excluded) =>
+          (otherConfig, redirectUrlWhenDenied, ips) =>
 
             whenever(!otherConfig.contains("bootstrap.filters.allowlist.excluded")) {
 
               val config = Configuration(
                 (otherConfig +
-                  ("bootstrap.filters.allowlist.destination" -> destination) +
-                  ("bootstrap.filters.allowlist.ips"         -> excluded) +
+                  ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
+                  ("bootstrap.filters.allowlist.ips"         -> ips) +
                   ("bootstrap.filters.allowlist.enabled"     -> true)
                   ).toSeq: _*
               )
@@ -202,19 +237,17 @@ class AllowlistFilterSpec
 
     "return Calls to all of the values" when {
 
-      "given a comma-separated list of values" in {
+      "given an array of excluded paths" in {
 
         val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
 
-        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[String]) {
-          (excludedPaths, otherConfig, destination, ips) =>
-
-            val excludedPathString = excludedPaths.mkString(",")
+        forAll(gen, otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
+          (excludedPaths, otherConfig, redirectUrlWhenDenied, ips) =>
 
             val config = Configuration(
               (otherConfig +
-                ("bootstrap.filters.allowlist.destination" -> destination) +
-                ("bootstrap.filters.allowlist.excluded"    -> excludedPathString) +
+                ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
+                ("bootstrap.filters.allowlist.excluded"    -> excludedPaths) +
                 ("bootstrap.filters.allowlist.ips"         -> ips) +
                 ("bootstrap.filters.allowlist.enabled"     -> true)
                 ).toSeq: _*
@@ -235,7 +268,7 @@ class AllowlistFilterSpec
 
         val app = new GuiceApplicationBuilder()
           .configure(
-            "bootstrap.filters.allowlist.destination" -> "",
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> "",
             "bootstrap.filters.allowlist.excluded" -> "",
             "bootstrap.filters.allowlist.ips" -> "",
             "bootstrap.filters.allowlist.enabled" -> false
@@ -274,9 +307,9 @@ class AllowlistFilterSpec
 
         val app = new GuiceApplicationBuilder()
           .configure(
-            "bootstrap.filters.allowlist.destination" -> "",
-            "bootstrap.filters.allowlist.excluded" -> "",
-            "bootstrap.filters.allowlist.ips" -> "",
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> "",
+            "bootstrap.filters.allowlist.excluded" -> Seq.empty,
+            "bootstrap.filters.allowlist.ips" -> Seq.empty,
             "bootstrap.filters.allowlist.enabled" -> true
           )
           .build()
@@ -285,8 +318,206 @@ class AllowlistFilterSpec
 
         val result = filter(_ => Future.successful(Results.Ok))(FakeRequest())
 
-        status(result) shouldBe NOT_IMPLEMENTED
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
+
+    "return successfully" when {
+      "a valid `True-Client-IP` header is found" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> Seq.empty,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest()
+            .withHeaders("True-Client-Ip" -> allowedIpAddress)
+          )
+
+        status(result) shouldBe OK
+
+      }
+    }
+     "return a Redirect to the 'redirectUrlWhenDenied'" when {
+        "an invalid True-Client-IP header is found" in {
+
+          val app = new GuiceApplicationBuilder()
+            .configure(
+              "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
+              "bootstrap.filters.allowlist.excluded" -> Seq.empty,
+              "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+              "bootstrap.filters.allowlist.enabled" -> true
+            )
+            .build()
+
+          val filter = app.injector.instanceOf[AllowlistFilter]
+
+          val result = filter(_ => Future.successful(Results.Ok))(
+            FakeRequest()
+              .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+            )
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(govUkUrl)
+
+        }
+     }
+
+    "return a Forbidden " when {
+      "the user would endup in a redirect loop" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> "/service-frontend",
+            "bootstrap.filters.allowlist.excluded" -> Seq.empty,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("GET", "/service-frontend")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+          )
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+
+      }
+    }
+
+
+    "return OK " when {
+      "the route to be accessed is an excluded path" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> exclusions,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("GET", "/some-excluded-path")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+          )
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "return OK " when {
+      "the route to be accessed is an excluded route accessed with an http method other than GET" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> Seq("/ping/ping", "PUT:/some-excluded-path"),
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("PUT", "/some-excluded-path")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "be tolerant" when {
+      val app = new GuiceApplicationBuilder()
+        .configure(
+          "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
+          "bootstrap.filters.allowlist.excluded" -> Seq("/ping/ping", "put:/some-excluded-path"),
+          "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+          "bootstrap.filters.allowlist.enabled" -> true
+        )
+        .build()
+
+      val filter = app.injector.instanceOf[AllowlistFilter]
+
+      "configuration for exclusions has the method defined as non-uppercase" in {
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("PUT", "/some-excluded-path")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+        status(result) shouldBe OK
+      }
+      "the request method is non-uppercase" in {
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("Put", "/some-excluded-path")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+        status(result) shouldBe OK
+      }
+
+    }
+
+
+
+
+      "return OK " when {
+        "the route to be accessed is the healthcheck /ping/ping endpoint" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> exclusions,
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("GET", "/ping/ping")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "return OK " when {
+      "the requested route matches a wildcarded exclusion" in {
+
+        val app = new GuiceApplicationBuilder()
+          .configure(
+            "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> govUkUrl,
+            "bootstrap.filters.allowlist.excluded" -> (exclusions :+ "/service/feature/*"),
+            "bootstrap.filters.allowlist.ips" -> Seq(allowedIpAddress),
+            "bootstrap.filters.allowlist.enabled" -> true
+          )
+          .build()
+
+        val filter = app.injector.instanceOf[AllowlistFilter]
+
+        val result = filter(_ => Future.successful(Results.Ok))(
+          FakeRequest("GET", "/service/feature/settings")
+            .withHeaders("True-Client-Ip" -> nonAllowedIpAddress)
+        )
+
+        status(result) shouldBe OK
+      }
+    }
+
   }
 }

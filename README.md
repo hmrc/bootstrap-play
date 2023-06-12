@@ -151,8 +151,72 @@ If you would like the same functionality in `Dev` mode, you must use the older
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
 
+## Allow List Filter
+
+The library includes a frontend Filter that can block requests from IP addresses that are not on an _allow list_.
+
+To enable this filter, in your frontend service, add the following line to your application.conf file:
+
+`bootstrap.filters.allowlist.enabled = true`
+
+The filter will check the ip address supplied in the `True-Client-IP` http header against a list of allowed ip addresses.
+
+When enabled the following configuration properties are used:
+
+| Property                                              | Type             | Mandatory | Default        | Desription                                                                                                                                                                                                                                 |
+|-------------------------------------------------------|------------------|-----------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `bootstrap.filters.allowlist.ips`                     | array of strings | Y         | -              | Allows requests from any one of these ip addresses                                                                                                                                                                                         |
+| `bootstrap.filters.allowlist.excluded`                | array of strings | N         | ["/ping/ping"] | Irrespective of IP address the filter will not block access to any of these paths<br/>See example below for defintion.                                                                                                                     |
+| `bootstrap.filters.allowlist.redirectUrlWhenExcluded` | string           | Y         | -              | The filter will redirect any denied requests to this URL<br/>Note:<br/>-  **if** this URL is relative to your service it must also be on the excluded list.<br/>- replaces the obsolete property `bootstrap.filters.allowlist.destination` |
+
+
+### Configuring Exclusions
+
+#### Http Methods
+Exclusions by default are defined with the implicit Http `GET` method. If exclusions are required for other methods
+they can be defined with the following syntax: `"<method>:/path"`<br/>
+for example:
+
+```hocon
+"/some/path" # this is the equivalent of "GET:/some/path"
+"PUT:/some/path"
+"POST:/other/path"
+"DELETE:/some/path"
+```
+
+#### Wildcard Mathching
+
+Exclusion definitions by default are exact matches. By adding a trailing `/*` then they will match all paths below that level.<br/>
+for example: `bootstrap.filters.allowlist.excluded = ["/admin/*"]` matches all Uri starting with `/admin`
+
+### Configuration Example
+
+application.conf
+
+```hocon
+bootstrap.filters.allowlist.enabled = true
+bootstrap.filters.allowlist.ips = ["192.168.2.1", "10.0.0.1"]
+bootstrap.filters.allowlist.excluded +=  "/some/path"
+bootstrap.filters.allowlist.excluded +=  "/some/other/path"
+bootstrap.filters.allowlist.excluded += "POST:/admin/*"
+bootstrap.filters.allowlist.redirectUrlWhenExcluded = "http://www.gov.uk"
+```
 
 ## Changes
+
+### Version 7.16.0
+- Updates the Allowlist Filter
+  - removes all references to Akamai
+  - provides a allowlist filter implementation and no longer extends the play-allowlist-filter library
+  - new error handling and logging for configuration errors.
+  - updated config values 
+    - `bootstrap.filters.allowlist.destination` is now obsolete use `bootstrap.filters.allowlist.redirectUrlWhenDenied` instead
+    - `bootstrap.filters.allowlist.ips` is now an array
+    - `bootstrap.filters.allowlist.excluded` is now an array
+    - exclusions can, optionally, be defined with http methods in config, for example, `METHOD:/path`
+    - exclusions now support a trailing wildcard, for example, `/path/*` excludes everything _below_ /path
+    - frontend.conf includes a `/ping/ping` exclusion at `bootstrap.filters.allowlist.excluded[0]`
+
 
 ### Version 7.15.0
 
