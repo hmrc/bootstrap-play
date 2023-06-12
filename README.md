@@ -196,11 +196,9 @@ application.conf
 ```hocon
 bootstrap.filters.allowlist.enabled = true
 bootstrap.filters.allowlist.ips = ["192.168.2.1", "10.0.0.1"]
-bootstrap.filters.allowlist.excluded ++= [ 
-  "/some/path",
-  "/some/other/path",
-  "POST:/admin/*",
-  ]
+bootstrap.filters.allowlist.excluded +=  "/some/path"
+bootstrap.filters.allowlist.excluded +=  "/some/other/path"
+bootstrap.filters.allowlist.excluded += "POST:/admin/*"
 bootstrap.filters.allowlist.redirectUrlWhenExcluded = "http://www.gov.uk"
 ```
 
