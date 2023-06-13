@@ -167,7 +167,7 @@ When enabled the following configuration properties are used:
 |-------------------------------------------------------|------------------|-----------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `bootstrap.filters.allowlist.ips`                     | array of strings | Y         | -              | Allows requests from any one of these ip addresses                                                                                                                                                                                         |
 | `bootstrap.filters.allowlist.excluded`                | array of strings | N         | ["/ping/ping"] | Irrespective of IP address the filter will not block access to any of these paths<br/>See example below for defintion.                                                                                                                     |
-| `bootstrap.filters.allowlist.redirectUrlWhenExcluded` | string           | Y         | -              | The filter will redirect any denied requests to this URL<br/>Note:<br/>-  **if** this URL is relative to your service it must also be on the excluded list.<br/>- replaces the obsolete property `bootstrap.filters.allowlist.destination` |
+| `bootstrap.filters.allowlist.redirectUrlWhenDenied`   | string           | Y         | -              | The filter will redirect any denied requests to this URL<br/>Note:<br/>-  **if** this URL is relative to your service it must also be on the excluded list.<br/>- replaces the obsolete property `bootstrap.filters.allowlist.destination` |
 
 
 ### Configuring Exclusions
@@ -199,7 +199,7 @@ bootstrap.filters.allowlist.ips = ["192.168.2.1", "10.0.0.1"]
 bootstrap.filters.allowlist.excluded +=  "/some/path"
 bootstrap.filters.allowlist.excluded +=  "/some/other/path"
 bootstrap.filters.allowlist.excluded += "POST:/admin/*"
-bootstrap.filters.allowlist.redirectUrlWhenExcluded = "http://www.gov.uk"
+bootstrap.filters.allowlist.redirectUrlWhenDenied = "http://www.gov.uk"
 ```
 
 ## Changes
