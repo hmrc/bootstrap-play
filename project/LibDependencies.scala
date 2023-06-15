@@ -52,11 +52,7 @@ object LibDependencies {
     )
 
   private def frontendCommon(playVersion: String, playSuffix: String) =
-    common(playVersion, playSuffix) ++
-      Seq(
-        "uk.gov.hmrc"       %% s"play-allowlist-filter-$playSuffix" % "1.1.0",
-        "com.typesafe.akka" %% "akka-stream-testkit"                % akkaVersion % Test
-      )
+    common(playVersion, playSuffix) :+ "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test
 
   private def test(playVersion: String, playSuffix: String) =
     Seq(
