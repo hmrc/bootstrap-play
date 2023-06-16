@@ -76,10 +76,13 @@ class GraphiteMetricsModuleSpec
            Map("metrics.enabled" -> kenshooEnabled) ++
              (if (graphiteEnabled)
                 Map(
-                  "microservice.metrics.graphite.enabled" -> true,
-                  "microservice.metrics.graphite.host"    -> "test",
-                  "microservice.metrics.graphite.port"    -> "9999",
-                  "appName"                               -> "test"
+                  "microservice.metrics.graphite.enabled"   -> true,
+                  "microservice.metrics.graphite.host"      -> "test",
+                  "microservice.metrics.graphite.port"      -> "9999",
+                  "microservice.metrics.graphite.prefix"    -> "test",
+                  "microservice.metrics.graphite.durations" -> "SECONDS",
+                  "microservice.metrics.graphite.rates"     -> "MILLISECONDS",
+                  "microservice.metrics.graphite.interval"  -> "10"
                 )
               else
                 Map("microservice.metrics.graphite.enabled" -> false)

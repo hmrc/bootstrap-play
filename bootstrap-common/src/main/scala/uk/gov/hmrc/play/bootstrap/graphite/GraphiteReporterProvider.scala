@@ -22,31 +22,21 @@ import javax.inject.{Inject, Provider}
 import com.codahale.metrics.MetricFilter
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
 import com.kenshoo.play.metrics.Metrics
-import com.typesafe.config.ConfigException
 import play.api.Configuration
 
 case class GraphiteReporterProviderConfig(
   prefix   : String,
-  rates    : Option[TimeUnit],
-  durations: Option[TimeUnit]
+  rates    : TimeUnit,
+  durations: TimeUnit
 )
 
 object GraphiteReporterProviderConfig {
-  def fromConfig(config: Configuration): GraphiteReporterProviderConfig = {
-    lazy val appName = config.getOptional[String]("appName")
-
-    val prefix: String = config
-      .getOptional[String]("microservice.metrics.graphite.prefix")
-      .orElse(appName.map(name => s"tax.$name"))
-      .getOrElse(
-        throw new ConfigException.Generic("`microservice.metrics.graphite.prefix` in config or `appName` as parameter required"))
-
+  def fromConfig(config: Configuration): GraphiteReporterProviderConfig =
     GraphiteReporterProviderConfig(
-      prefix    = prefix,
-      rates     = config.getOptional[String]("microservice.metrics.graphite.rates").map(TimeUnit.valueOf),
-      durations = config.getOptional[String]("microservice.metrics.graphite.durations").map(TimeUnit.valueOf)
+      prefix    = config.get[String]("microservice.metrics.graphite.prefix"),
+      rates     = TimeUnit.valueOf(config.get[String]("microservice.metrics.graphite.rates")),
+      durations = TimeUnit.valueOf(config.get[String]("microservice.metrics.graphite.durations"))
     )
-  }
 }
 
 class GraphiteReporterProvider @Inject()(
@@ -60,8 +50,8 @@ class GraphiteReporterProvider @Inject()(
     GraphiteReporter
       .forRegistry(metrics.defaultRegistry)
       .prefixedWith(s"${config.prefix}.${java.net.InetAddress.getLocalHost.getHostName}")
-      .convertDurationsTo(config.durations.getOrElse(TimeUnit.SECONDS))
-      .convertRatesTo(config.rates.getOrElse(TimeUnit.MILLISECONDS))
+      .convertDurationsTo(config.durations)
+      .convertRatesTo(config.rates)
       .filter(filter)
       .build(graphite)
 }

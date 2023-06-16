@@ -46,14 +46,7 @@ class GraphiteReportingSpec extends AnyWordSpec with Matchers with MockitoSugar 
   }
 
   "GraphiteReporting" must {
-    "start the reporter when metrics are enabled with default interval" in {
-      Helpers.running(app.build()) {
-        verify(graphite).start(10L, TimeUnit.SECONDS)
-      }
-      verify(graphite).stop()
-    }
-
-    "start the reporter when metrics are enabled with custom interval" in {
+    "start the reporter when metrics are enabled" in {
       Helpers.running(app.configure("microservice.metrics.graphite.interval" -> "11").build()) {
         verify(graphite).start(11L, TimeUnit.SECONDS)
       }
