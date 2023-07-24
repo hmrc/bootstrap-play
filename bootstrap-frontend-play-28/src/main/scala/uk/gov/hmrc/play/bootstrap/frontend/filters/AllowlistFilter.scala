@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import akka.stream.Materializer
 import com.google.inject.{Inject, Singleton}
 import play.api.{Configuration, Logger}
-import play.api.mvc.Results.{Forbidden, InternalServerError, NotImplemented, Redirect}
+import play.api.mvc.Results.{InternalServerError, Redirect}
 import play.api.mvc.{Call, Filter, RequestHeader, Result}
 
 import scala.concurrent.Future
@@ -30,45 +30,42 @@ class AllowlistFilter @Inject() (
   override val mat: Materializer
 ) extends Filter {
 
-
   private val logger = Logger(getClass)
+
   private val trueClient = "True-Client-IP"
 
   case class AllowlistFilterConfig(
-    allowlist    : Seq[String],
-    redirectUrlWhenDenied  : Call,
-    excludedPaths: Seq[Call]
+    allowlist            : Seq[String],
+    redirectUrlWhenDenied: Call,
+    excludedPaths        : Seq[Call]
   )
 
-  private val destinationKey = "bootstrap.filters.allowlist.destination"
+  private val destinationKey           = "bootstrap.filters.allowlist.destination"
   private val redirectUrlWhenDeniedKey = "bootstrap.filters.allowlist.redirectUrlWhenDenied"
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
-    allowlist =
-      config.get[Seq[String]]("bootstrap.filters.allowlist.ips")
-        .toIndexedSeq
-        .map(_.trim)
-        .filter(_.nonEmpty),
+    allowlist             = config.get[Seq[String]]("bootstrap.filters.allowlist.ips")
+                              .toIndexedSeq
+                              .map(_.trim)
+                              .filter(_.nonEmpty),
 
-    redirectUrlWhenDenied = {
-      if (config.has(destinationKey)) {
-       throw config.reportError(destinationKey, s"$destinationKey is obsolete please use $redirectUrlWhenDeniedKey instead")
-      } else {
-        val path = config.get[String](redirectUrlWhenDeniedKey)
-        Call("GET", path)
-      }
-    },
+    redirectUrlWhenDenied = if (config.has(destinationKey))
+                             throw config.reportError(destinationKey, s"$destinationKey is obsolete please use $redirectUrlWhenDeniedKey instead")
+                            else {
+                              val path = config.get[String](redirectUrlWhenDeniedKey)
+                              Call("GET", path)
+                            },
 
-    excludedPaths =
-      config.get[Seq[String]]("bootstrap.filters.allowlist.excluded")
-        .toIndexedSeq
-        .map(_.trim)
-        .filter(_.nonEmpty)
-        .map{_.split(":") match {
-                case Array(method, url) => Call(method, url)
-                case Array(url) => Call("GET", url)
-              }
-            }
+    excludedPaths         = config.get[Seq[String]]("bootstrap.filters.allowlist.excluded")
+                              .toIndexedSeq
+                              .map(_.trim)
+                              .filter(_.nonEmpty)
+                              .map(
+                                _.split(":") match {
+                                    case Array(method, url) => Call(method, url)
+                                    case Array(url)         => Call("GET", url)
+                                  }
+                              )
     )
 
   def loadConfig: AllowlistFilter = {
@@ -97,14 +94,15 @@ class AllowlistFilter @Inject() (
     Future.successful(InternalServerError)
  }
 
-  protected def response: Result = Redirect(redirectUrlWhenDenied)
+  protected def response: Result =
+    Redirect(redirectUrlWhenDenied)
 
   protected def excluded(rh: RequestHeader): Boolean = {
-    def wildcardMatch(c: Call) = c.url.endsWith("/*") && rh.uri.startsWith(c.url.dropRight(2))
+    def wildcardMatch(c: Call) =
+      c.url.endsWith("/*") && rh.uri.startsWith(c.url.dropRight(2))
 
     excludedPaths.exists(c => c.method.equalsIgnoreCase(rh.method) && (c.url == rh.uri || wildcardMatch(c)))
   }
-
 
   private def processRequest(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (excluded(rh))
@@ -118,7 +116,6 @@ class AllowlistFilter @Inject() (
         else
           Future.successful(response)
       )
-
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (enabled)
