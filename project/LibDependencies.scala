@@ -5,8 +5,8 @@ object LibDependencies {
   private val play28Version          = "2.8.20"
   private val httpVerbsVersion       = "14.9.0"
   private val akkaVersion            = "2.6.21"
-  private val jacksonVersion         = "2.12.6"
-  private val jacksonDatabindVersion = "2.12.6.1"
+  private val jacksonVersion         = "2.12.7"
+  private val jacksonDatabindVersion = "2.12.7.1"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
 
