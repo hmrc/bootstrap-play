@@ -146,7 +146,7 @@ If you would like the same functionality in `Dev` mode, you must use the older
   PlayKeys.devSettings += "play.server.provider" -> "play.core.server.NettyServerProvider"
 ```
 
-* Make sure you still use the `AkkaHttpServer` in `Prod` mode by specifying it in `application.conf`
+* Note, this will add Netty to the classpath for builds, so you may want to only do this temporarily. If not, make sure you still use the `AkkaHttpServer` in `Prod` mode by specifying it in `application.conf`
 ```hocon
 play.server.provider = play.core.server.AkkaHttpServerProvider
 ```
@@ -200,6 +200,61 @@ bootstrap.filters.allowlist.excluded +=  "/some/path"
 bootstrap.filters.allowlist.excluded +=  "/some/other/path"
 bootstrap.filters.allowlist.excluded += "POST:/admin/*"
 bootstrap.filters.allowlist.redirectUrlWhenDenied = "http://www.gov.uk"
+```
+
+## RedirectUrl
+
+Urls provided as query parameters (redirect urls, callbacks etc.) should be modelled with `RedirecUrl`. This allows configuration of allowed destinations and helps prevent Open Redirects.
+
+e.g.
+
+- `build.sbt` - import model and query binder for use in routes:
+
+```scala
+.settings(
+  RoutesKeys.routesImport += "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
+)
+```
+
+- `app.routes` - use `RedirectUrl`
+
+```scala
+/redirect MyController.redirect(redirectUrl: RedirectUrl)
+```
+
+- Controller
+
+The Url provided to controller will be wrapped with `RedirectUrl`, and can be checked against the required policy before using.
+
+E.g. the following will only accept relative urls
+
+```scala
+def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
+  Action {
+    Redirect(redirectUrl.get(OnlyRelative).url)
+  }
+```
+
+Or accept configured hostnames
+
+```scala
+val redirectUrlPolicy = AbsoluteWithHostnameFromAllowlist("safehost1", "safehost2") // provide from configuration
+
+def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
+  Action {
+    Redirect(redirectUrl.get(redirectUrlPolicy).url)
+  }
+```
+
+Note, if the url does not conform to the policy, this will lead to a 500. To have more control over this behaviour, you can use `getEither` instead.
+
+```scala
+def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
+  Action {
+    redirectUrl
+      .getEither(OnlyRelative)
+      .fold(BadRequest("Bad url"))(safeUrl => Redirect(safeUrl.url))
+  }
 ```
 
 ## Changes
