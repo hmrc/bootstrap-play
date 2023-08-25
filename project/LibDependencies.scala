@@ -81,6 +81,7 @@ object LibDependencies {
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
       "org.scalatest"           %% "scalatest"                    % "3.2.17"      % Test,
+      "com.vladsch.flexmark"    %  "flexmark-all"                 % "0.62.2"      % Test,
       "com.typesafe.akka"       %% "akka-stream-testkit"          % akkaVersion   % Test,
       "com.typesafe.play"       %% "play-akka-http-server"        % playVersion   % Test
     )
