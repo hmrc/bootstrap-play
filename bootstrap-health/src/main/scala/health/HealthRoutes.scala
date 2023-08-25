@@ -46,11 +46,11 @@ class Routes @Inject()(
           routerPackage  = "app",
           controller     = "uk.gov.hmrc.play.health.HealthController",
           method         = "ping",
-          parameterTypes = Nil,
+          parameterTypes = Seq.empty,
           verb           = "GET",
           path           = this.prefix + "ping/ping",
           comments       = "",
-          modifiers      = Seq()
+          modifiers      = Seq.empty
         )
       ).call(healthController.ping)
   }
