@@ -258,6 +258,8 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 ```
 
 ## Changes
+### Version 7.22.0
+- Deprecate `SafeRedirectUrl` public constructor
 
 ### Version 7.20.0
 - Updates playframework to 2.8.20
