@@ -34,9 +34,13 @@ object RedirectUrlPolicy {
   }
 }
 
-case class SafeRedirectUrl(url: String) extends AnyVal {
+@annotation.nowarn("msg=deprecated")
+case class SafeRedirectUrl @deprecated(
+  message = "This constructor will become private. Use RedirectUrl with policy instead. If you only need encoding consider using `uk.gov.hmrc.http.StringContextOps`"
+, since   = "7.21.0"
+)(url: String) extends AnyVal {
+  def encodedUrl = URLEncoder.encode(url, "UTF-8")
   override def toString = url
-  def encodedUrl        = URLEncoder.encode(url, "UTF-8")
 }
 
 sealed trait RedirectUrlPolicy[T[_]] {
@@ -94,6 +98,7 @@ case class RedirectUrl(private val url: String) {
     RedirectUrl.errorFor(url)
   )
 
+  @annotation.nowarn("msg=deprecated")
   def getEither[T[_]](policy: RedirectUrlPolicy[T])(implicit f: Applicative[T]) =
     f.map(policy.applies(url)) { result =>
       if (result) {
@@ -114,7 +119,6 @@ case class RedirectUrl(private val url: String) {
 }
 
 object RedirectUrl {
-
   private def errorFor(invalidUrl: String) = s"'$invalidUrl' is not a valid continue URL"
 
   def isAbsoluteUrl(url: String) = url.startsWith("http")
