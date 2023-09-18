@@ -34,7 +34,6 @@ object RedirectUrlPolicy {
   }
 }
 
-@annotation.nowarn("msg=deprecated")
 case class SafeRedirectUrl @deprecated(
   message = "This constructor will become private. Use RedirectUrl with policy instead. If you only need encoding consider using `uk.gov.hmrc.http.StringContextOps`"
 , since   = "7.21.0"
@@ -98,7 +97,6 @@ case class RedirectUrl(private val url: String) {
     RedirectUrl.errorFor(url)
   )
 
-  @annotation.nowarn("msg=deprecated")
   def getEither[T[_]](policy: RedirectUrlPolicy[T])(implicit f: Applicative[T]) =
     f.map(policy.applies(url)) { result =>
       if (result) {
@@ -123,10 +121,10 @@ object RedirectUrl {
   private def errorFor(invalidUrl: String) =
     s"'$invalidUrl' is not a valid continue URL"
 
-  def isAbsoluteUrl(url: String) =
+  def isAbsoluteUrl(url: String): Boolean =
     url.startsWith("http")
 
-  def isRelativeUrl(url: String) =
+  def isRelativeUrl(url: String): Boolean =
     url.matches("""^[/][^/\\].*""")
 
   implicit def queryBinder(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[RedirectUrl] =

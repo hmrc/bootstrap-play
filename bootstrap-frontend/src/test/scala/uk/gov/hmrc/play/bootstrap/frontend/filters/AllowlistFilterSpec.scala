@@ -61,10 +61,12 @@ class AllowlistFilterSpec
             whenever(!otherConfig.contains("bootstrap.filters.allowlist.ips")) {
 
               val config = Configuration(
-                (otherConfig +
-                  ("bootstrap.filters.allowlist.destination" -> destination) +
-                  ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true)
+                (otherConfig ++
+                  Map(
+                    "bootstrap.filters.allowlist.destination" -> destination,
+                    "bootstrap.filters.allowlist.excluded"    -> excluded,
+                    "bootstrap.filters.allowlist.enabled"     -> true
+                  )
                 ).toSeq: _*
               )
 
@@ -82,11 +84,13 @@ class AllowlistFilterSpec
           (otherConfig, redirectUrlWhenDenied, excluded) =>
 
             val config = Configuration(
-              (otherConfig +
-                ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
-                ("bootstrap.filters.allowlist.excluded"              -> excluded) +
-                ("bootstrap.filters.allowlist.ips"                   -> Seq.empty) +
-                ("bootstrap.filters.allowlist.enabled"               -> true)
+              (otherConfig ++
+                Map(
+                  "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied,
+                  "bootstrap.filters.allowlist.excluded"              -> excluded,
+                  "bootstrap.filters.allowlist.ips"                   -> Seq.empty,
+                  "bootstrap.filters.allowlist.enabled"               -> true
+                )
               ).toSeq: _*
             )
 
@@ -105,11 +109,13 @@ class AllowlistFilterSpec
           (ips, otherConfig, redirectUrlWhenDenied, excluded) =>
 
             val config = Configuration(
-              (otherConfig +
-                ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
-                ("bootstrap.filters.allowlist.excluded"              -> excluded) +
-                ("bootstrap.filters.allowlist.ips"                   -> ips) +
-                ("bootstrap.filters.allowlist.enabled"               -> true)
+              (otherConfig ++
+                Map(
+                  "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied,
+                  "bootstrap.filters.allowlist.excluded"              -> excluded,
+                  "bootstrap.filters.allowlist.ips"                   -> ips,
+                  "bootstrap.filters.allowlist.enabled"               -> true
+                )
               ).toSeq: _*
             )
 
@@ -131,12 +137,14 @@ class AllowlistFilterSpec
 
             whenever(!otherConfig.contains("bootstrap.filters.allowlist.redirectUrlWhenDenied")) {
               val config = Configuration(
-                (otherConfig +
-                  ("bootstrap.filters.allowlist.ips"         -> ips) +
-                  ("bootstrap.filters.allowlist.destination" -> destination) +
-                  ("bootstrap.filters.allowlist.excluded"    -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"     -> true)
-                  ).toSeq: _*
+                (otherConfig ++
+                  Map(
+                    "bootstrap.filters.allowlist.ips"         -> ips,
+                    "bootstrap.filters.allowlist.destination" -> destination,
+                    "bootstrap.filters.allowlist.excluded"    -> excluded,
+                    "bootstrap.filters.allowlist.enabled"     -> true
+                  )
+                ).toSeq: _*
               )
 
               assertThrows[PlayException] {
@@ -156,11 +164,13 @@ class AllowlistFilterSpec
 
             whenever(!otherConfig.contains("bootstrap.filters.allowlist.redirectUrlWhenDenied")) {
               val config = Configuration(
-                (otherConfig +
-                  ("bootstrap.filters.allowlist.ips"      -> ips) +
-                  ("bootstrap.filters.allowlist.excluded" -> excluded) +
-                  ("bootstrap.filters.allowlist.enabled"  -> true)
-                  ).toSeq: _*
+                (otherConfig ++
+                  Map(
+                    "bootstrap.filters.allowlist.ips"      -> ips,
+                    "bootstrap.filters.allowlist.excluded" -> excluded,
+                    "bootstrap.filters.allowlist.enabled"  -> true
+                  )
+                ).toSeq: _*
               )
 
               assertThrows[ConfigException] {
@@ -176,12 +186,14 @@ class AllowlistFilterSpec
         (otherConfig, ips, redirectUrlWhenDenied, excluded) =>
 
           val config = Configuration(
-            (otherConfig +
-              ("bootstrap.filters.allowlist.ips"                   -> ips) +
-              ("bootstrap.filters.allowlist.excluded"              -> excluded) +
-              ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
-              ("bootstrap.filters.allowlist.enabled"               -> true)
-              ).toSeq: _*
+            (otherConfig ++
+              Map(
+                "bootstrap.filters.allowlist.ips"                   -> ips,
+                "bootstrap.filters.allowlist.excluded"              -> excluded,
+                "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied,
+                "bootstrap.filters.allowlist.enabled"               -> true
+              )
+            ).toSeq: _*
           )
 
           val allowlistFilter = new AllowlistFilter(config, mockMaterializer)
@@ -200,11 +212,13 @@ class AllowlistFilterSpec
             whenever(!otherConfig.contains("bootstrap.filters.allowlist.excluded")) {
 
               val config = Configuration(
-                (otherConfig +
-                  ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
-                  ("bootstrap.filters.allowlist.ips"                   -> ips) +
-                  ("bootstrap.filters.allowlist.enabled"               -> true)
-                  ).toSeq: _*
+                (otherConfig ++
+                  Map(
+                    "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied,
+                    "bootstrap.filters.allowlist.ips"                   -> ips,
+                    "bootstrap.filters.allowlist.enabled"               -> true
+                  )
+                ).toSeq: _*
               )
 
               assertThrows[ConfigException] {
@@ -223,12 +237,14 @@ class AllowlistFilterSpec
           (excludedPaths, otherConfig, redirectUrlWhenDenied, ips) =>
 
             val config = Configuration(
-              (otherConfig +
-                ("bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied) +
-                ("bootstrap.filters.allowlist.excluded"              -> excludedPaths) +
-                ("bootstrap.filters.allowlist.ips"                   -> ips) +
-                ("bootstrap.filters.allowlist.enabled"               -> true)
-                ).toSeq: _*
+              (otherConfig ++
+                Map(
+                  "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied,
+                  "bootstrap.filters.allowlist.excluded"              -> excludedPaths,
+                  "bootstrap.filters.allowlist.ips"                   -> ips,
+                  "bootstrap.filters.allowlist.enabled"               -> true
+                )
+              ).toSeq: _*
             )
 
             val expectedCalls = excludedPaths.map(Call("GET", _))

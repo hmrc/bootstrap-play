@@ -3,7 +3,7 @@ import sbt._
 object LibDependencies {
 
   private val play28Version          = "2.8.20"
-  private val play29Version          = "2.9.0-RC2"
+  private val play29Version          = "2.9.0-RC3"
   private val httpVerbsVersion       = "14.11.0-SNAPSHOT"
   private val akkaVersion            = "2.6.21"
   private val jacksonVersion         = "2.12.7"
@@ -28,7 +28,7 @@ object LibDependencies {
       "com.typesafe.play"       %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % s"7.0.0-SNAPSHOT",
-      "uk.gov.hmrc"             %% "crypto"                     % "7.3.0",
+      "uk.gov.hmrc"             %% "crypto"                     % "7.4.0-SNAPSHOT",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.7.0-SNAPSHOT",
       // the following are not used by bootstrap - but transitively added for clients
@@ -95,7 +95,6 @@ object LibDependencies {
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playVersion) % Test,
     )
 
-  // TODO drop this dependency all together?
   private def scalaTestPlusPlayVersion(playVersion: String): String =
     if (playVersion == play28Version) "5.1.0"
     else if (playVersion == play29Version) "6.0.0-RC2"
