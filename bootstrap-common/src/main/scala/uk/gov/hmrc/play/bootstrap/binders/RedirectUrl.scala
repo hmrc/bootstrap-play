@@ -119,40 +119,50 @@ case class RedirectUrl(private val url: String) {
 }
 
 object RedirectUrl {
-  private def errorFor(invalidUrl: String) = s"'$invalidUrl' is not a valid continue URL"
 
-  def isAbsoluteUrl(url: String) = url.startsWith("http")
+  private def errorFor(invalidUrl: String) =
+    s"'$invalidUrl' is not a valid continue URL"
 
-  def isRelativeUrl(url: String) = url.matches("""^[/][^/\\].*""")
+  def isAbsoluteUrl(url: String) =
+    url.startsWith("http")
 
-  implicit def queryBinder(implicit stringBinder: QueryStringBindable[String]) = new QueryStringBindable[RedirectUrl] {
-    def bind(key: String, params: Map[String, Seq[String]]) =
-      stringBinder.bind(key, params).map {
-        case Right(s) =>
-          Try(RedirectUrl(s)) match {
-            case Success(url) => Right(url)
-            case Failure(_)   => Left(errorFor(s))
-          }
-        case Left(message) => Left(message)
-      }
+  def isRelativeUrl(url: String) =
+    url.matches("""^[/][^/\\].*""")
 
-    def unbind(key: String, value: RedirectUrl) = stringBinder.unbind(key, value.url)
+  implicit def queryBinder(implicit stringBinder: QueryStringBindable[String]): QueryStringBindable[RedirectUrl] =
+    new QueryStringBindable[RedirectUrl] {
+      def bind(key: String, params: Map[String, Seq[String]]) =
+        stringBinder.bind(key, params).map {
+          case Right(s) =>
+            Try(RedirectUrl(s)) match {
+              case Success(url) => Right(url)
+              case Failure(_)   => Left(errorFor(s))
+            }
+          case Left(message) => Left(message)
+        }
 
-  }
+      def unbind(key: String, value: RedirectUrl) =
+        stringBinder.unbind(key, value.url)
+    }
 
-  implicit def idFunctor = new Applicative[Id] {
-    override def map[K, V](t: Id[K])(fn: K => V): Id[V] = fn(t)
+  implicit def idFunctor: Applicative[Id] =
+    new Applicative[Id] {
+      override def map[K, V](t: Id[K])(fn: K => V): Id[V] =
+        fn(t)
 
-    override def product[A, B](fa: Id[A], fb: Id[B]): (A, B) = (fa, fb)
-  }
+      override def product[A, B](fa: Id[A], fb: Id[B]): (A, B) =
+        (fa, fb)
+    }
 
-  implicit def futureFunctor(implicit ec: ExecutionContext) = new Applicative[Future] {
-    override def map[K, V](t: Future[K])(fn: K => V): Future[V] = t.map(fn)
+  implicit def futureFunctor(implicit ec: ExecutionContext): Applicative[Future] =
+    new Applicative[Future] {
+      override def map[K, V](t: Future[K])(fn: K => V): Future[V] =
+        t.map(fn)
 
-    override def product[A, B](fa: Future[A], fb: Future[B]): Future[(A, B)] =
-      for {
-        a <- fa
-        b <- fb
-      } yield (a, b)
-  }
+      override def product[A, B](fa: Future[A], fb: Future[B]): Future[(A, B)] =
+        for {
+          a <- fa
+          b <- fb
+        } yield (a, b)
+    }
 }

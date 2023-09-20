@@ -89,10 +89,10 @@ class AllowlistFilter @Inject() (
   private val enabled: Boolean =
     config.get[Boolean]("bootstrap.filters.allowlist.enabled")
 
- private def error(message: String): Future[Result] = {
+  private def error(message: String): Future[Result] = {
     logger.error(message)
     Future.successful(InternalServerError)
- }
+  }
 
   protected def response: Result =
     Redirect(redirectUrlWhenDenied)

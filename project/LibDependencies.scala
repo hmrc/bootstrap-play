@@ -3,8 +3,8 @@ import sbt._
 object LibDependencies {
 
   private val play28Version          = "2.8.20"
-  private val play29Version          = "2.9.0-M7"
-  private val httpVerbsVersion       = "14.8.0-SNAPSHOT"
+  private val play29Version          = "2.9.0-RC2"
+  private val httpVerbsVersion       = "14.11.0-SNAPSHOT"
   private val akkaVersion            = "2.6.21"
   private val jacksonVersion         = "2.12.7"
   private val jacksonDatabindVersion = "2.12.7.1"
@@ -30,7 +30,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % s"7.0.0-SNAPSHOT",
       "uk.gov.hmrc"             %% "crypto"                     % "7.3.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.5.0-SNAPSHOT",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.7.0-SNAPSHOT",
       // the following are not used by bootstrap - but transitively added for clients
       "com.typesafe.play"       %% (if (playVersion == play28Version) "filters-helpers" else "play-filters-helpers") % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
@@ -80,7 +80,7 @@ object LibDependencies {
     Seq(
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
-      "org.scalatest"           %% "scalatest"                    % "3.2.15"      % Test,
+      "org.scalatest"           %% "scalatest"                    % "3.2.17"      % Test,
       "com.typesafe.akka"       %% "akka-stream-testkit"          % akkaVersion   % Test,
       "com.typesafe.play"       %% "play-akka-http-server"        % playVersion   % Test
     )
@@ -89,7 +89,7 @@ object LibDependencies {
     Seq(
       "com.typesafe.play"       %% "play"                       % playVersion,
       // test dependencies
-      "org.scalatest"           %% "scalatest"                  % "3.2.15"      % Test,
+      "org.scalatest"           %% "scalatest"                  % "3.2.17"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.62.2"      % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playVersion) % Test,
     )
@@ -97,6 +97,6 @@ object LibDependencies {
   // TODO drop this dependency all together?
   private def scalaTestPlusPlayVersion(playVersion: String): String =
     if (playVersion == play28Version) "5.1.0"
-    else if (playVersion == play29Version) "6.0.0-M6"
+    else if (playVersion == play29Version) "6.0.0-RC2"
     else sys.error("Unsupported playVersion")
 }

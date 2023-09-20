@@ -81,14 +81,14 @@ trait HttpAuditEvent {
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
 
     val requiredFields =
-      JsObject(makeRequiredFields(hc, request).mapValues(JsString).toSeq)
+      JsObject(makeRequiredFields(hc, request).mapValues(JsString.apply).toSeq)
 
     val tags = hc.toAuditTags(transactionName, request.path)
 
     ExtendedDataEvent(
       appName,
       eventType,
-      detail        = detail ++ requiredFields ++ JsObject(optionalAuditFieldsSeq(request.headers.toMap).mapValues(JsString).toSeq),
+      detail        = detail ++ requiredFields ++ JsObject(optionalAuditFieldsSeq(request.headers.toMap).mapValues(JsString.apply).toSeq),
       tags          = tags,
       truncationLog = truncationLog,
       redactionLog  = redactionLog
