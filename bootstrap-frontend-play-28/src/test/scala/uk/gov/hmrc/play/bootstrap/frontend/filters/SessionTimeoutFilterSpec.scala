@@ -18,8 +18,8 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
 import java.time.temporal.ChronoUnit
-
 import akka.stream.Materializer
+
 import javax.inject.Inject
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.OptionValues
@@ -38,12 +38,19 @@ import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, Configuration}
-import uk.gov.hmrc.http.SessionKeys._
+import uk.gov.hmrc.http.HeaderNames
+import uk.gov.hmrc.http.HeaderNames.xSessionId
+import uk.gov.hmrc.http.SessionKeys.{authToken, lastRequestTimestamp, loginOrigin, sessionId => sessionIdKey}
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 object SessionTimeoutFilterSpec {
   val now = LocalDateTime.of(2017, 1, 12, 14, 56).toInstant(ZoneOffset.UTC)
+
+  private val sessionUuid = "4e296bd3-cc4a-4ad6-bdbc-7c9fff982b15"
+  private val sessionIdValue = s"sessionId-$sessionUuid"
+  val sessionId: UUID = UUID.fromString(sessionUuid)
 
   class Filters @Inject()(timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
 
@@ -52,7 +59,7 @@ object SessionTimeoutFilterSpec {
   )(implicit
     ec: ExecutionContext,
     mat: Materializer
-  ) extends SessionTimeoutFilter(config)(ec, mat) {
+  ) extends SessionTimeoutFilter(config, sessionId)(ec, mat) {
     override val clock: Instant = now
   }
 }
@@ -75,15 +82,11 @@ class SessionTimeoutFilterSpec
         Router.from {
           case GET(p"/test") =>
             Action { request =>
-              Ok(
-                Json.obj(
-                  "session" -> request.session.data,
-                  "cookies" -> request.cookies.toSeq
-                    .map { cookie =>
-                      cookie.name -> cookie.value
-                    }
-                    .toMap[String, String]
-                ))
+              buildResult(request)
+            }
+          case GET(p"/testWithSessionFromService") =>
+            Action { request =>
+              buildResult(request).withSession( "allowlisted" -> "some-preserved-value")
             }
         }
       )
@@ -91,6 +94,19 @@ class SessionTimeoutFilterSpec
         bind[SessionTimeoutFilter].to[StaticDateSessionTimeoutFilter],
         bind[HttpFilters].to[Filters]
       )
+  }
+
+  private def buildResult(request: Request[AnyContent]) = {
+    Ok(
+      Json.obj(
+        "session" -> request.session.data,
+        "headers" -> request.headers.toSimpleMap,
+        "cookies" -> request.cookies.toSeq
+          .map { cookie =>
+            cookie.name -> cookie.value
+          }
+          .toMap[String, String]
+      ))
   }
 
   "SessionTimeoutFilter" should {
@@ -114,18 +130,25 @@ class SessionTimeoutFilterSpec
       running(app()) {
         val result = route(
           app(),
-          FakeRequest(GET, "/test").withSession(
+          FakeRequest(GET, "/test")
+           .withSession(
             lastRequestTimestamp -> timestamp,
             authToken            -> "a-token",
-            "allowlisted"        -> "allowlisted"
+            "allowlisted"        -> "allowlisted",
+            sessionIdKey         -> "old-session-id"
           )
+          .withHeaders(
+            xSessionId -> "old-session-id")
         ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+        val rhHeader = (contentAsJson(result) \ "headers").as[Map[String,String]]
 
-        rhSession                                 should onlyContainAllowlistedKeys(Set("allowlisted"))
-        rhSession.get(lastRequestTimestamp).value shouldEqual timestamp
-        rhSession.get("allowlisted").value        shouldEqual "allowlisted"
+        rhSession                                  should onlyContainAllowlistedKeys(Set("allowlisted", sessionIdKey))
+        rhSession.get(lastRequestTimestamp).value  shouldEqual timestamp
+        rhSession.get("allowlisted").value         shouldEqual "allowlisted"
+        rhSession.get(sessionIdKey).value          shouldEqual sessionIdValue
+        rhHeader.get(xSessionId).value             shouldEqual sessionIdValue
       }
     }
 
@@ -133,22 +156,59 @@ class SessionTimeoutFilterSpec
       running(app()) {
         val result = route(
           app(),
-          FakeRequest(GET, "/test").withSession(
-            lastRequestTimestamp -> timestamp,
-            loginOrigin          -> "gg",
-            authToken            -> "a-token",
-            "allowlisted"        -> "allowlisted"
-          )
+          FakeRequest(GET, "/test")
+            .withSession(
+             lastRequestTimestamp -> timestamp,
+             loginOrigin          -> "gg",
+             authToken            -> "a-token",
+             "allowlisted"        -> "allowlisted",
+             sessionIdKey         -> "old-session-id"
+            )
+            .withHeaders(
+              xSessionId -> "some-x-session-id")
         ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+        val rhHeaders = (contentAsJson(result) \ "headers").as[Map[String, String]]
 
-        rhSession                    should onlyContainAllowlistedKeys(Set("allowlisted"))
-        rhSession.get(loginOrigin)   shouldBe Some("gg")
-        rhSession.get("allowlisted") shouldBe Some("allowlisted")
+        rhSession                                   should onlyContainAllowlistedKeys(Set("allowlisted", sessionIdKey))
+        rhSession.get(loginOrigin)                  shouldBe Some("gg")
+        rhSession.get("allowlisted")                shouldBe Some("allowlisted")
+        rhSession.get(sessionIdKey).value           shouldEqual sessionIdValue
+        rhHeaders.get(xSessionId).value             shouldEqual sessionIdValue
       }
     }
 
+
+    "preserve values in result session when one exists with values" in {
+      running(app()) {
+        val result = route(
+          app(),
+          FakeRequest(GET, "/testWithSessionFromService")
+            .withSession(
+              lastRequestTimestamp -> timestamp,
+              authToken -> "a-token",
+              "allowlisted" -> "allowlisted",
+              sessionIdKey -> "old-session-id"
+            )
+            .withHeaders(
+              xSessionId -> "old-session-id")
+        ).value
+
+        val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+        val rhHeader = (contentAsJson(result) \ "headers").as[Map[String, String]]
+
+        rhSession should onlyContainAllowlistedKeys(Set("allowlisted", sessionIdKey))
+        rhSession.get(lastRequestTimestamp).value shouldEqual timestamp
+        rhSession.get("allowlisted").value shouldEqual "allowlisted"
+        rhSession.get(sessionIdKey).value shouldEqual sessionIdValue
+        rhHeader.get(xSessionId).value shouldEqual sessionIdValue
+
+        session(result).get("allowlisted") shouldBe Some("some-preserved-value")
+        session(result).get(sessionIdKey) shouldBe Some(sessionIdValue)
+
+      }
+    }
     "pass through all session values if timestamp is recent" in {
       val timestamp = now.minusSeconds(5).toEpochMilli.toString
 
@@ -158,16 +218,22 @@ class SessionTimeoutFilterSpec
           FakeRequest(GET, "/test").withSession(
             lastRequestTimestamp -> timestamp,
             authToken            -> "a-token",
-            "custom"             -> "custom"
+            "custom"             -> "custom",
+            sessionIdKey         -> "some-session-id"
           )
+          .withHeaders(
+            xSessionId -> "some-session-id")
         ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+        val rhHeaders = (contentAsJson(result) \ "headers").as[Map[String, String]]
 
         rhSession               shouldNot onlyContainAllowlistedKeys(Set("allowlisted"))
         rhSession.get("custom") shouldBe Some("custom")
+        rhHeaders.get(xSessionId).value   shouldEqual "some-session-id"
 
-        session(result).get("custom") shouldBe Some("custom")
+        session(result).get("custom")     shouldBe Some("custom")
+        session(result).get(sessionIdKey) shouldBe Some("some-session-id")
       }
     }
 
@@ -176,8 +242,9 @@ class SessionTimeoutFilterSpec
         val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
-            authToken -> "a-token",
-            "custom"  -> "custom"
+            authToken    -> "a-token",
+            "custom"     -> "custom",
+            sessionIdKey -> "some-session-id"
           )
         ).value
 
@@ -185,6 +252,7 @@ class SessionTimeoutFilterSpec
 
         rhSession.get(authToken).value      shouldEqual "a-token"
         rhSession.get("custom").value       shouldEqual "custom"
+        rhSession.get(sessionIdKey).value   shouldEqual "some-session-id"
         rhSession.get(lastRequestTimestamp) shouldBe None
 
         session(result).get(lastRequestTimestamp) shouldBe Some(now.toEpochMilli.toString)
@@ -203,17 +271,21 @@ class SessionTimeoutFilterSpec
             lastRequestTimestamp -> oldTimestamp,
             authToken            -> "a-token",
             "custom"             -> "custom",
-            "allowlisted"        -> "allowlisted"
+            "allowlisted"        -> "allowlisted",
+            sessionIdKey         -> "some-session-id"
           )
         ).value
 
         val rhSession = (contentAsJson(result) \ "session").as[Map[String, String]]
+        val rhHeaders = (contentAsJson(result) \ "headers").as[Map[String, String]]
 
-        rhSession.get("custom").value shouldEqual "custom"
-        rhSession.get(authToken)      shouldNot be(defined)
+        rhSession.get("custom").value   shouldEqual "custom"
+        rhSession.get(authToken)        shouldNot be(defined)
+        rhHeaders.get(xSessionId).value shouldEqual sessionIdValue
 
-        session(result).get("custom").value shouldEqual "custom"
-        session(result).get(authToken)      shouldNot be(defined)
+        session(result).get("custom").value     shouldEqual "custom"
+        session(result).get(authToken)          shouldNot be(defined)
+        session(result).get(sessionIdKey).value shouldEqual sessionIdValue
       }
     }
 
@@ -240,6 +312,7 @@ class SessionTimeoutFilterSpec
         ).value
 
         session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
+        session(result).get(sessionIdKey)               shouldNot be(defined)
       }
     }
 
@@ -251,7 +324,8 @@ class SessionTimeoutFilterSpec
             lastRequestTimestamp -> "invalid-format",
             authToken            -> "a-token",
             loginOrigin          -> "gg",
-            "custom"             -> "custom"
+            "custom"             -> "custom",
+            sessionIdKey         -> "some-session-id"
           )
         ).value
 
@@ -259,6 +333,7 @@ class SessionTimeoutFilterSpec
         session(result).get(loginOrigin).value          shouldEqual "gg"
         session(result).get("custom").value             shouldEqual "custom"
         session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
+        session(result).get(sessionIdKey).value         shouldEqual "some-session-id"
       }
     }
 

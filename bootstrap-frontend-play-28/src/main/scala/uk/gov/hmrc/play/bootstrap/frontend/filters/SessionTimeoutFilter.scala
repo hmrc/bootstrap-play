@@ -17,13 +17,16 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import akka.stream.Materializer
-import javax.inject.Inject
-import java.time.{Duration, Instant}
 import play.api.Configuration
-import play.api.mvc.{Filter, RequestHeader, Result, Session}
 import play.api.mvc.request.{Cell, RequestAttrKey}
+import play.api.mvc.{Filter, RequestHeader, Result, Session}
 import uk.gov.hmrc.http.SessionKeys._
+import uk.gov.hmrc.http.{SessionKeys, HeaderNames => HMRCHeaderNames}
 
+import java.time.{Duration, Instant}
+import java.util.UUID
+import javax.inject.Inject
+import scala.Option.option2Iterable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SessionTimeoutFilterConfig(
@@ -60,7 +63,7 @@ object SessionTimeoutFilterConfig {
 /**
   * Filter that manipulates session data if 'ts' session field is older than configured timeout.
   *
-  * If the 'ts' has expired, we wipe the session, and update the 'ts'.
+  * If the 'ts' has expired, we wipe the session, add a new SessionId and update the 'ts'.
   * If the 'ts' doesn't exist, or is invalid, we just wipe the authToken.
   *
   * This filter clears data on the incoming request, so that the controller does not receive any session information.
@@ -72,12 +75,16 @@ object SessionTimeoutFilterConfig {
   *                        of this class
   * @param mat             a `Materializer` instance for Play! to use when dealing with the underlying Akka streams
   */
-class SessionTimeoutFilter @Inject()(
-  config: SessionTimeoutFilterConfig
+class SessionTimeoutFilter(
+  config: SessionTimeoutFilterConfig,
+  uuid: => UUID = UUID.randomUUID()
 )(implicit
   ec: ExecutionContext,
   override val mat: Materializer
 ) extends Filter {
+  @Inject
+  def this(mat: Materializer, config: SessionTimeoutFilterConfig, ec: ExecutionContext) =
+    this(config)(ec, mat)
 
   def clock(): Instant = Instant.now()
 
@@ -98,13 +105,34 @@ class SessionTimeoutFilter @Inject()(
 
     val timestamp = rh.session.get(lastRequestTimestamp)
 
+    val sessionParameters = SessionParameters(uuid)
+
+    def addSessionIdKeyAndHeader(requestHeader: RequestHeader): RequestHeader =
+      requestHeader
+        .withHeaders(requestHeader.headers
+                      .remove(HMRCHeaderNames.xSessionId)
+                      .add(sessionParameters.sessionHeader)
+                    )
+        .addAttr(RequestAttrKey.Session, Cell(requestHeader.session + sessionParameters.sessionKeyPair))
+
+    val withSessionId: Result => Result =
+      result => {
+        val newSession = result.newSession match {
+          case Some(s) => s + sessionParameters.sessionKeyPair
+          case _ => Session() + sessionParameters.sessionKeyPair
+        }
+        result.withSession(newSession)
+      }
+
     (timestamp.flatMap(timestampToInstant) match {
       case Some(ts) if hasExpired(ts) && config.onlyWipeAuthToken =>
-        f(wipeAuthRelatedKeys(rh))
+        f(addSessionIdKeyAndHeader(wipeAuthRelatedKeys(rh)))
           .map(wipeAuthRelatedKeysFromSessionCookie)
+          .map(withSessionId)
       case Some(ts) if hasExpired(ts) =>
-        f(wipeSession(rh))
+        f(addSessionIdKeyAndHeader(wipeSession(rh)))
           .map(wipeAllFromSessionCookie)
+          .map(withSessionId)
       case _ =>
         f(rh)
     }).map(updateTimestamp)
@@ -136,12 +164,20 @@ class SessionTimeoutFilter @Inject()(
       value = Cell(session)
     )
 
+
+
   private def preservedSessionData(session: Session): Seq[(String, String)] =
     for {
       key   <- (SessionTimeoutFilter.allowlistedSessionKeys ++ config.additionalSessionKeys).toSeq
       value <- session.get(key)
     } yield key -> value
 
+}
+
+case class SessionParameters(uuid: UUID) {
+  val sessionId: String = s"sessionId-$uuid"
+  val sessionKeyPair: (String, String) = SessionKeys.sessionId -> sessionId
+  val sessionHeader: (String, String) = HMRCHeaderNames.xSessionId -> sessionId
 }
 
 object SessionTimeoutFilter {
