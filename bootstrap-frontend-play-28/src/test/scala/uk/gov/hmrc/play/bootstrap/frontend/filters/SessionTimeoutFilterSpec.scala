@@ -50,7 +50,7 @@ object SessionTimeoutFilterSpec {
 
   private val sessionUuid = "4e296bd3-cc4a-4ad6-bdbc-7c9fff982b15"
   private val sessionIdValue = s"sessionId-$sessionUuid"
-  val sessionId: UUID = UUID.fromString(sessionUuid)
+  val sessionId: () => UUID = () => UUID.fromString(sessionUuid)
 
   class Filters @Inject()(timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
 

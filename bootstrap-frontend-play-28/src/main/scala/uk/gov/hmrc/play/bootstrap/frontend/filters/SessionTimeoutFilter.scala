@@ -77,7 +77,7 @@ object SessionTimeoutFilterConfig {
   */
 class SessionTimeoutFilter(
   config: SessionTimeoutFilterConfig,
-  uuid: => UUID = UUID.randomUUID()
+  uuid: () => UUID = () => UUID.randomUUID()
 )(implicit
   ec: ExecutionContext,
   override val mat: Materializer
@@ -105,7 +105,7 @@ class SessionTimeoutFilter(
 
     val timestamp = rh.session.get(lastRequestTimestamp)
 
-    val sessionParameters = SessionParameters(uuid)
+    val sessionParameters = SessionParameters(uuid())
 
     def addSessionIdKeyAndHeader(requestHeader: RequestHeader): RequestHeader =
       requestHeader
