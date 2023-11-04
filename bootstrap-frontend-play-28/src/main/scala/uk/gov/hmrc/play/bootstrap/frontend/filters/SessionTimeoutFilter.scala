@@ -21,11 +21,11 @@ import play.api.Configuration
 import play.api.mvc.request.{Cell, RequestAttrKey}
 import play.api.mvc.{Filter, RequestHeader, Result, Session}
 import uk.gov.hmrc.http.SessionKeys._
-import uk.gov.hmrc.http.{SessionKeys, HeaderNames}
+import uk.gov.hmrc.http.{HeaderNames, SessionKeys}
 
 import java.time.{Duration, Instant}
 import java.util.UUID
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.Option.option2Iterable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -75,6 +75,7 @@ object SessionTimeoutFilterConfig {
   *                        of this class
   * @param mat             a `Materializer` instance for Play! to use when dealing with the underlying Akka streams
   */
+@Singleton
 class SessionTimeoutFilter(
   config: SessionTimeoutFilterConfig,
   uuid: () => UUID = () => UUID.randomUUID()
