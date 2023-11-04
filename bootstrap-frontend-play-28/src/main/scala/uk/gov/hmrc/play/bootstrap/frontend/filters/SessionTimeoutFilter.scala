@@ -21,7 +21,7 @@ import play.api.Configuration
 import play.api.mvc.request.{Cell, RequestAttrKey}
 import play.api.mvc.{Filter, RequestHeader, Result, Session}
 import uk.gov.hmrc.http.SessionKeys._
-import uk.gov.hmrc.http.{SessionKeys, HeaderNames => HMRCHeaderNames}
+import uk.gov.hmrc.http.{SessionKeys, HeaderNames}
 
 import java.time.{Duration, Instant}
 import java.util.UUID
@@ -105,23 +105,20 @@ class SessionTimeoutFilter(
 
     val timestamp = rh.session.get(lastRequestTimestamp)
 
-    val sessionParameters = SessionParameters(uuid())
+    val sessionId: String = s"sessionId-${uuid()}"
 
     def addSessionIdKeyAndHeader(requestHeader: RequestHeader): RequestHeader =
       requestHeader
         .withHeaders(requestHeader.headers
-                      .remove(HMRCHeaderNames.xSessionId)
-                      .add(sessionParameters.sessionHeader)
+                      .remove(HeaderNames.xSessionId)
+                      .add   (HeaderNames.xSessionId -> sessionId)
                     )
-        .addAttr(RequestAttrKey.Session, Cell(requestHeader.session + sessionParameters.sessionKeyPair))
+        .addAttr(RequestAttrKey.Session, Cell(requestHeader.session + (SessionKeys.sessionId, sessionId)))
 
     val withSessionId: Result => Result =
       result => {
-        val newSession = result.newSession match {
-          case Some(s) => s + sessionParameters.sessionKeyPair
-          case _ => Session() + sessionParameters.sessionKeyPair
-        }
-        result.withSession(newSession)
+        val sessionKeyPair = SessionKeys.sessionId -> sessionId
+        result.withSession(result.newSession.getOrElse(Session() + sessionKeyPair) + sessionKeyPair)
       }
 
     (timestamp.flatMap(timestampToInstant) match {
@@ -174,11 +171,6 @@ class SessionTimeoutFilter(
 
 }
 
-case class SessionParameters(uuid: UUID) {
-  val sessionId: String = s"sessionId-$uuid"
-  val sessionKeyPair: (String, String) = SessionKeys.sessionId -> sessionId
-  val sessionHeader: (String, String) = HMRCHeaderNames.xSessionId -> sessionId
-}
 
 object SessionTimeoutFilter {
 
