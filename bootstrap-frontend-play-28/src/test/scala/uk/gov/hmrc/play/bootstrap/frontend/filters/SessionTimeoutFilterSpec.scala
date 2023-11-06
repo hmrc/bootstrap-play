@@ -46,11 +46,11 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 object SessionTimeoutFilterSpec {
-  val now = LocalDateTime.of(2017, 1, 12, 14, 56).toInstant(ZoneOffset.UTC)
+  val now: () => Instant = () => LocalDateTime.of(2017, 1, 12, 14, 56).toInstant(ZoneOffset.UTC)
 
   private val sessionUuid = "4e296bd3-cc4a-4ad6-bdbc-7c9fff982b15"
   private val sessionIdValue = s"sessionId-$sessionUuid"
-  val sessionId: () => UUID = () => UUID.fromString(sessionUuid)
+  val uuid: () => UUID = () => UUID.fromString(sessionUuid)
 
   class Filters @Inject()(timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
 
@@ -59,9 +59,7 @@ object SessionTimeoutFilterSpec {
   )(implicit
     ec: ExecutionContext,
     mat: Materializer
-  ) extends SessionTimeoutFilter(config, sessionId)(ec, mat) {
-    override val clock: Instant = now
-  }
+  ) extends SessionTimeoutFilter(config, uuid,now)(ec, mat)
 }
 
 class SessionTimeoutFilterSpec
@@ -110,7 +108,7 @@ class SessionTimeoutFilterSpec
   }
 
   "SessionTimeoutFilter" should {
-    val timestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
+    val timestamp = now().minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
     val config = SessionTimeoutFilterConfig(
       timeoutDuration       = Duration.of(1, ChronoUnit.MINUTES),
@@ -210,7 +208,7 @@ class SessionTimeoutFilterSpec
       }
     }
     "pass through all session values if timestamp is recent" in {
-      val timestamp = now.minusSeconds(5).toEpochMilli.toString
+      val timestamp = now().minusSeconds(5).toEpochMilli.toString
 
       running(app()) {
         val result = route(
@@ -255,13 +253,13 @@ class SessionTimeoutFilterSpec
         rhSession.get(sessionIdKey).value   shouldEqual "some-session-id"
         rhSession.get(lastRequestTimestamp) shouldBe None
 
-        session(result).get(lastRequestTimestamp) shouldBe Some(now.toEpochMilli.toString)
+        session(result).get(lastRequestTimestamp) shouldBe Some(now().toEpochMilli.toString)
       }
     }
 
     "strip only auth-related keys if timestamp is old, and onlyWipeAuthToken == true" in {
       val altConfig    = config.copy(onlyWipeAuthToken = true)
-      val oldTimestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
+      val oldTimestamp = now().minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
       running(app(altConfig)) {
 
@@ -294,11 +292,11 @@ class SessionTimeoutFilterSpec
         val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
-            lastRequestTimestamp -> now.minus(1, ChronoUnit.DAYS).toEpochMilli.toString
+            lastRequestTimestamp -> now().minus(1, ChronoUnit.DAYS).toEpochMilli.toString
           )
         ).value
 
-        session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
+        session(result).get(lastRequestTimestamp).value shouldEqual now().toEpochMilli.toString
       }
     }
 
@@ -307,11 +305,11 @@ class SessionTimeoutFilterSpec
         val result = route(
           app(),
           FakeRequest(GET, "/test").withSession(
-            lastRequestTimestamp -> now.minusSeconds(1).toEpochMilli.toString
+            lastRequestTimestamp -> now().minusSeconds(1).toEpochMilli.toString
           )
         ).value
 
-        session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
+        session(result).get(lastRequestTimestamp).value shouldEqual now().toEpochMilli.toString
         session(result).get(sessionIdKey)               shouldNot be(defined)
       }
     }
@@ -332,13 +330,13 @@ class SessionTimeoutFilterSpec
         session(result).get(authToken).value            shouldEqual "a-token"
         session(result).get(loginOrigin).value          shouldEqual "gg"
         session(result).get("custom").value             shouldEqual "custom"
-        session(result).get(lastRequestTimestamp).value shouldEqual now.toEpochMilli.toString
+        session(result).get(lastRequestTimestamp).value shouldEqual now().toEpochMilli.toString
         session(result).get(sessionIdKey).value         shouldEqual "some-session-id"
       }
     }
 
     "ensure non-session cookies are passed through to the action untouched" in {
-      val timestamp = now.minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
+      val timestamp = now().minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
       running(app()) {
 

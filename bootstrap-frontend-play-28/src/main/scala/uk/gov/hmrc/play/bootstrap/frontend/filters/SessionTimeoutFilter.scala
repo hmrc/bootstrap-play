@@ -78,7 +78,8 @@ object SessionTimeoutFilterConfig {
 @Singleton
 class SessionTimeoutFilter(
   config: SessionTimeoutFilterConfig,
-  uuid: () => UUID = () => UUID.randomUUID()
+  uuid: () => UUID = () => UUID.randomUUID(),
+  clock: () => Instant = () => Instant.now()
 )(implicit
   ec: ExecutionContext,
   override val mat: Materializer
@@ -86,8 +87,6 @@ class SessionTimeoutFilter(
   @Inject
   def this(mat: Materializer, config: SessionTimeoutFilterConfig, ec: ExecutionContext) =
     this(config)(ec, mat)
-
-  def clock(): Instant = Instant.now()
 
   val authRelatedKeys = Seq(authToken)
 
