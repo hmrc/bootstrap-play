@@ -16,41 +16,36 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
-import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
-import java.time.temporal.ChronoUnit
 import akka.stream.Materializer
-
-import javax.inject.Inject
+import com.typesafe.config.ConfigFactory
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.matchers.{MatchResult, Matcher}
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.matchers.{MatchResult, Matcher}
 import org.scalatest.wordspec.AnyWordSpecLike
-import com.typesafe.config.ConfigFactory
 import play.api.http.{DefaultHttpFilters, HttpFilters}
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
+import play.api.mvc.Results.Ok
 import play.api.mvc._
-import Results.Ok
-import play.api.inject.bind
 import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, Configuration}
-import uk.gov.hmrc.http.HeaderNames
 import uk.gov.hmrc.http.HeaderNames.xSessionId
 import uk.gov.hmrc.http.SessionKeys.{authToken, lastRequestTimestamp, loginOrigin, sessionId => sessionIdKey}
 
-import java.util.UUID
+import java.time.temporal.ChronoUnit
+import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 object SessionTimeoutFilterSpec {
   val now: () => Instant = () => LocalDateTime.of(2017, 1, 12, 14, 56).toInstant(ZoneOffset.UTC)
 
-  private val sessionUuid = "4e296bd3-cc4a-4ad6-bdbc-7c9fff982b15"
-  private val sessionIdValue = s"sessionId-$sessionUuid"
-  val uuid: () => UUID = () => UUID.fromString(sessionUuid)
+  val mkSessionId: () => String = () => "some-unique-key-for-a-sessionId"
 
   class Filters @Inject()(timeoutFilter: SessionTimeoutFilter) extends DefaultHttpFilters(timeoutFilter)
 
@@ -59,7 +54,7 @@ object SessionTimeoutFilterSpec {
   )(implicit
     ec: ExecutionContext,
     mat: Materializer
-  ) extends SessionTimeoutFilter(config, uuid,now)(ec, mat)
+  ) extends SessionTimeoutFilter(config, mkSessionId, now)(ec, mat)
 }
 
 class SessionTimeoutFilterSpec
@@ -145,8 +140,8 @@ class SessionTimeoutFilterSpec
         rhSession                                  should onlyContainAllowlistedKeys(Set("allowlisted", sessionIdKey))
         rhSession.get(lastRequestTimestamp).value  shouldEqual timestamp
         rhSession.get("allowlisted").value         shouldEqual "allowlisted"
-        rhSession.get(sessionIdKey).value          shouldEqual sessionIdValue
-        rhHeader.get(xSessionId).value             shouldEqual sessionIdValue
+        rhSession.get(sessionIdKey).value          shouldEqual mkSessionId()
+        rhHeader.get(xSessionId).value             shouldEqual mkSessionId()
       }
     }
 
@@ -172,8 +167,8 @@ class SessionTimeoutFilterSpec
         rhSession                                   should onlyContainAllowlistedKeys(Set("allowlisted", sessionIdKey))
         rhSession.get(loginOrigin)                  shouldBe Some("gg")
         rhSession.get("allowlisted")                shouldBe Some("allowlisted")
-        rhSession.get(sessionIdKey).value           shouldEqual sessionIdValue
-        rhHeaders.get(xSessionId).value             shouldEqual sessionIdValue
+        rhSession.get(sessionIdKey).value           shouldEqual mkSessionId()
+        rhHeaders.get(xSessionId).value             shouldEqual mkSessionId()
       }
     }
 
@@ -199,11 +194,11 @@ class SessionTimeoutFilterSpec
         rhSession should onlyContainAllowlistedKeys(Set("allowlisted", sessionIdKey))
         rhSession.get(lastRequestTimestamp).value shouldEqual timestamp
         rhSession.get("allowlisted").value shouldEqual "allowlisted"
-        rhSession.get(sessionIdKey).value shouldEqual sessionIdValue
-        rhHeader.get(xSessionId).value shouldEqual sessionIdValue
+        rhSession.get(sessionIdKey).value shouldEqual mkSessionId()
+        rhHeader.get(xSessionId).value shouldEqual mkSessionId()
 
         session(result).get("allowlisted") shouldBe Some("some-preserved-value")
-        session(result).get(sessionIdKey) shouldBe Some(sessionIdValue)
+        session(result).get(sessionIdKey) shouldBe Some(mkSessionId())
 
       }
     }
@@ -279,11 +274,11 @@ class SessionTimeoutFilterSpec
 
         rhSession.get("custom").value   shouldEqual "custom"
         rhSession.get(authToken)        shouldNot be(defined)
-        rhHeaders.get(xSessionId).value shouldEqual sessionIdValue
+        rhHeaders.get(xSessionId).value shouldEqual mkSessionId()
 
         session(result).get("custom").value     shouldEqual "custom"
         session(result).get(authToken)          shouldNot be(defined)
-        session(result).get(sessionIdKey).value shouldEqual sessionIdValue
+        session(result).get(sessionIdKey).value shouldEqual mkSessionId()
       }
     }
 

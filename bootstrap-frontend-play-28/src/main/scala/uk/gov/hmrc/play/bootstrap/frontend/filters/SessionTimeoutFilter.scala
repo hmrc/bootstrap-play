@@ -78,7 +78,7 @@ object SessionTimeoutFilterConfig {
 @Singleton
 class SessionTimeoutFilter(
   config: SessionTimeoutFilterConfig,
-  uuid: () => UUID = () => UUID.randomUUID(),
+  mkSessionId: () => String = () => s"sessionId-${UUID.randomUUID()}",
   clock: () => Instant = () => Instant.now()
 )(implicit
   ec: ExecutionContext,
@@ -105,7 +105,7 @@ class SessionTimeoutFilter(
 
     val timestamp = rh.session.get(lastRequestTimestamp)
 
-    val sessionId: String = s"sessionId-${uuid()}"
+    val sessionId: String = mkSessionId()
 
     def addSessionIdKeyAndHeader(requestHeader: RequestHeader): RequestHeader =
       requestHeader
