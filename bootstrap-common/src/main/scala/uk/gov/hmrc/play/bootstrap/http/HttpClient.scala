@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import javax.inject.{Inject, Named, Provider, Singleton}
 import play.api.Configuration
@@ -25,6 +24,7 @@ import uk.gov.hmrc.http.client.{HttpClientV2, HttpClientV2Impl}
 import uk.gov.hmrc.http.hooks.HttpHook
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.bootstrap.stream.ActorSystem
 import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.util.matching.Regex

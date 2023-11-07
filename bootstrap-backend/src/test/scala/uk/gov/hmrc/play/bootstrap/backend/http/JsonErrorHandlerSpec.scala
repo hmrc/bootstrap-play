@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.http
 
-import akka.actor.ActorSystem
-import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -41,6 +39,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.{DataEvent, TruncationLog}
 import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
+import uk.gov.hmrc.play.bootstrap.stream.{ActorSystem, ByteString}
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -444,9 +443,9 @@ class JsonErrorHandlerSpec
     }
   }
 
-  // these are the assumptions the redacting logic in JsonErrorHandler expects from plaexpectations on play, such that J
+  // these are the assumptions the redacting logic in JsonErrorHandler expects from playexpectations on play, such that J
   "play" should {
-    implicit val system = ActorSystem()
+    implicit val system = ActorSystem("JsonErrorHandlerSpec")
 
     val errorHandler = new HttpErrorHandler {
       override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =

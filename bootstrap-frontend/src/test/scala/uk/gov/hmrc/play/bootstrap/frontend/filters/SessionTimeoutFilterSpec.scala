@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
-import akka.stream.Materializer
 import com.typesafe.config.ConfigFactory
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.OptionValues
@@ -36,6 +35,7 @@ import play.api.test.Helpers._
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.http.HeaderNames.xSessionId
 import uk.gov.hmrc.http.SessionKeys.{authToken, lastRequestTimestamp, loginOrigin, sessionId => sessionIdKey}
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}

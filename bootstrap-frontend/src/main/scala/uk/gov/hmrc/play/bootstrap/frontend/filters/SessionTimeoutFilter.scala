@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import play.api.Configuration
 import play.api.mvc.request.{Cell, RequestAttrKey}
 import play.api.mvc.{Filter, RequestHeader, Result, Session}

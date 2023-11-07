@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.filters
 
 import java.util.{Date, TimeZone}
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually

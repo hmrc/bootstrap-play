@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import akka.stream.Materializer
 import javax.inject.Inject
 import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.routing.Router.Attrs
 import play.api.{Logger, LoggerLike}
 import uk.gov.hmrc.play.bootstrap.config.ControllerConfigs
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal

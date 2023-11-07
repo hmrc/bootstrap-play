@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration

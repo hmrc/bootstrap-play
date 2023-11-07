@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import javax.inject.{Inject, Named}
 import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector

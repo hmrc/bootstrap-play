@@ -16,11 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
-import akka.Done
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.{mock, verify}
@@ -49,6 +44,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceFingerprint
+import uk.gov.hmrc.play.bootstrap.stream.{ActorSystem, ByteString, Done, Materializer, Source}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.DurationLong

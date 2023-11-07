@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters.crypto
 
-import akka.stream.Materializer
 import org.mockito.Mockito._
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.LoneElement
@@ -28,6 +27,7 @@ import play.api.mvc.Results._
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainText}
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}

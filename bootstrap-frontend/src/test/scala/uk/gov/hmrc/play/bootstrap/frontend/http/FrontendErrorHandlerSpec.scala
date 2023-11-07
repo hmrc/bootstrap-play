@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.http
 
-import akka.stream.Materializer
 import org.scalatest.AppendedClues.convertToClueful
 import org.scalatest.Inspectors.forAll
 import org.scalatest.matchers.should.Matchers
@@ -33,6 +32,7 @@ import play.api.test.{FakeHeaders, FakeRequest}
 import play.api.test.Helpers._
 import play.mvc.Http.HeaderNames
 import play.twirl.api.Html
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import scala.concurrent.Future
 

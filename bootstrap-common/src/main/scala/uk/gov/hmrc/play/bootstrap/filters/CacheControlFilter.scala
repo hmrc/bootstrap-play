@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.filters
 
 import javax.inject.Inject
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import play.api.{Configuration, Logger}
 import play.api.http.HeaderNames.CACHE_CONTROL
 import play.api.http.Status

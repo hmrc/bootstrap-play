@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.filters
 
-import akka.stream.Materializer
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.filters.MDCFilter
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import scala.concurrent.ExecutionContext
 

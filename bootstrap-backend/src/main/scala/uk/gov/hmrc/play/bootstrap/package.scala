@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.play
 
-import akka.stream.Materializer
 import com.kenshoo.play.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import scala.concurrent.ExecutionContext
 

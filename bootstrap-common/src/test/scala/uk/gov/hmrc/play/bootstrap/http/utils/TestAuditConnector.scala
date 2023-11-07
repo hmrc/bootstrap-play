@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.play.bootstrap.http.utils
 
-import akka.stream.Materializer
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.{AuditChannel, AuditConnector, DatastreamMetrics}
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import javax.inject.{Inject, Named}
 

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.filters
 
-import akka.stream.Materializer
 
 import javax.inject.Inject
 import play.api.Configuration
@@ -30,6 +29,7 @@ import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, Truncation
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
 import uk.gov.hmrc.play.bootstrap.filters.{CommonAuditFilter, Details}
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import scala.concurrent.ExecutionContext
 

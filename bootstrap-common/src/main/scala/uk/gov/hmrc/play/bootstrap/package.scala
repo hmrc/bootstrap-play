@@ -47,7 +47,7 @@ package bootstrap {
     @Singleton
     class DefaultAuditChannel @Inject()(
       auditingConfig   : AuditingConfig,
-      materializer     : akka.stream.Materializer,
+      materializer     : uk.gov.hmrc.play.bootstrap.stream.Materializer,
       lifecycle        : play.api.inject.ApplicationLifecycle,
       datastreamMetrics: uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
     ) extends uk.gov.hmrc.play.audit.DefaultAuditChannel(

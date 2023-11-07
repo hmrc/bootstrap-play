@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.backend
 
-import akka.stream.Materializer
 import com.typesafe.config.ConfigFactory
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers
@@ -26,6 +25,7 @@ import play.api.libs.json.{JsObject, OFormat}
 import play.api.mvc.{ControllerComponents, RequestHeader}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import scala.concurrent.ExecutionContext
 

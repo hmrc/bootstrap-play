@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.filters
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import org.slf4j.MDC
 import play.api.Configuration
 import play.api.mvc.{Filter, RequestHeader, Result}

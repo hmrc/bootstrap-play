@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import com.typesafe.config.ConfigException
 import org.mockito.scalatest.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary

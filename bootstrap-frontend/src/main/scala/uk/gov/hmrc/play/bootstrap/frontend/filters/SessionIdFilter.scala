@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import java.util.UUID
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import com.google.inject.Inject
 import play.api.mvc._
 import play.api.mvc.request.{Cell, RequestAttrKey}

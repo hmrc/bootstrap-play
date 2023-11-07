@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import com.google.inject.{Inject, Singleton}
 import play.api.{Configuration, Logger}
 import play.api.mvc.Results.{InternalServerError, Redirect}

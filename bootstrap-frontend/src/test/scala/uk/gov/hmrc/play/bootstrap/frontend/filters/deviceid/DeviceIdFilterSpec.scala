@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
 import org.scalatest.matchers.should.Matchers
 import org.mockito.captor.ArgCaptor
 import org.mockito.scalatest.MockitoSugar
@@ -29,6 +27,7 @@ import play.api.mvc.request.RequestAttrKey
 import play.api.test.FakeRequest
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
+import uk.gov.hmrc.play.bootstrap.stream.{ActorSystem, Materializer}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls

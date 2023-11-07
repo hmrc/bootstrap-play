@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import com.typesafe.config.ConfigFactory
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers

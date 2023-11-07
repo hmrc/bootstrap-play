@@ -18,7 +18,6 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import java.util.UUID
 
-import akka.stream.Materializer
 import com.google.inject.Inject
 import org.scalatest.OptionValues
 import org.scalatest.matchers.must.Matchers
@@ -33,6 +32,7 @@ import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderNames, SessionKeys}
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 
 import scala.concurrent.ExecutionContext
 

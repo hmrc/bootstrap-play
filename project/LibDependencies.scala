@@ -4,39 +4,47 @@ object LibDependencies {
 
   private val play28Version          = "2.8.20"
   private val play29Version          = "2.9.0"
+  private val play30Version          = "3.0.0"
   private val httpVerbsVersion       = "14.11.0-SNAPSHOT"
   private val akkaVersion            = "2.6.21"
+  private val pekkoVersion           = "1.0.1"
   private val jacksonVersion         = "2.12.7"
   private val jacksonDatabindVersion = "2.12.7.1"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
   val commonPlay29: Seq[ModuleID] = common(play29Version, "play-29")
+  val commonPlay30: Seq[ModuleID] = common(play30Version, "play-30")
 
   val frontendCommonPlay28: Seq[ModuleID] = frontendCommon(play28Version, "play-28")
   val frontendCommonPlay29: Seq[ModuleID] = frontendCommon(play29Version, "play-29")
+  val frontendCommonPlay30: Seq[ModuleID] = frontendCommon(play30Version, "play-30")
 
   val testPlay28: Seq[ModuleID] = test(play28Version, "play-28")
   val testPlay29: Seq[ModuleID] = test(play29Version, "play-29")
+  val testPlay30: Seq[ModuleID] = test(play30Version, "play-30")
 
   val healthPlay28: Seq[ModuleID] = health(play28Version, "play-28")
   val healthPlay29: Seq[ModuleID] = health(play29Version, "play-29")
+  val healthPlay30: Seq[ModuleID] = health(play30Version, "play-30")
 
   private def common(playVersion: String, playSuffix: String) =
     Seq(
       "ch.qos.logback"          %  "logback-core"               % "1.2.3",
-      "com.kenshoo"             %% "metrics-play"               % "2.7.3_0.8.2", // this is compatible with play 2.8
-      "com.typesafe.play"       %% "play-guice"                 % playVersion,
+      "com.kenshoo"             %% "metrics-play"               % (if (playVersion == play30Version) "3.0.0_0.8.2" // TODO this doesn't actually exist
+                                                                   else "2.7.3_0.8.2" // this is compatible with play 2.8
+                                                                  ),
+      playOrg(playVersion)      %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % s"7.0.0-SNAPSHOT",
       "uk.gov.hmrc"             %% "crypto"                     % "7.4.0-SNAPSHOT",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.7.0-SNAPSHOT",
       // the following are not used by bootstrap - but transitively added for clients
-      "com.typesafe.play"       %% (if (playVersion == play28Version) "filters-helpers" else "play-filters-helpers") % playVersion,
+      playOrg(playVersion)      %% (if (playVersion == play28Version) "filters-helpers" else "play-filters-helpers") % playVersion,
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
 
       // test dependencies
-      "com.typesafe.play"       %% "play-test"                  % playVersion    % Test,
+      playOrg(playVersion)      %% "play-test"                  % playVersion    % Test,
       "org.mockito"             %% "mockito-scala-scalatest"    % "1.17.14"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
       "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
@@ -63,32 +71,37 @@ object LibDependencies {
       )
 
   private def frontendCommon(playVersion: String, playSuffix: String) =
-    common(playVersion, playSuffix) :+ "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test
+    common(playVersion, playSuffix) :+
+      (if (playVersion == play30Version)
+         "org.apache.pekko"     %% "pekko-stream-testkit"         % pekkoVersion  % Test
+       else
+         "com.typesafe.akka"    %% "akka-stream-testkit"          % akkaVersion   % Test
+      )
 
   private def test(playVersion: String, playSuffix: String) =
     Seq(
-      "com.typesafe.play"       %% "play-test"                    % playVersion,
+      playOrg(playVersion)      %% "play-test"                    % playVersion,
       "uk.gov.hmrc"             %% s"http-verbs-test-$playSuffix" % httpVerbsVersion,
       "org.scalatestplus.play"  %% "scalatestplus-play"           % scalaTestPlusPlayVersion(playVersion),
-    ) ++
       // provides the optional dependency of scalatest as pulled in by scalatestplus-play
-      (if (playVersion == play28Version)
-        Seq("com.vladsch.flexmark"   %  "flexmark-all"       % "0.35.10")
-       else
-        Seq("com.vladsch.flexmark"   %  "flexmark-all"       % "0.62.2")// to go beyond requires Java 11 https://github.com/scalatest/scalatest/issues/2276
-      ) ++
-    Seq(
+      "com.vladsch.flexmark"   %  "flexmark-all"                  % (if (playVersion == play28Version) "0.35.10"
+                                                                     else                              "0.62.2"// to go beyond requires Java 11 https://github.com/scalatest/scalatest/issues/2276
+                                                                    ),
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
       "org.scalatest"           %% "scalatest"                    % "3.2.17"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"                 % "0.64.8"      % Test,
-      "com.typesafe.akka"       %% "akka-stream-testkit"          % akkaVersion   % Test,
-      "com.typesafe.play"       %% "play-akka-http-server"        % playVersion   % Test
+      (if (playVersion == play30Version)
+         "org.apache.pekko"     %% "pekko-stream-testkit"         % pekkoVersion  % Test
+       else
+         "com.typesafe.akka"    %% "akka-stream-testkit"          % akkaVersion   % Test
+      ),
+      playOrg(playVersion)      %% (if (playVersion == play30Version) "play-pekko-http-server" else "play-akka-http-server") % playVersion % Test
     )
 
   private def health(playVersion: String, playSuffix: String) =
     Seq(
-      "com.typesafe.play"       %% "play"                       % playVersion,
+      playOrg(playVersion)      %% "play"                       % playVersion,
       // test dependencies
       "org.scalatest"           %% "scalatest"                  % "3.2.17"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"      % Test,
@@ -96,7 +109,14 @@ object LibDependencies {
     )
 
   private def scalaTestPlusPlayVersion(playVersion: String): String =
-    if (playVersion == play28Version) "5.1.0"
+    if      (playVersion == play28Version) "5.1.0"
     else if (playVersion == play29Version) "6.0.0"
+    else if (playVersion == play30Version) "7.0.0"
+    else sys.error("Unsupported playVersion")
+
+  private def playOrg(playVersion: String): String =
+    if      (playVersion == play28Version) "com.typesafe.play"
+    else if (playVersion == play29Version) "com.typesafe.play"
+    else if (playVersion == play30Version) "org.playframework"
     else sys.error("Unsupported playVersion")
 }

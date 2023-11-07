@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.filters
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
 import com.typesafe.config.ConfigFactory
 import org.mockito.captor.ArgCaptor
 import org.mockito.scalatest.MockitoSugar
@@ -36,6 +34,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import uk.gov.hmrc.play.bootstrap.config.{ControllerConfigs, HttpAuditEvent}
+import uk.gov.hmrc.play.bootstrap.stream.{ActorSystem, Materializer}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,7 +48,7 @@ class BackendAuditFilterSpec
      with MockitoSugar
      with BeforeAndAfterAll {
 
-  implicit val system = ActorSystem("BackendAuditFilterSpec")
+  implicit val system: ActorSystem = ActorSystem("BackendAuditFilterSpec")
 
   override def afterAll(): Unit = {
     system.terminate()

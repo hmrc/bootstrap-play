@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters.crypto
 
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import javax.inject.Inject
 import play.api.Logger
 import play.api.http.HeaderNames

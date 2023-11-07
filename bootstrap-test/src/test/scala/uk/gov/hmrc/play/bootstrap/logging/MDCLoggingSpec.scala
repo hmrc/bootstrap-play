@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.logging
 
-import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
@@ -30,6 +29,7 @@ import play.api.mvc.Results
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.{HeaderNames => HMRCHeaderNames, SessionKeys}
+import uk.gov.hmrc.play.bootstrap.stream.ActorSystem
 
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}

@@ -19,9 +19,10 @@ package uk.gov.hmrc.play.bootstrap.filters
 import play.api.{Configuration, Logger}
 import play.api.http.HttpChunk
 import play.api.mvc.EssentialFilter
-import akka.stream._
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.util.ByteString
+import org.apache.pekko.stream._
+import org.apache.pekko.stream.scaladsl.{Flow, Keep, Sink, Source}
+import org.apache.pekko.util.ByteString
+import org.apache.pekko.NotUsed
 import play.api.http.HttpEntity
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.streams.Accumulator
@@ -155,7 +156,7 @@ trait CommonAuditFilter extends AuditFilter {
       .map { result =>
         val responseBodyPromise = Promise[Data[String]]()
 
-        lazy val responseBodyCaptor: Sink[ByteString, akka.NotUsed] =
+        lazy val responseBodyCaptor: Sink[ByteString, NotUsed] =
           BodyCaptor.sink(
             maxBodySize,
             withCapturedBody = body => responseBodyPromise.success(body.map(_.utf8String))
@@ -165,7 +166,7 @@ trait CommonAuditFilter extends AuditFilter {
           case str: HttpEntity.Streamed =>
             str.copy(data = str.data.alsoTo(responseBodyCaptor))
           case str: HttpEntity.Chunked =>
-            val chunkedResponseBodyCaptor: Sink[HttpChunk, akka.NotUsed] =
+            val chunkedResponseBodyCaptor: Sink[HttpChunk, NotUsed] =
               responseBodyCaptor.contramap {
                 case HttpChunk.Chunk(data)  => data
                 case HttpChunk.LastChunk(_) => ByteString()

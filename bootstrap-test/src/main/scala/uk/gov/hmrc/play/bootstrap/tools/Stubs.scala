@@ -20,19 +20,22 @@ import play.api.http.{DefaultFileMimeTypes, FileMimeTypes, FileMimeTypesConfigur
 import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
 import play.api.test.Helpers._
-import akka.stream.testkit.NoMaterializer
+import uk.gov.hmrc.play.bootstrap.stream.ActorSystem
 
 import scala.concurrent.ExecutionContext
 
 object Stubs {
 
+  private implicit val as: ActorSystem = ActorSystem("Stubs")
+
   def stubMessagesControllerComponents(
-    bodyParser: BodyParser[AnyContent] = stubBodyParser(AnyContentAsEmpty),
-    playBodyParsers: PlayBodyParsers   = stubPlayBodyParsers(NoMaterializer),
-    messagesApi: MessagesApi           = stubMessagesApi(),
-    langs: Langs                       = stubLangs(),
-    fileMimeTypes: FileMimeTypes       = new DefaultFileMimeTypes(FileMimeTypesConfiguration()),
-    executionContext: ExecutionContext = ExecutionContext.global): MessagesControllerComponents =
+    bodyParser      : BodyParser[AnyContent] = stubBodyParser(AnyContentAsEmpty),
+    playBodyParsers : PlayBodyParsers        = stubPlayBodyParsers,
+    messagesApi     : MessagesApi            = stubMessagesApi(),
+    langs           : Langs                  = stubLangs(),
+    fileMimeTypes   : FileMimeTypes          = new DefaultFileMimeTypes(FileMimeTypesConfiguration()),
+    executionContext: ExecutionContext       = ExecutionContext.global
+  ): MessagesControllerComponents =
     DefaultMessagesControllerComponents(
       new DefaultMessagesActionBuilderImpl(bodyParser, messagesApi)(executionContext),
       DefaultActionBuilder(bodyParser)(executionContext),

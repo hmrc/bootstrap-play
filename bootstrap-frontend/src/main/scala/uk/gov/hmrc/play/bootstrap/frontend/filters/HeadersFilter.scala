@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 import java.util.UUID
 
 import javax.inject.Inject
-import akka.stream.Materializer
+import uk.gov.hmrc.play.bootstrap.stream.Materializer
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderNames
 
