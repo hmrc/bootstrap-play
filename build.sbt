@@ -14,69 +14,91 @@ lazy val library = (project in file("."))
     bootstrapCommonPlay30, bootstrapTestPlay30, bootstrapBackendPlay30, bootstrapFrontendPlay30, bootstrapHealthPlay30
   )
 
-def shareSources(location: String) = Seq(
-  Compile / unmanagedSourceDirectories   += baseDirectory.value / s"../$location/src/main/scala",
-  Compile / unmanagedResourceDirectories += baseDirectory.value / s"../$location/src/main/resources",
-  Test    / unmanagedSourceDirectories   += baseDirectory.value / s"../$location/src/test/scala",
-  Test    / unmanagedResourceDirectories += baseDirectory.value / s"../$location/src/test/resources"
+def copySources(module: Project) = Seq(
+  Compile / scalaSource       := (module / Compile / scalaSource      ).value,
+  Compile / resourceDirectory := (module / Compile / resourceDirectory).value,
+  Test    / scalaSource       := (module / Test    / scalaSource      ).value,
+  Test    / resourceDirectory := (module / Test    / resourceDirectory).value
 )
 
-def withConfig(sourceModule: String, filename: String, transform: String => String) =
-  Compile / resourceGenerators += Def.task {
-    //Compile / sourceDirectory // points to bootstrap-backend-play-
-    val source = baseDirectory.value / s"../$sourceModule/src/main/template/$filename"
-    val target = (Compile / resourceManaged).value / filename
-    IO.write(target, transform(IO.read(source)))
-    Seq(target)
-  }.taskValue
+/** copies source files from one module to another, and applies transformation */
+def copySources(module: Project, transform: String => String) = Seq(
+  Compile / sourceGenerators   += transformWith(module / Compile / scalaSource      , Compile / sourceManaged  , transform).taskValue,
+  Compile / resourceGenerators += transformWith(module / Compile / resourceDirectory, Compile / resourceManaged, transform).taskValue,
+  Test    / sourceGenerators   += transformWith(module / Test    / scalaSource      , Test    / sourceManaged  , transform).taskValue,
+  Test    / resourceGenerators += transformWith(module / Test    / resourceDirectory, Test    / resourceManaged, transform).taskValue,
+  // generated sources are not included in source.jar by default
+  Compile / packageSrc / mappings ++= {
+    def include(location: File) = {
+      val files = (location ** "*").get.filterNot(_.isDirectory)
+      files.map { file =>
+        file -> file.getPath.stripPrefix(location.getPath)
+      }
+    }
+    include((Compile / sourceManaged).value) ++
+      include((Compile / resourceManaged).value)
+  }
+)
+
+def transformWith(sourceSetting: SettingKey[File], targetSourceSetting: SettingKey[File], transform: String => String) =
+  Def.task {
+    val source       = sourceSetting.value
+    val targetSource = targetSourceSetting.value
+    val files        = (source ** "*").get.filterNot(_.isDirectory)
+    println(s"Copying and transforming the following files for ${moduleName.value} scalaVersion ${scalaVersion.value}: files:\n${files.mkString("\n")}}")
+    files.map { file =>
+      val targetFile = new java.io.File(file.getParent.replace(source.getPath, targetSource.getPath)) / file.getName
+      IO.write(targetFile, transform(IO.read(file)))
+      targetFile
+    }
+  }
 
 lazy val bootstrapCommonPlay28 = Project("bootstrap-common-play-28", file("bootstrap-common-play-28"))
   .settings(
     crossScalaVersions := Seq(scala2_12, scala2_13),
     libraryDependencies ++= LibDependencies.commonPlay28,
-    shareSources("bootstrap-common")
+    copySources(bootstrapCommonPlay30, _.replace("org.apache.pekko", "akka"))
   )
 
 lazy val bootstrapCommonPlay29 = Project("bootstrap-common-play-29", file("bootstrap-common-play-29"))
   .settings(
     crossScalaVersions := Seq(scala2_13),
     libraryDependencies ++= LibDependencies.commonPlay29,
-    shareSources("bootstrap-common")
+    copySources(bootstrapCommonPlay30, _.replace("org.apache.pekko", "akka"))
   )
 
 lazy val bootstrapCommonPlay30 = Project("bootstrap-common-play-30", file("bootstrap-common-play-30"))
   .settings(
     crossScalaVersions := Seq(scala2_13),
-    libraryDependencies ++= LibDependencies.commonPlay30,
-    shareSources("bootstrap-common")
+    libraryDependencies ++= LibDependencies.commonPlay30
   )
 
 lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap-test-play-28"))
   .settings(
     libraryDependencies ++= LibDependencies.testPlay28,
-    shareSources("bootstrap-test")
+    copySources(bootstrapTestPlay30, _.replace("org.apache.pekko", "akka"))
   )
   .dependsOn(bootstrapCommonPlay28)
 
 lazy val bootstrapTestPlay29 = Project("bootstrap-test-play-29", file("bootstrap-test-play-29"))
   .settings(
     libraryDependencies ++= LibDependencies.testPlay29,
-    shareSources("bootstrap-test")
+    copySources(bootstrapTestPlay30, _.replace("org.apache.pekko", "akka"))
   )
   .dependsOn(bootstrapCommonPlay29)
 
 lazy val bootstrapTestPlay30 = Project("bootstrap-test-play-30", file("bootstrap-test-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.testPlay30,
-    shareSources("bootstrap-test")
+    libraryDependencies ++= LibDependencies.testPlay30
   )
   .dependsOn(bootstrapCommonPlay30)
 
 lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("bootstrap-backend-play-28"))
   .settings(
     libraryDependencies ++= LibDependencies.commonPlay28,
-    shareSources("bootstrap-backend"),
-    withConfig("bootstrap-backend", "backend.conf", _.replace("{stream}", "akka")),
+    copySources(bootstrapBackendPlay30, _.replace("org.apache.pekko", "akka")
+                                         .replace("pekko", "akka") // for backend.conf
+    )
   ).dependsOn(
     bootstrapCommonPlay28,
     bootstrapTestPlay28 % "test->test",
@@ -86,8 +108,9 @@ lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("boo
 lazy val bootstrapBackendPlay29 = Project("bootstrap-backend-play-29", file("bootstrap-backend-play-29"))
   .settings(
     libraryDependencies ++= LibDependencies.commonPlay29,
-    shareSources("bootstrap-backend"),
-    withConfig("bootstrap-backend", "backend.conf", _.replace("{stream}", "akka")),
+    copySources(bootstrapBackendPlay30, _.replace("org.apache.pekko", "akka")
+                                         .replace("pekko", "akka") // for backend.conf
+    )
   ).dependsOn(
     bootstrapCommonPlay29,
     bootstrapTestPlay29 % "test->test",
@@ -96,9 +119,7 @@ lazy val bootstrapBackendPlay29 = Project("bootstrap-backend-play-29", file("boo
 
 lazy val bootstrapBackendPlay30 = Project("bootstrap-backend-play-30", file("bootstrap-backend-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.commonPlay30,
-    shareSources("bootstrap-backend"),
-    withConfig("bootstrap-backend", "backend.conf", _.replace("{stream}", "pekko")),
+    libraryDependencies ++= LibDependencies.commonPlay30
   ).dependsOn(
     bootstrapCommonPlay30,
     bootstrapTestPlay30 % "test->test",
@@ -108,8 +129,9 @@ lazy val bootstrapBackendPlay30 = Project("bootstrap-backend-play-30", file("boo
 lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("bootstrap-frontend-play-28"))
   .settings(
     libraryDependencies ++= LibDependencies.frontendCommonPlay28,
-    shareSources("bootstrap-frontend"),
-    withConfig("bootstrap-frontend", "frontend.conf", _.replace("{stream}", "akka")),
+    copySources(bootstrapFrontendPlay30, _.replace("org.apache.pekko", "akka")
+                                          .replace("pekko", "akka") // for frontend.conf
+    )
   ).dependsOn(
     bootstrapCommonPlay28,
     bootstrapTestPlay28 % "test->test",
@@ -119,8 +141,9 @@ lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("b
 lazy val bootstrapFrontendPlay29 = Project("bootstrap-frontend-play-29", file("bootstrap-frontend-play-29"))
   .settings(
     libraryDependencies ++= LibDependencies.frontendCommonPlay29,
-    shareSources("bootstrap-frontend"),
-    withConfig("bootstrap-frontend", "frontend.conf", _.replace("{stream}", "akka")),
+    copySources(bootstrapFrontendPlay30, _.replace("org.apache.pekko", "akka")
+                                          .replace("pekko", "akka") // for frontend.conf
+    )
   ).dependsOn(
     bootstrapCommonPlay29,
     bootstrapTestPlay29 % "test->test",
@@ -129,9 +152,7 @@ lazy val bootstrapFrontendPlay29 = Project("bootstrap-frontend-play-29", file("b
 
 lazy val bootstrapFrontendPlay30 = Project("bootstrap-frontend-play-30", file("bootstrap-frontend-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.frontendCommonPlay30,
-    shareSources("bootstrap-frontend"),
-    withConfig("bootstrap-frontend", "frontend.conf", _.replace("{stream}", "pekko")),
+    libraryDependencies ++= LibDependencies.frontendCommonPlay30
   ).dependsOn(
     bootstrapCommonPlay30,
     bootstrapTestPlay30 % "test->test",
@@ -141,17 +162,16 @@ lazy val bootstrapFrontendPlay30 = Project("bootstrap-frontend-play-30", file("b
 lazy val bootstrapHealthPlay28 = Project("bootstrap-health-play-28", file("bootstrap-health-play-28"))
   .settings(
     libraryDependencies ++= LibDependencies.healthPlay28,
-    shareSources("bootstrap-health")
+    copySources(bootstrapHealthPlay30)
   )
 
 lazy val bootstrapHealthPlay29 = Project("bootstrap-health-play-29", file("bootstrap-health-play-29"))
   .settings(
     libraryDependencies ++= LibDependencies.healthPlay29,
-    shareSources("bootstrap-health")
+    copySources(bootstrapHealthPlay30)
   )
 
 lazy val bootstrapHealthPlay30 = Project("bootstrap-health-play-30", file("bootstrap-health-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.healthPlay30,
-    shareSources("bootstrap-health")
+    libraryDependencies ++= LibDependencies.healthPlay30
   )
