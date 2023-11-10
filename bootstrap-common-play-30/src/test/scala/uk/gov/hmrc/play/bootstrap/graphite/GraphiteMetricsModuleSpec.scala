@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.codahale.metrics.{MetricFilter, SharedMetricRegistries}
-import com.kenshoo.play.metrics.{DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
+import uk.gov.hmrc.play.bootstrap.metrics.{DisabledMetrics, DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
@@ -29,11 +29,11 @@ import play.api.test.Helpers
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
 
 class GraphiteMetricsModuleSpec
-    extends AnyFreeSpec
-    with Matchers
-    with BeforeAndAfterEach
-    with ScalaCheckDrivenPropertyChecks
-    with GivenWhenThen {
+  extends AnyFreeSpec
+     with Matchers
+     with BeforeAndAfterEach
+     with ScalaCheckDrivenPropertyChecks
+     with GivenWhenThen {
 
   override def beforeEach(): Unit = {
     super.beforeEach()

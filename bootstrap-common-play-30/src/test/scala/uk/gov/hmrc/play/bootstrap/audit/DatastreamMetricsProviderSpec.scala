@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.audit
 
 import com.codahale.metrics.{Counter, MetricRegistry}
-import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import org.mockito.Strictness
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.matchers.should.Matchers

@@ -261,6 +261,20 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 ### Version 7.22.0
 - Deprecate `SafeRedirectUrl` public constructor
 
+### Version 8.0.0
+- Supports Play 2.8, Play 2.9, Play 3.0
+- Note, Play 3.0 uses `apache.org.pekko` instead of `akka`.
+- Drops kenshoo `metrics-play` for an inline version.
+  The route
+  ```
+  GET /admin/metrics @com.kenshoo.play.metrics.MetricsController.metrics
+  ```
+  will need changing to
+  ```
+  GET /admin/metrics @uk.gov.hmrc.play.bootstrap.metrics.MetricsController.metrics
+  ```
+  Or it can be removed altogether , since it is not used when deployed.
+
 ### Version 7.20.0
 - Updates playframework to 2.8.20
 

@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.graphite
 
 import com.codahale.metrics.{Metric, MetricFilter, MetricRegistry, MetricSet}
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
-import com.kenshoo.play.metrics.{DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
+import uk.gov.hmrc.play.bootstrap.metrics.{DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
 import javax.inject.Singleton
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}

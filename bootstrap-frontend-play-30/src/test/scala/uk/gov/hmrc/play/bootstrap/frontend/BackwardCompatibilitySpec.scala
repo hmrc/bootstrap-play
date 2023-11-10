@@ -70,7 +70,7 @@ class BackwardCompatibilitySpec
         headersFilter             = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.HeadersFilter],
         securityFilter            = mock[play.filters.headers.SecurityHeadersFilter],
         frontendAuditFilter       = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],
-        metricsFilter             = mock[com.kenshoo.play.metrics.MetricsFilter],
+        metricsFilter             = mock[uk.gov.hmrc.play.bootstrap.metrics.MetricsFilter],
         deviceIdFilter            = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.deviceid.DeviceIdFilter],
         csrfFilter                = mock[play.filters.csrf.CSRFFilter],
         sessionCookieCryptoFilter = mock[uk.gov.hmrc.play.bootstrap.filters.frontend.crypto.SessionCookieCryptoFilter],

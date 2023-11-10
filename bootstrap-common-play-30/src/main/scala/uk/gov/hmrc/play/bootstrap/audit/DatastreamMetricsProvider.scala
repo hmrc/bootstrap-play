@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.audit
 
-import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import org.slf4j.LoggerFactory
 import uk.gov.hmrc.play.audit.http.connector.{Counter, DatastreamMetrics}
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig

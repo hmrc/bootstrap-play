@@ -21,7 +21,7 @@ import javax.inject.{Inject, Provider}
 
 import com.codahale.metrics.MetricFilter
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
-import com.kenshoo.play.metrics.Metrics
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 import play.api.Configuration
 
 case class GraphiteReporterProviderConfig(

@@ -10,6 +10,7 @@ object LibDependencies {
   private val pekkoVersion           = "1.0.1"
   private val jacksonVersion         = "2.12.7"
   private val jacksonDatabindVersion = "2.12.7.1"
+  private val dropwizardVersion      = "4.2.22"
 
   val commonPlay28: Seq[ModuleID] = common(play28Version, "play-28")
   val commonPlay29: Seq[ModuleID] = common(play29Version, "play-29")
@@ -30,11 +31,11 @@ object LibDependencies {
   private def common(playVersion: String, playSuffix: String) =
     Seq(
       "ch.qos.logback"          %  "logback-core"               % "1.2.3",
-      "com.kenshoo"             %% "metrics-play"               % (if (playVersion == play30Version) "3.0.0_0.8.2" // TODO this doesn't actually exist
-                                                                   else "2.7.3_0.8.2" // this is compatible with play 2.8
-                                                                  ),
       playOrg(playVersion)      %% "play-guice"                 % playVersion,
-      "io.dropwizard.metrics"   %  "metrics-graphite"           % "4.1.17",
+      "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
+      "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
+      "io.dropwizard.metrics"   %  "metrics-json"               % dropwizardVersion,
+      "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % s"7.0.0-SNAPSHOT",
       "uk.gov.hmrc"             %% "crypto"                     % "7.4.0-SNAPSHOT",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,

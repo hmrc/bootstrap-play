@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play
 
-import com.kenshoo.play.metrics.MetricsFilter
+import uk.gov.hmrc.play.bootstrap.metrics.MetricsFilter
 import javax.inject.{Inject, Singleton}
 import org.apache.pekko.stream.Materializer
 import play.api.Configuration

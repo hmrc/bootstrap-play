@@ -63,7 +63,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters" in {
       new uk.gov.hmrc.play.bootstrap.filters.MicroserviceFilters(
-        metricsFilter = mock[com.kenshoo.play.metrics.MetricsFilter],
+        metricsFilter = mock[uk.gov.hmrc.play.bootstrap.metrics.MetricsFilter],
         auditFilter   = mock[uk.gov.hmrc.play.bootstrap.filters.AuditFilter],
         loggingFilter = mock[uk.gov.hmrc.play.bootstrap.filters.LoggingFilter],
         cacheFilter   = mock[uk.gov.hmrc.play.bootstrap.filters.CacheControlFilter],
