@@ -21,18 +21,12 @@ import javax.inject.Inject
 import play.api.mvc.{AbstractController, ControllerComponents}
 
 class MetricsController @Inject() (
-    met: Metrics,
-    controllerComponents: ControllerComponents)
-  extends AbstractController(controllerComponents) {
-
-  def metrics = Action {
-    try {
-      Ok(met.toJson)
-        .as("application/json")
-        .withHeaders("Cache-Control" -> "must-revalidate,no-cache,no-store")
-    } catch {
-      case ex: MetricsDisabledException =>
-        InternalServerError("metrics plugin not enabled")
-    }
+  met                 : Metrics,
+  controllerComponents: ControllerComponents)
+extends AbstractController(controllerComponents) {
+  val metrics = Action {
+    Ok(met.toJson)
+      .as("application/json")
+      .withHeaders("Cache-Control" -> "must-revalidate,no-cache,no-store")
   }
 }

@@ -37,13 +37,12 @@ class MetricsControllerSpec extends AnyWordSpec with Matchers {
       headers(result) should contain value "must-revalidate,no-cache,no-store"
     }
 
-    "return 500 if metrics module is disabled" in {
-
+    "return null if metrics module is disabled" in {
       val controller = new MetricsController(new DisabledMetrics(), Helpers.stubControllerComponents())
 
       val result = controller.metrics.apply(FakeRequest())
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsString(result) shouldBe "null"
     }
   }
 }

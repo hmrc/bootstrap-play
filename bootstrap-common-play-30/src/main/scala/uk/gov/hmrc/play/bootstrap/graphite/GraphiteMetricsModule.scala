@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.play.bootstrap.graphite
 
-import com.codahale.metrics.{Metric, MetricFilter, MetricRegistry, MetricSet}
+import com.codahale.metrics.MetricFilter
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
-import uk.gov.hmrc.play.bootstrap.metrics.{DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
-import javax.inject.Singleton
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
 import uk.gov.hmrc.play.bootstrap.audit.{DisabledDatastreamMetricsProvider, EnabledDatastreamMetricsProvider}
+import uk.gov.hmrc.play.bootstrap.metrics.{DisabledMetrics, DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
 
 class GraphiteMetricsModule extends Module {
 
@@ -40,23 +39,23 @@ class GraphiteMetricsModule extends Module {
       if (kenshooMetricsEnabled)
         Seq(
           bind[MetricsFilter].to[MetricsFilterImpl].eagerly(),
-          bind[Metrics].to[MetricsImpl].eagerly()
+          bind[Metrics      ].to[MetricsImpl].eagerly()
         )
       else
         Seq(
           bind[MetricsFilter].to[DisabledMetricsFilter].eagerly(),
-          bind[Metrics].to[DisabledMetrics].eagerly()
+          bind[Metrics      ].to[DisabledMetrics].eagerly()
         )
 
     val graphiteBindings: Seq[Binding[_]] =
       if (kenshooMetricsEnabled && graphitePublisherEnabled)
         Seq(
-          bind[GraphiteProviderConfig].toInstance(GraphiteProviderConfig.fromRootConfig(configuration)),
+          bind[GraphiteProviderConfig        ].toInstance(GraphiteProviderConfig.fromRootConfig(configuration)),
           bind[GraphiteReporterProviderConfig].toInstance(GraphiteReporterProviderConfig.fromConfig(configuration)),
-          bind[Graphite].toProvider[GraphiteProvider],
-          bind[GraphiteReporter].toProvider[GraphiteReporterProvider],
-          bind[DatastreamMetrics].toProvider[EnabledDatastreamMetricsProvider],
-          bind[GraphiteReporting].to[EnabledGraphiteReporting].eagerly()
+          bind[Graphite                      ].toProvider[GraphiteProvider],
+          bind[GraphiteReporter              ].toProvider[GraphiteReporterProvider],
+          bind[DatastreamMetrics             ].toProvider[EnabledDatastreamMetricsProvider],
+          bind[GraphiteReporting             ].to[EnabledGraphiteReporting].eagerly()
         )
       else
         Seq(
@@ -66,18 +65,4 @@ class GraphiteMetricsModule extends Module {
 
     defaultBindings ++ graphiteBindings ++ kenshooBindings
   }
-}
-
-/** An alternative to com.kenshoo.play.metrics.DisabledMetrics, this implementation
-  * will not generate `MetricsDisabledException` if the injected metrics is used
-  * (we do not expect clients to check metrics.enabled before using the injected metrics)
-  */
-@Singleton
-class DisabledMetrics extends Metrics {
-  override def defaultRegistry: MetricRegistry = new MetricRegistry {
-    override def register[T <: Metric](name: String, metric: T): T = metric
-    override def registerAll(metrics: MetricSet): Unit = ()
-  }
-
-  override def toJson: String = "null"
 }
