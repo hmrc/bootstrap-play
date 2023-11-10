@@ -21,7 +21,6 @@ import org.scalatest.matchers.should.Matchers
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{Json, JsValue}
 import play.api.test.Helpers._
 
 import scala.jdk.CollectionConverters._
@@ -42,19 +41,6 @@ class MetricsSpec extends AnyWordSpec with Matchers {
   def metrics(implicit app: Application) = app.injector.instanceOf[Metrics]
 
   "Metrics" should {
-
-    "serialize to JSON" in withApplication(Map.empty) { implicit app =>
-      val jsValue: JsValue = Json.parse(metrics.toJson)
-      (jsValue \ "version").as[String] shouldEqual "4.0.0"
-    }
-
-    "be able to add custom counter" in withApplication(Map("metrics.jvm" -> false)) { implicit app =>
-      metrics.defaultRegistry.counter("my-counter").inc()
-
-      val jsValue: JsValue = Json.parse(metrics.toJson)
-      (jsValue \ "counters" \ "my-counter" \ "count").as[Int] shouldEqual(1)
-    }
-
     "contain JVM metrics" in withApplication(Map("metrics.jvm" -> true)) { implicit app =>
       metrics.defaultRegistry.getGauges.asScala should contain key "jvm.attribute.name"
     }

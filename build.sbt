@@ -1,7 +1,7 @@
 val scala2_12 = "2.12.18"
 val scala2_13 = "2.13.12"
 
-ThisBuild / majorVersion     := 7
+ThisBuild / majorVersion     := 8
 ThisBuild / isPublicArtefact := true
 ThisBuild / scalaVersion     := scala2_13
 ThisBuild / scalacOptions    ++= Seq("-feature")

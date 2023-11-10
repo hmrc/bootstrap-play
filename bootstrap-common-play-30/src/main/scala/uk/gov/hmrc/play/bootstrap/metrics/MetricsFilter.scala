@@ -53,18 +53,29 @@ class MetricsFilterImpl @Inject() (metrics: Metrics)(implicit val mat: Materiali
     * Defaults to 200, 400, 401, 403, 404, 409, 201, 304, 307, 500, which is compatible
     * with prior releases.
     */
-  def knownStatuses = Seq(Status.OK, Status.BAD_REQUEST, Status.FORBIDDEN, Status.NOT_FOUND,
-    Status.CREATED, Status.TEMPORARY_REDIRECT, Status.INTERNAL_SERVER_ERROR, Status.CONFLICT,
-    Status.UNAUTHORIZED, Status.NOT_MODIFIED)
+  def knownStatuses =
+    Seq(
+      Status.OK,
+      Status.BAD_REQUEST,
+      Status.FORBIDDEN,
+      Status.NOT_FOUND,
+      Status.CREATED,
+      Status.TEMPORARY_REDIRECT,
+      Status.INTERNAL_SERVER_ERROR,
+      Status.CONFLICT,
+      Status.UNAUTHORIZED,
+      Status.NOT_MODIFIED
+    )
 
 
-  def statusCodes: Map[Int, Meter] = knownStatuses.map(s => s -> registry.meter(name(labelPrefix, s.toString))).toMap
+  def statusCodes: Map[Int, Meter] =
+    knownStatuses.map(s => s -> registry.meter(name(labelPrefix, s.toString))).toMap
 
-  def requestsTimer: Timer = registry.timer(name(labelPrefix, "requestTimer"))
+  def requestsTimer : Timer   = registry.timer(name(labelPrefix, "requestTimer"))
   def activeRequests: Counter = registry.counter(name(labelPrefix, "activeRequests"))
-  def otherStatuses: Meter = registry.meter(name(labelPrefix, "other"))
+  def otherStatuses : Meter   = registry.meter(name(labelPrefix, "other"))
 
-  def apply(nextFilter: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
+  def apply(nextFilter: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
 
     val context = requestsTimer.time()
 

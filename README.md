@@ -263,17 +263,16 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 
 ### Version 8.0.0
 - Supports Play 2.8, Play 2.9, Play 3.0
-- Note, Play 3.0 uses `apache.org.pekko` instead of `akka`.
-- Drops kenshoo `metrics-play` for an inline version.
-  The route
-  ```
-  GET /admin/metrics @com.kenshoo.play.metrics.MetricsController.metrics
-  ```
-  will need changing to
-  ```
-  GET /admin/metrics @uk.gov.hmrc.play.bootstrap.metrics.MetricsController.metrics
-  ```
-  Or it can be removed altogether , since it is not used when deployed.
+- Play 3.0:
+  - Uses `apache.org.pekko` instead of `akka`.
+  - The artefact organisation has changed from `com.typesafe.play` to `org.playframework` - use this to register the plugin `sbt-plugin`.
+- Drops kenshoo `metrics-play` and uses an inline version of `MetricsFilter`.
+  - If you need to access `com.codahale.metrics.MetricRegistry` then inject this directly, rather than injecting `com.kenshoo.play.metrics.Metrics` and calling `defaultRegistry`.
+  - The following route can be removed.
+    ```
+    GET /admin/metrics @com.kenshoo.play.metrics.MetricsController.metrics
+    ```
+    It is not used for deployed services, the metrics are collected by the Graphite integration.
 
 ### Version 7.20.0
 - Updates playframework to 2.8.20

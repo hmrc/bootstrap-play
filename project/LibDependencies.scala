@@ -34,7 +34,6 @@ object LibDependencies {
       playOrg(playVersion)      %% "play-guice"                 % playVersion,
       "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
-      "io.dropwizard.metrics"   %  "metrics-json"               % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % s"7.0.0-SNAPSHOT",
       "uk.gov.hmrc"             %% "crypto"                     % "7.4.0-SNAPSHOT",

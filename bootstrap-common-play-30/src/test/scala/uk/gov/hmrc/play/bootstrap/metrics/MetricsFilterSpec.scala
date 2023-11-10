@@ -56,12 +56,13 @@ object MetricsFilterSpec extends AnyWordSpec with Matchers {
     running(application){block(application)}
   }
 
-  def metrics(implicit app: Application) = app.injector.instanceOf[Metrics]
+  def metrics(implicit app: Application) =
+    app.injector.instanceOf[Metrics]
 
-  val labelPrefix = classOf[MetricsFilter].getName
+  val labelPrefix =
+    classOf[MetricsFilter].getName
 
   "MetricsFilter" should {
-
     "return passed response code" in withApplication(Ok("")) { app =>
       val result = route(app, FakeRequest()).get
       status(result) shouldBe OK

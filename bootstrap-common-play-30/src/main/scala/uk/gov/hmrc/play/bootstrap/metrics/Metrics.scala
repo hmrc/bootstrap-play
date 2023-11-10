@@ -16,25 +16,19 @@
 
 package uk.gov.hmrc.play.bootstrap.metrics
 
-import java.io.StringWriter
-import java.util.concurrent.TimeUnit
-import javax.inject.{Inject, Singleton}
-
 import ch.qos.logback.classic
 import com.codahale.metrics.{Metric, MetricRegistry, MetricSet, SharedMetricRegistries}
-import com.codahale.metrics.json.MetricsModule
 import com.codahale.metrics.jvm.{GarbageCollectorMetricSet, JvmAttributeGaugeSet, MemoryUsageGaugeSet, ThreadStatesGaugeSet}
 import com.codahale.metrics.logback.InstrumentedAppender
-import com.fasterxml.jackson.databind.{ObjectWriter, ObjectMapper}
 import play.api.{Logger, Configuration}
 import play.api.inject.ApplicationLifecycle
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 
 trait Metrics {
   def defaultRegistry: MetricRegistry
-  def toJson: String
 }
 
 @Singleton
@@ -42,23 +36,9 @@ class MetricsImpl @Inject() (lifecycle: ApplicationLifecycle, configuration: Con
 
   private val innerLogger: Logger = Logger(classOf[MetricsImpl])
 
-  val validUnits = Set("NANOSECONDS", "MICROSECONDS", "MILLISECONDS", "SECONDS", "MINUTES", "HOURS", "DAYS")
-
-  val registryName     : String  = configuration.get[String]("metrics.name")
-  val rateUnit         : String  = configuration.getAndValidate[String]("metrics.rateUnit", validUnits)
-  val durationUnit     : String  = configuration.getAndValidate[String]("metrics.durationUnit", validUnits)
-  val showSamples      : Boolean = configuration.get[Boolean]("metrics.showSamples")
-  val jvmMetricsEnabled: Boolean = configuration.get[Boolean]("metrics.jvm")
-  val logbackEnabled   : Boolean = configuration.get[Boolean]("metrics.logback")
-
-  private val mapper: ObjectMapper = new ObjectMapper()
-
-  override def toJson: String = {
-    val writer: ObjectWriter = mapper.writerWithDefaultPrettyPrinter()
-    val stringWriter = new StringWriter()
-    writer.writeValue(stringWriter, defaultRegistry)
-    stringWriter.toString
-  }
+  private val registryName     : String  = configuration.get[String]("metrics.name")
+  private val jvmMetricsEnabled: Boolean = configuration.get[Boolean]("metrics.jvm")
+  private val logbackEnabled   : Boolean = configuration.get[Boolean]("metrics.logback")
 
   override def defaultRegistry: MetricRegistry =
     SharedMetricRegistries.getOrCreate(registryName)
@@ -84,9 +64,6 @@ class MetricsImpl @Inject() (lifecycle: ApplicationLifecycle, configuration: Con
   def onStart(): Unit = {
     setupJvmMetrics(defaultRegistry)
     setupLogbackMetrics(defaultRegistry)
-
-    val module = new MetricsModule(TimeUnit.valueOf(rateUnit), TimeUnit.valueOf(durationUnit), showSamples)
-    mapper.registerModule(module)
   }
 
   def onStop(): Unit = {
@@ -106,6 +83,4 @@ class DisabledMetrics extends Metrics {
       override def registerAll(metrics: MetricSet): Unit =
         ()
     }
-
-  override lazy val toJson: String = "null"
 }
