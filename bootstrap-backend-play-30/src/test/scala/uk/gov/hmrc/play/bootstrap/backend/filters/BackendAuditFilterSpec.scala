@@ -131,9 +131,6 @@ class BackendAuditFilterSpec
                                  .withFallback(Configuration(ConfigFactory.load()))
       val auditFilter        = createAuditFilter(config, mockAuditConnector)
 
-      when(mockAuditConnector.sendExtendedEvent(any[ExtendedDataEvent])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(Success))
-
       a[RuntimeException] should be thrownBy await(auditFilter.apply(exceptionThrowingAction)(request).run())
 
       eventually {

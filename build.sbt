@@ -14,39 +14,8 @@ lazy val library = (project in file("."))
     bootstrapCommonPlay30, bootstrapTestPlay30, bootstrapBackendPlay30, bootstrapFrontendPlay30, bootstrapHealthPlay30
   )
 
-/** Copies source files from one module to another, and applies transformations */
-def copySources(module: Project, transformSource: String => String, transformResource: String => String) = {
-  def transformWith(fromSetting: SettingKey[File], toSetting: SettingKey[File], transform: String => String) =
-    Def.task {
-      val from  = fromSetting.value
-      val to    = toSetting.value
-      val files = (from ** "*").get.filterNot(_.isDirectory)
-      println(s"Copying and transforming the following files for ${moduleName.value} scalaVersion ${scalaVersion.value}: files:\n${files.mkString("\n")}}")
-      files.map { file =>
-        val targetFile = new java.io.File(file.getParent.replace(from.getPath, to.getPath)) / file.getName
-        IO.write(targetFile, transform(IO.read(file)))
-        targetFile
-      }
-    }
-
-  def include(location: File) = {
-    val files = (location ** "*").get.filterNot(_.isDirectory)
-    files.map(file => file -> file.getPath.stripPrefix(location.getPath))
-  }
-
-  Seq(
-    Compile / sourceGenerators   += transformWith(module / Compile / scalaSource      , Compile / sourceManaged  , transformSource  ).taskValue,
-    Compile / resourceGenerators += transformWith(module / Compile / resourceDirectory, Compile / resourceManaged, transformResource).taskValue,
-    Test    / sourceGenerators   += transformWith(module / Test    / scalaSource      , Test    / sourceManaged  , transformSource  ).taskValue,
-    Test    / resourceGenerators += transformWith(module / Test    / resourceDirectory, Test    / resourceManaged, transformResource).taskValue,
-    // generated sources are not included in source.jar by default
-    Compile / packageSrc / mappings ++= include((Compile / sourceManaged).value) ++
-                                          include((Compile / resourceManaged).value)
-  )
-}
-
 def copyPlay30Sources(module: Project) =
-  copySources(
+  CopySources.copySources(
     module,
     transformSource   = _.replace("org.apache.pekko", "akka"),
     transformResource = _.replace("pekko", "akka")
@@ -55,46 +24,46 @@ def copyPlay30Sources(module: Project) =
 lazy val bootstrapCommonPlay28 = Project("bootstrap-common-play-28", file("bootstrap-common-play-28"))
   .settings(
     crossScalaVersions := Seq(scala2_12, scala2_13),
-    libraryDependencies ++= LibDependencies.commonPlay28,
+    libraryDependencies ++= LibDependencies.common("play-28"),
     copyPlay30Sources(bootstrapCommonPlay30)
   )
 
 lazy val bootstrapCommonPlay29 = Project("bootstrap-common-play-29", file("bootstrap-common-play-29"))
   .settings(
     crossScalaVersions := Seq(scala2_13),
-    libraryDependencies ++= LibDependencies.commonPlay29,
+    libraryDependencies ++= LibDependencies.common("play-29"),
     copyPlay30Sources(bootstrapCommonPlay30)
   )
 
 lazy val bootstrapCommonPlay30 = Project("bootstrap-common-play-30", file("bootstrap-common-play-30"))
   .settings(
     crossScalaVersions := Seq(scala2_13),
-    libraryDependencies ++= LibDependencies.commonPlay30
+    libraryDependencies ++= LibDependencies.common("play-30")
   )
 
 lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap-test-play-28"))
   .settings(
-    libraryDependencies ++= LibDependencies.testPlay28,
+    libraryDependencies ++= LibDependencies.test("play-28"),
     copyPlay30Sources(bootstrapTestPlay30)
   )
   .dependsOn(bootstrapCommonPlay28)
 
 lazy val bootstrapTestPlay29 = Project("bootstrap-test-play-29", file("bootstrap-test-play-29"))
   .settings(
-    libraryDependencies ++= LibDependencies.testPlay29,
+    libraryDependencies ++= LibDependencies.test("play-29"),
     copyPlay30Sources(bootstrapTestPlay30)
   )
   .dependsOn(bootstrapCommonPlay29)
 
 lazy val bootstrapTestPlay30 = Project("bootstrap-test-play-30", file("bootstrap-test-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.testPlay30
+    libraryDependencies ++= LibDependencies.test("play-30")
   )
   .dependsOn(bootstrapCommonPlay30)
 
 lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("bootstrap-backend-play-28"))
   .settings(
-    libraryDependencies ++= LibDependencies.commonPlay28,
+    libraryDependencies ++= LibDependencies.backend("play-28"),
     copyPlay30Sources(bootstrapBackendPlay30)
   ).dependsOn(
     bootstrapCommonPlay28,
@@ -104,7 +73,7 @@ lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("boo
 
 lazy val bootstrapBackendPlay29 = Project("bootstrap-backend-play-29", file("bootstrap-backend-play-29"))
   .settings(
-    libraryDependencies ++= LibDependencies.commonPlay29,
+    libraryDependencies ++= LibDependencies.backend("play-29"),
     copyPlay30Sources(bootstrapBackendPlay30)
   ).dependsOn(
     bootstrapCommonPlay29,
@@ -114,7 +83,7 @@ lazy val bootstrapBackendPlay29 = Project("bootstrap-backend-play-29", file("boo
 
 lazy val bootstrapBackendPlay30 = Project("bootstrap-backend-play-30", file("bootstrap-backend-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.commonPlay30
+    libraryDependencies ++= LibDependencies.backend("play-30")
   ).dependsOn(
     bootstrapCommonPlay30,
     bootstrapTestPlay30 % "test->test",
@@ -123,7 +92,7 @@ lazy val bootstrapBackendPlay30 = Project("bootstrap-backend-play-30", file("boo
 
 lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("bootstrap-frontend-play-28"))
   .settings(
-    libraryDependencies ++= LibDependencies.frontendCommonPlay28,
+    libraryDependencies ++= LibDependencies.frontend("play-28"),
     copyPlay30Sources(bootstrapFrontendPlay30)
   ).dependsOn(
     bootstrapCommonPlay28,
@@ -133,7 +102,7 @@ lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("b
 
 lazy val bootstrapFrontendPlay29 = Project("bootstrap-frontend-play-29", file("bootstrap-frontend-play-29"))
   .settings(
-    libraryDependencies ++= LibDependencies.frontendCommonPlay29,
+    libraryDependencies ++= LibDependencies.frontend("play-29"),
     copyPlay30Sources(bootstrapFrontendPlay30)
   ).dependsOn(
     bootstrapCommonPlay29,
@@ -143,7 +112,7 @@ lazy val bootstrapFrontendPlay29 = Project("bootstrap-frontend-play-29", file("b
 
 lazy val bootstrapFrontendPlay30 = Project("bootstrap-frontend-play-30", file("bootstrap-frontend-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.frontendCommonPlay30
+    libraryDependencies ++= LibDependencies.frontend("play-30")
   ).dependsOn(
     bootstrapCommonPlay30,
     bootstrapTestPlay30 % "test->test",
@@ -152,17 +121,17 @@ lazy val bootstrapFrontendPlay30 = Project("bootstrap-frontend-play-30", file("b
 
 lazy val bootstrapHealthPlay28 = Project("bootstrap-health-play-28", file("bootstrap-health-play-28"))
   .settings(
-    libraryDependencies ++= LibDependencies.healthPlay28,
+    libraryDependencies ++= LibDependencies.health("play-28"),
     copyPlay30Sources(bootstrapHealthPlay30)
   )
 
 lazy val bootstrapHealthPlay29 = Project("bootstrap-health-play-29", file("bootstrap-health-play-29"))
   .settings(
-    libraryDependencies ++= LibDependencies.healthPlay29,
+    libraryDependencies ++= LibDependencies.health("play-29"),
     copyPlay30Sources(bootstrapHealthPlay30)
   )
 
 lazy val bootstrapHealthPlay30 = Project("bootstrap-health-play-30", file("bootstrap-health-play-30"))
   .settings(
-    libraryDependencies ++= LibDependencies.healthPlay30
+    libraryDependencies ++= LibDependencies.health("play-30")
   )

@@ -23,7 +23,7 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 class MetricsSpec extends AnyWordSpec with Matchers {
 
