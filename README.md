@@ -258,6 +258,20 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 ```
 
 ## Changes
+### Version 8.0.0
+- Supports Play 2.8, Play 2.9, Play 3.0
+- Play 3.0:
+  - Uses `apache.org.pekko` instead of `akka`.
+  - The artefact organisation has changed from `com.typesafe.play` to `org.playframework` - use this to register the plugin `sbt-plugin`.
+- Drops kenshoo `metrics-play` and uses an inline version of `MetricsFilter`.
+  - If you need to access `com.codahale.metrics.MetricRegistry` then inject this directly, rather than injecting `com.kenshoo.play.metrics.Metrics` and calling `defaultRegistry`.
+  - The following route can be removed.
+    ```
+    GET /admin/metrics @com.kenshoo.play.metrics.MetricsController.metrics
+    ```
+    It is not used for deployed services, the metrics are collected by the Graphite integration.
+- Updates playframework for play-28 to 2.8.21
+
 ### Version 7.22.0
 - Deprecate `SafeRedirectUrl` public constructor
 
