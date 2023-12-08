@@ -26,7 +26,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
 
       // test dependencies
-      playOrg(playSuffix)      %% "play-test"                  % playVersion(playSuffix)    % Test,
+      playOrg(playSuffix)       %% "play-test"                  % playVersion(playSuffix)    % Test,
       "org.mockito"             %% "mockito-scala-scalatest"    % "1.17.14"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
       "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
