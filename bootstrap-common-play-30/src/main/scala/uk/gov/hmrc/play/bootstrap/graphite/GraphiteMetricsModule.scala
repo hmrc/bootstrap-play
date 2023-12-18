@@ -16,20 +16,21 @@
 
 package uk.gov.hmrc.play.bootstrap.graphite
 
-import com.codahale.metrics.MetricFilter
+import com.codahale.metrics.{MetricFilter, MetricRegistry}
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter}
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
 import uk.gov.hmrc.play.bootstrap.audit.{DisabledDatastreamMetricsProvider, EnabledDatastreamMetricsProvider}
-import uk.gov.hmrc.play.bootstrap.metrics.{DisabledMetrics, DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
+import uk.gov.hmrc.play.bootstrap.metrics.{DisabledMetrics, DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl, MetricRegistryProvider}
 
 class GraphiteMetricsModule extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     val defaultBindings: Seq[Binding[_]] = Seq(
       // Note: `MetricFilter` rather than `MetricsFilter`
-      bind[MetricFilter].toInstance(MetricFilter.ALL).eagerly()
+      bind[MetricFilter  ].toInstance(MetricFilter.ALL).eagerly(),
+      bind[MetricRegistry].toProvider[MetricRegistryProvider].eagerly()
     )
 
     val kenshooMetricsEnabled    = configuration.get[Boolean]("metrics.enabled") // metrics collection

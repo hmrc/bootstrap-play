@@ -258,6 +258,9 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 ```
 
 ## Changes
+### Version 8.3.0
+- Injected `RegistryMetrics` is ensured to be the same as `Metrics.defaultRegistry`. Previously it would be a new one created on demand, meaning clients would have to inject `Metrics` instead.
+
 ### Version 8.0.0
 - Supports Play 2.8, Play 2.9, Play 3.0
 - Play 3.0:
