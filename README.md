@@ -258,6 +258,9 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 ```
 
 ## Changes
+### Version 8.4.0
+- `AuthRedirects` has been removed from Play 2.9/3.0 builds. You will need to inline anything that is still needed.
+
 ### Version 8.3.0
 - Injected `RegistryMetrics` is ensured to be the same as `Metrics.defaultRegistry`. Previously it would be a new one created on demand, meaning clients would have to inject `Metrics` instead.
 
