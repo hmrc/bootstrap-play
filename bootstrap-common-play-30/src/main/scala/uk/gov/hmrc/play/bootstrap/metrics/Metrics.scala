@@ -40,7 +40,7 @@ class MetricsImpl @Inject() (lifecycle: ApplicationLifecycle, configuration: Con
   private val jvmMetricsEnabled: Boolean = configuration.get[Boolean]("metrics.jvm")
   private val logbackEnabled   : Boolean = configuration.get[Boolean]("metrics.logback")
 
-  override def defaultRegistry: MetricRegistry =
+  override lazy val defaultRegistry: MetricRegistry =
     SharedMetricRegistries.getOrCreate(registryName)
 
   def setupJvmMetrics(registry: MetricRegistry): Unit =
