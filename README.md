@@ -258,6 +258,9 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 ```
 
 ## Changes
+### Version 8.5.0
+- `JsonErrorHandler` has been updated to allow downgrading log the level of `401` status code error messages from `ERROR` to `WARN` with the `bootstrap.errorHandler.warnOnly.statusCodes` configuration.
+
 ### Version 8.4.0
 - `AuthRedirects` has been removed from Play 2.9/3.0 builds. You will need to inline anything that is still needed.
 

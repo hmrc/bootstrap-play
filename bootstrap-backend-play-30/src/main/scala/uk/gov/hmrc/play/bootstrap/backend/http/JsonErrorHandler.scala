@@ -143,17 +143,17 @@ class JsonErrorHandler @Inject()(
 
     val errorResponse = ex match {
       case e: AuthorisationException =>
-        logger.error(s"! Internal server error, for (${request.method}) [${request.uri}] -> ", e)
+        logException(e, 401, request)
         // message is not suppressed here since needs to be forwarded
         ErrorResponse(401, e.getMessage)
 
       case e: HttpException =>
-        logException(e, e.responseCode)
+        logException(e, e.responseCode, request)
         // message is not suppressed here since HttpException exists to define returned message
         ErrorResponse(e.responseCode, e.getMessage)
 
       case e: UpstreamErrorResponse =>
-        logException(e, e.statusCode)
+        logException(e, e.statusCode, request)
         val msg =
           if (suppress5xxErrorMessages) s"UpstreamErrorResponse: ${e.statusCode}"
           else e.getMessage
@@ -175,12 +175,15 @@ class JsonErrorHandler @Inject()(
         detail          = Map("transactionFailureReason" -> ex.getMessage)
       )
     )
+
     Future.successful(new Status(errorResponse.statusCode)(Json.toJson(errorResponse)))
   }
 
-  private def logException(exception: Exception, responseCode: Int): Unit =
-    if (upstreamWarnStatuses contains responseCode)
-      logger.warn(exception.getMessage, exception)
+  private def logException(exception: Exception, responseCode: Int, request: RequestHeader): Unit = {
+    val msg = s"${request.method} ${request.uri} failed with ${exception.getClass.getName}: ${exception.getMessage}"
+    if (upstreamWarnStatuses.contains(responseCode))
+      logger.warn(msg, exception)
     else
-      logger.error(exception.getMessage, exception)
+      logger.error(msg, exception)
+  }
 }

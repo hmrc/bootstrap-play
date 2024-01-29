@@ -317,7 +317,7 @@ class JsonErrorHandlerSpec
           eventually {
             val event = logEvents.loneElement
             event.getLevel   shouldBe Level.WARN
-            event.getMessage shouldBe s"any application exception"
+            event.getMessage shouldBe "GET some-uri failed with uk.gov.hmrc.http.Upstream5xxResponse: any application exception"
           }
         }
       }
@@ -329,18 +329,15 @@ class JsonErrorHandlerSpec
           eventually {
             val event = logEvents.loneElement
             event.getLevel   shouldBe Level.WARN
-            event.getMessage shouldBe s"any application exception"
+            event.getMessage shouldBe "GET some-uri failed with uk.gov.hmrc.http.BadRequestException: any application exception"
           }
         }
       }
     }
-
   }
 
   "onClientError" should {
-
     "audit an error and return json response for 400" in new Setup {
-
       val errorScenarios = Table(
         ("errorMessage", "expectedResponseMessage"),
         ("Invalid Json: No content to map due to end-of-input\n at [Source", "Invalid Json: No content to map due to end-of-input\n at [Source"),
