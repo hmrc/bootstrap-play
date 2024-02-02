@@ -77,9 +77,9 @@ object SessionTimeoutFilterConfig {
   */
 @Singleton
 class SessionTimeoutFilter(
-  config: SessionTimeoutFilterConfig,
-  mkSessionId: () => String = () => s"sessionId-${UUID.randomUUID()}",
-  clock: () => Instant = () => Instant.now()
+  config     : SessionTimeoutFilterConfig,
+  mkSessionId: () => String              = () => s"session-${UUID.randomUUID()}",
+  clock      : () => Instant             = () => Instant.now()
 )(implicit
   ec: ExecutionContext,
   override val mat: Materializer
@@ -90,7 +90,8 @@ class SessionTimeoutFilter(
 
   val authRelatedKeys = Seq(authToken)
 
-  private def wipeFromSession(session: Session, keys: Seq[String]): Session = keys.foldLeft(session)((s, k) => s - k)
+  private def wipeFromSession(session: Session, keys: Seq[String]): Session =
+    keys.foldLeft(session)((s, k) => s - k)
 
   override def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
 
@@ -168,7 +169,6 @@ class SessionTimeoutFilter(
       key   <- (SessionTimeoutFilter.allowlistedSessionKeys ++ config.additionalSessionKeys).toSeq
       value <- session.get(key)
     } yield key -> value
-
 }
 
 
