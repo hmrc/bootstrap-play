@@ -18,16 +18,16 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import org.apache.pekko.stream.Materializer
 import play.api.Configuration
+import play.api.mvc.{Filter, Headers, RequestHeader, Result, Session}
 import play.api.mvc.request.{Cell, RequestAttrKey}
-import play.api.mvc.{Filter, RequestHeader, Result, Session}
-import uk.gov.hmrc.http.SessionKeys._
 import uk.gov.hmrc.http.{HeaderNames, SessionKeys}
 
-import java.time.{Duration, Instant}
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
-import scala.Option.option2Iterable
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.{Duration, DurationLong}
 
 case class SessionTimeoutFilterConfig(
   timeoutDuration      : Duration,
@@ -36,28 +36,13 @@ case class SessionTimeoutFilterConfig(
 )
 
 object SessionTimeoutFilterConfig {
-
-  def fromConfig(configuration: Configuration): SessionTimeoutFilterConfig = {
-
-    val timeoutDuration = Duration.ofSeconds(
-      configuration
-        .getOptional[Long]("session.timeoutSeconds")
-        .getOrElse(configuration.get[scala.concurrent.duration.Duration]("session.timeout").toSeconds)
-    )
-
-    val wipeIdleSession = configuration
-      .get[Boolean]("session.wipeIdleSession")
-
-    val additionalSessionKeysToKeep = configuration
-      .get[Seq[String]]("session.additionalSessionKeysToKeep")
-      .toSet
-
+  def fromConfig(configuration: Configuration): SessionTimeoutFilterConfig =
     SessionTimeoutFilterConfig(
-      timeoutDuration       = timeoutDuration,
-      additionalSessionKeys = additionalSessionKeysToKeep,
-      onlyWipeAuthToken     = !wipeIdleSession
+      timeoutDuration       = configuration.getOptional[Long]("session.timeoutSeconds").map(_.seconds)
+                                .getOrElse(configuration.get[Duration]("session.timeout")),
+      additionalSessionKeys = configuration.get[Seq[String]]("session.additionalSessionKeysToKeep").toSet,
+      onlyWipeAuthToken     = !configuration.get[Boolean]("session.wipeIdleSession")
     )
-  }
 }
 
 /**
@@ -77,108 +62,104 @@ object SessionTimeoutFilterConfig {
   */
 @Singleton
 class SessionTimeoutFilter(
-  config     : SessionTimeoutFilterConfig,
-  mkSessionId: () => String              = () => s"session-${UUID.randomUUID()}",
-  clock      : () => Instant             = () => Instant.now()
+  config          : SessionTimeoutFilterConfig,
+  mkSessionId     : () => String  = () => s"session-${UUID.randomUUID()}",
+  clock           : () => Instant = () => Instant.now()
 )(implicit
-  ec: ExecutionContext,
+  ec              : ExecutionContext,
   override val mat: Materializer
 ) extends Filter {
+
   @Inject
-  def this(mat: Materializer, config: SessionTimeoutFilterConfig, ec: ExecutionContext) =
+  def this(
+    mat   : Materializer,
+    config: SessionTimeoutFilterConfig,
+    ec    : ExecutionContext
+  ) =
     this(config)(ec, mat)
 
-  val authRelatedKeys = Seq(authToken)
+  private def removeExpiredData(session: Session): Session =
+    if (config.onlyWipeAuthToken)
+      removeFromSession(session, SessionTimeoutFilter.authRelatedKeys)
+    else
+      removeAllExceptFromSession(session, SessionTimeoutFilter.allowlistedSessionKeys ++ config.additionalSessionKeys)
 
-  private def wipeFromSession(session: Session, keys: Seq[String]): Session =
-    keys.foldLeft(session)((s, k) => s - k)
+  override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
+    lazy val sessionId: String = mkSessionId()
 
-  override def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] = {
-
-    val updateTimestamp: (Result) => Result =
-      result => result.addingToSession(lastRequestTimestamp -> clock().toEpochMilli.toString)(rh)
-
-    val wipeAllFromSessionCookie: (Result) => Result =
-      result => result.withSession(preservedSessionData(result.session(rh)): _*)
-
-    val wipeAuthRelatedKeysFromSessionCookie: (Result) => Result =
-      result => result.withSession(wipeFromSession(result.session(rh), authRelatedKeys))
-
-    val timestamp = rh.session.get(lastRequestTimestamp)
-
-    val sessionId: String = mkSessionId()
-
-    def addSessionIdKeyAndHeader(requestHeader: RequestHeader): RequestHeader =
-      requestHeader
-        .withHeaders(requestHeader.headers
-                      .remove(HeaderNames.xSessionId)
-                      .add   (HeaderNames.xSessionId -> sessionId)
-                    )
-        .addAttr(RequestAttrKey.Session, Cell(requestHeader.session + (SessionKeys.sessionId, sessionId)))
-
-    val withSessionId: Result => Result =
-      result => {
-        val sessionKeyPair = SessionKeys.sessionId -> sessionId
-        result.withSession(result.newSession.getOrElse(Session() + sessionKeyPair) + sessionKeyPair)
-      }
-
-    (timestamp.flatMap(timestampToInstant) match {
-      case Some(ts) if hasExpired(ts) && config.onlyWipeAuthToken =>
-        f(addSessionIdKeyAndHeader(wipeAuthRelatedKeys(rh)))
-          .map(wipeAuthRelatedKeysFromSessionCookie)
-          .map(withSessionId)
+    (timestamp(rh) match {
       case Some(ts) if hasExpired(ts) =>
-        f(addSessionIdKeyAndHeader(wipeSession(rh)))
-          .map(wipeAllFromSessionCookie)
-          .map(withSessionId)
+        val updatedRequestHeader =
+          transformHeadersInRequest(_.remove(HeaderNames.xSessionId).add(HeaderNames.xSessionId -> sessionId))(
+            transformSessionInRequest(_ + (SessionKeys.sessionId, sessionId))(
+              transformSessionInRequest(removeExpiredData)(
+                rh
+              )
+            )
+          )
+
+        f(updatedRequestHeader)
+          .map(transformSessionInResult(removeExpiredData)(updatedRequestHeader))
+          .map(transformSessionInResult(_ + (SessionKeys.sessionId, sessionId))(updatedRequestHeader))
+
       case _ =>
         f(rh)
-    }).map(updateTimestamp)
+    }).map(updateTimestamp(rh))
   }
 
-  private def timestampToInstant(timestampMs: String): Option[Instant] =
-    try {
-      Some(Instant.ofEpochMilli(timestampMs.toLong))
-    } catch {
-      case e: NumberFormatException => None
-    }
+  private def timestamp(requestHeader: RequestHeader): Option[Instant] =
+    requestHeader.session.get(SessionKeys.lastRequestTimestamp)
+      .flatMap(timestampMs =>
+        try
+          Some(Instant.ofEpochMilli(timestampMs.toLong))
+        catch {
+          case e: NumberFormatException => None
+        }
+      )
 
-  private def hasExpired(timestamp: Instant): Boolean = {
-    val timeOfExpiry = timestamp.plus(config.timeoutDuration)
-    clock().isAfter(timeOfExpiry)
-  }
+  private def hasExpired(timestamp: Instant): Boolean =
+    clock().isAfter(timestamp.plus(config.timeoutDuration.toSeconds, ChronoUnit.SECONDS))
 
-  private def wipeSession(requestHeader: RequestHeader): RequestHeader = {
-    val sessionMap: Map[String, String] = preservedSessionData(requestHeader.session).toMap
-    requestWithUpdatedSession(requestHeader, new Session(sessionMap))
-  }
+  private def updateTimestamp(requestHeader: RequestHeader)(result: Result): Result =
+    result.addingToSession(SessionKeys.lastRequestTimestamp -> clock().toEpochMilli.toString)(requestHeader)
 
-  private def wipeAuthRelatedKeys(requestHeader: RequestHeader): RequestHeader =
-    requestWithUpdatedSession(requestHeader, wipeFromSession(requestHeader.session, authRelatedKeys))
+  private def transformHeadersInRequest(transform: Headers => Headers)(requestHeader: RequestHeader): RequestHeader =
+    requestHeader.withHeaders(transform(requestHeader.headers))
 
-  private def requestWithUpdatedSession(requestHeader: RequestHeader, session: Session): RequestHeader =
+  private def transformSessionInRequest(transform: Session => Session)(requestHeader: RequestHeader): RequestHeader =
     requestHeader.addAttr(
       key   = RequestAttrKey.Session,
-      value = Cell(session)
+      value = Cell(transform(requestHeader.session))
     )
 
+  private def transformSessionInResult(transform: Session => Session)(requestHeader: RequestHeader)(result: Result) =
+    result.withSession(transform(result.session(requestHeader)))
 
+  private def removeFromSession(session: Session, keys: Set[String]): Session =
+    keys.foldLeft(session)((s, k) => s - k)
 
-  private def preservedSessionData(session: Session): Seq[(String, String)] =
-    for {
-      key   <- (SessionTimeoutFilter.allowlistedSessionKeys ++ config.additionalSessionKeys).toSeq
-      value <- session.get(key)
-    } yield key -> value
+  private def removeAllExceptFromSession(session: Session, keys: Set[String]): Session =
+    new Session(
+      (for {
+         key   <- keys
+         value <- session.get(key)
+       } yield key -> value
+      ).toMap
+    )
 }
 
 
 object SessionTimeoutFilter {
 
+  private val authRelatedKeys: Set[String] = Set(
+    SessionKeys.authToken
+  )
+
   private[filters] val allowlistedSessionKeys: Set[String] = Set(
-    lastRequestTimestamp, // the timestamp that this filter manages
-    redirect, // a redirect used by some authentication provider journeys
-    loginOrigin, // the name of a service that initiated a login
-    "Csrf-Token", // the Play default name for a header that contains the CsrfToken value (here only in case it is being misused in tests)
-    "csrfToken" // the Play default name for the CsrfToken value within the Play Session)
+    SessionKeys.lastRequestTimestamp, // the timestamp that this filter manages
+    SessionKeys.redirect,             // a redirect used by some authentication provider journeys
+    SessionKeys.loginOrigin,          // the name of a service that initiated a login
+    "Csrf-Token",                     // the Play default name for a header that contains the CsrfToken value (here only in case it is being misused in tests)
+    "csrfToken"                       // the Play default name for the CsrfToken value within the Play Session)
   )
 }

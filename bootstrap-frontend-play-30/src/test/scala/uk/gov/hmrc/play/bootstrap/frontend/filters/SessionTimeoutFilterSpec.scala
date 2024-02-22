@@ -38,9 +38,10 @@ import uk.gov.hmrc.http.HeaderNames.xSessionId
 import uk.gov.hmrc.http.SessionKeys.{authToken, lastRequestTimestamp, loginOrigin, sessionId => sessionIdKey}
 
 import java.time.temporal.ChronoUnit
-import java.time.{Duration, Instant, LocalDateTime, ZoneOffset}
+import java.time.{Instant, LocalDateTime, ZoneOffset}
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationLong
 
 object SessionTimeoutFilterSpec {
   val now: () => Instant = () => LocalDateTime.of(2017, 1, 12, 14, 56).toInstant(ZoneOffset.UTC)
@@ -106,7 +107,7 @@ class SessionTimeoutFilterSpec
     val timestamp = now().minus(5, ChronoUnit.MINUTES).toEpochMilli.toString
 
     val config = SessionTimeoutFilterConfig(
-      timeoutDuration       = Duration.of(1, ChronoUnit.MINUTES),
+      timeoutDuration       = 1.minute,
       additionalSessionKeys = Set("allowlisted")
     )
 
@@ -357,7 +358,7 @@ class SessionTimeoutFilterSpec
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be (empty)
       result.onlyWipeAuthToken     shouldBe false
-      result.timeoutDuration       shouldEqual Duration.of(15, ChronoUnit.MINUTES)
+      result.timeoutDuration       shouldBe 15.minutes
     }
 
     "return defaults when config is set to the defaults" in {
@@ -369,7 +370,7 @@ class SessionTimeoutFilterSpec
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should be (empty)
       result.onlyWipeAuthToken     shouldBe false
-      result.timeoutDuration       shouldEqual Duration.of(15, ChronoUnit.MINUTES)
+      result.timeoutDuration       shouldBe 15.minutes
     }
 
     "return custom settings" in {
@@ -381,7 +382,7 @@ class SessionTimeoutFilterSpec
       val result = SessionTimeoutFilterConfig.fromConfig(config)
       result.additionalSessionKeys should contain("foo")
       result.onlyWipeAuthToken     shouldBe true
-      result.timeoutDuration       shouldEqual Duration.of(5, ChronoUnit.MINUTES)
+      result.timeoutDuration       shouldBe 5.minutes
     }
   }
 

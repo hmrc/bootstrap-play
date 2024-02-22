@@ -30,6 +30,7 @@ import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, Truncation
 import uk.gov.hmrc.play.bootstrap.frontend.filters.RequestHeaderAuditing
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationLong
 
 @annotation.nowarn("msg=deprecated")
 class BackwardCompatibilitySpec
@@ -209,7 +210,7 @@ class BackwardCompatibilitySpec
 
     "preserve uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilterConfig" in {
       new uk.gov.hmrc.play.bootstrap.filters.frontend.SessionTimeoutFilterConfig(
-        timeoutDuration       = java.time.Duration.ZERO, // Note this has been changed from joda.time.Duration to java.time.Duration, but all clients seem to call SessionTimeoutFilterConfig.fromConfig
+        timeoutDuration       = 0.seconds, // Note this has been changed from joda.time.Duration to scala.concurrent.duration.Duration, but all clients seem to call SessionTimeoutFilterConfig.fromConfig
         additionalSessionKeys = mock[Set[String]],
         onlyWipeAuthToken     = true
       )
