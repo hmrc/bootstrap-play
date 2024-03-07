@@ -1,7 +1,7 @@
 import sbt._
 
 object LibDependencies {
-  private val httpVerbsVersion       = "14.12.0"
+  private val httpVerbsVersion       = "14.13.0"
   private val akkaVersion            = "2.6.21"
   private val pekkoVersion           = "1.0.2"
   private val jacksonVersion         = "2.12.7"
@@ -49,7 +49,7 @@ object LibDependencies {
           )
         else
           Seq(
-            "com.github.tomakehurst" % "wiremock"      % "3.0.0-beta-7" % Test
+            "com.github.tomakehurst" % "wiremock"      % "3.0.0-beta-7" % Test  // last version with jackson dependencies compatible with play
           )
       )
 
@@ -71,7 +71,7 @@ object LibDependencies {
       "org.scalatestplus.play"  %% "scalatestplus-play"           % scalaTestPlusPlayVersion(playSuffix),
       // provides the optional dependency of scalatest as pulled in by scalatestplus-play
       "com.vladsch.flexmark"   %  "flexmark-all"                  % (if (playSuffix == "play-28") "0.35.10"
-                                                                     else                         "0.62.2"// to go beyond requires Java 11 https://github.com/scalatest/scalatest/issues/2276
+                                                                     else                         "0.64.8"
                                                                     ),
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
@@ -99,8 +99,8 @@ object LibDependencies {
   private def playVersion(playSuffix: String) =
     playSuffix match {
       case "play-28" => "2.8.21"
-      case "play-29" => "2.9.1"
-      case "play-30" => "3.0.1"
+      case "play-29" => "2.9.2"
+      case "play-30" => "3.0.2"
     }
 
   private def playOrg(playSuffix: String): String =
@@ -113,7 +113,7 @@ object LibDependencies {
   private def scalaTestPlusPlayVersion(playSuffix: String): String =
     playSuffix match {
       case "play-28" => "5.1.0"
-      case "play-29" => "6.0.0"
-      case "play-30" => "7.0.0"
+      case "play-29" => "6.0.1"
+      case "play-30" => "7.0.1"
     }
 }
