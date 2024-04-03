@@ -1,10 +1,15 @@
 val scala2_12 = "2.12.18"
 val scala2_13 = "2.13.12"
+val scala3    = "3.3.3"
 
 ThisBuild / majorVersion     := 8
 ThisBuild / isPublicArtefact := true
 ThisBuild / scalaVersion     := scala2_13
-ThisBuild / scalacOptions    ++= Seq("-feature")
+ThisBuild / scalacOptions    ++= Seq("-feature")  ++
+                                 (CrossVersion.partialVersion(scalaVersion.value) match {
+                                   case Some((3, _ )) => Seq("-explain")
+                                   case _             => Seq.empty
+                                 })
 
 lazy val library = (project in file("."))
   .settings(publish / skip := true)
@@ -37,7 +42,7 @@ lazy val bootstrapCommonPlay29 = Project("bootstrap-common-play-29", file("boots
 
 lazy val bootstrapCommonPlay30 = Project("bootstrap-common-play-30", file("bootstrap-common-play-30"))
   .settings(
-    crossScalaVersions := Seq(scala2_13),
+    crossScalaVersions := Seq(scala2_13, scala3),
     libraryDependencies ++= LibDependencies.common("play-30")
   )
 
@@ -51,6 +56,7 @@ lazy val bootstrapTestPlay28 = Project("bootstrap-test-play-28", file("bootstrap
 
 lazy val bootstrapTestPlay29 = Project("bootstrap-test-play-29", file("bootstrap-test-play-29"))
   .settings(
+    crossScalaVersions := Seq(scala2_13),
     libraryDependencies ++= LibDependencies.test("play-29"),
     copyPlay30Sources(bootstrapTestPlay30)
   )
@@ -58,6 +64,7 @@ lazy val bootstrapTestPlay29 = Project("bootstrap-test-play-29", file("bootstrap
 
 lazy val bootstrapTestPlay30 = Project("bootstrap-test-play-30", file("bootstrap-test-play-30"))
   .settings(
+    crossScalaVersions := Seq(scala2_13, scala3),
     libraryDependencies ++= LibDependencies.test("play-30")
   )
   .dependsOn(bootstrapCommonPlay30)
@@ -75,6 +82,7 @@ lazy val bootstrapBackendPlay28 = Project("bootstrap-backend-play-28", file("boo
 
 lazy val bootstrapBackendPlay29 = Project("bootstrap-backend-play-29", file("bootstrap-backend-play-29"))
   .settings(
+    crossScalaVersions := Seq(scala2_13),
     libraryDependencies ++= LibDependencies.backend("play-29"),
     copyPlay30Sources(bootstrapBackendPlay30)
   ).dependsOn(
@@ -85,6 +93,7 @@ lazy val bootstrapBackendPlay29 = Project("bootstrap-backend-play-29", file("boo
 
 lazy val bootstrapBackendPlay30 = Project("bootstrap-backend-play-30", file("bootstrap-backend-play-30"))
   .settings(
+    crossScalaVersions := Seq(scala2_13, scala3),
     libraryDependencies ++= LibDependencies.backend("play-30")
   ).dependsOn(
     bootstrapCommonPlay30,
@@ -105,6 +114,7 @@ lazy val bootstrapFrontendPlay28 = Project("bootstrap-frontend-play-28", file("b
 
 lazy val bootstrapFrontendPlay29 = Project("bootstrap-frontend-play-29", file("bootstrap-frontend-play-29"))
   .settings(
+    crossScalaVersions := Seq(scala2_13),
     libraryDependencies ++= LibDependencies.frontend("play-29"),
     copyPlay30Sources(bootstrapFrontendPlay30)
   ).dependsOn(
@@ -115,6 +125,7 @@ lazy val bootstrapFrontendPlay29 = Project("bootstrap-frontend-play-29", file("b
 
 lazy val bootstrapFrontendPlay30 = Project("bootstrap-frontend-play-30", file("bootstrap-frontend-play-30"))
   .settings(
+    crossScalaVersions := Seq(scala2_13, scala3),
     libraryDependencies ++= LibDependencies.frontend("play-30")
   ).dependsOn(
     bootstrapCommonPlay30,
@@ -131,11 +142,13 @@ lazy val bootstrapHealthPlay28 = Project("bootstrap-health-play-28", file("boots
 
 lazy val bootstrapHealthPlay29 = Project("bootstrap-health-play-29", file("bootstrap-health-play-29"))
   .settings(
+    crossScalaVersions := Seq(scala2_13),
     libraryDependencies ++= LibDependencies.health("play-29"),
     copyPlay30Sources(bootstrapHealthPlay30)
   )
 
 lazy val bootstrapHealthPlay30 = Project("bootstrap-health-play-30", file("bootstrap-health-play-30"))
   .settings(
+    crossScalaVersions := Seq(scala2_13, scala3),
     libraryDependencies ++= LibDependencies.health("play-30")
   )

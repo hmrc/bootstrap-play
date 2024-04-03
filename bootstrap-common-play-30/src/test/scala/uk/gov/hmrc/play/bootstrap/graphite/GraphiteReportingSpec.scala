@@ -19,10 +19,11 @@ package uk.gov.hmrc.play.bootstrap.graphite
 import java.util.concurrent.TimeUnit
 
 import com.codahale.metrics.graphite.GraphiteReporter
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.Mockito.{reset, verify}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers
 

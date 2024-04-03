@@ -19,12 +19,14 @@ package uk.gov.hmrc.play.bootstrap.backend.filters
 import com.typesafe.config.ConfigFactory
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.mockito.captor.ArgCaptor
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.libs.json.{Reads, __}
 import play.api.mvc.Results.NotFound
@@ -94,10 +96,10 @@ class BackendAuditFilterSpec
       await(result.body.dataStream.runForeach { i => })
 
       eventually {
-        val captor = ArgCaptor[ExtendedDataEvent]
-        verify(mockAuditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
+        val captor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+        verify(mockAuditConnector).sendExtendedEvent(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
-        val event = captor.value
+        val event = captor.getValue
 
         event.auditSource               shouldBe applicationName
         event.auditType                 shouldBe requestReceived
@@ -134,10 +136,10 @@ class BackendAuditFilterSpec
       a[RuntimeException] should be thrownBy await(auditFilter.apply(exceptionThrowingAction)(request).run())
 
       eventually {
-        val captor = ArgCaptor[ExtendedDataEvent]
-        verify(mockAuditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
+        val captor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+        verify(mockAuditConnector).sendExtendedEvent(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
         verifyNoMoreInteractions(mockAuditConnector)
-        val event = captor.value
+        val event = captor.getValue
 
         event.auditSource                                  shouldBe applicationName
         event.auditType                                    shouldBe requestReceived

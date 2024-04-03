@@ -76,7 +76,6 @@ class HeadersFilterSpec
       val result = route(app, FakeRequest(GET, "/test")).value
       val body   = contentAsJson(result)
 
-      println(s"x=" + (body \ HeaderNames.xRequestId).toOption)
       (body \ HeaderNames.xRequestId).as[Seq[String]] should not be empty
     }
 

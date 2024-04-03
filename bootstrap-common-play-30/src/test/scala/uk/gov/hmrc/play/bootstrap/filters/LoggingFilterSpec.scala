@@ -19,12 +19,12 @@ package uk.gov.hmrc.play.bootstrap.filters
 import java.util.{Date, TimeZone}
 
 import org.apache.pekko.stream.Materializer
-import org.mockito.Strictness
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.Mockito.when
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
 import play.api.{LoggerLike, MarkerContext}
@@ -91,7 +91,7 @@ class LoggingFilterSpec
       val now                             = mock[() => Long]
       when(now.apply())
         .thenReturn(expectedRequestStartMillis)
-        .andThen(expectedRequestStartMillis + expectedRequestDurationInMillis)
+        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
 
       val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
 
@@ -111,7 +111,7 @@ class LoggingFilterSpec
       val now                             = mock[() => Long]
       when(now.apply())
         .thenReturn(expectedRequestStartMillis)
-        .andThen(expectedRequestStartMillis + expectedRequestDurationInMillis)
+        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
 
       val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
       val ex            = new Exception("test-exception")
@@ -137,7 +137,7 @@ class LoggingFilterSpec
     val testReqToResp =
       (_: RequestHeader) => Future.successful(Results.NoContent)
 
-    val handlerDef = mock[HandlerDef](withSettings.strictness(Strictness.Lenient))
+    val handlerDef = mock[HandlerDef]
     when(handlerDef.controller)
       .thenReturn("controller-name")
 

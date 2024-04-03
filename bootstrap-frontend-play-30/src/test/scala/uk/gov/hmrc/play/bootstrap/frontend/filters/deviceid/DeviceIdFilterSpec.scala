@@ -18,16 +18,18 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
-import org.scalatest.matchers.should.Matchers
-import org.mockito.Strictness
-import org.mockito.captor.ArgCaptor
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc._
 import play.api.mvc.request.RequestAttrKey
 import play.api.test.FakeRequest
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 
@@ -59,7 +61,8 @@ class DeviceIdFilterSpec
     lazy val action = {
       val mockAction       = mock[(RequestHeader) => Future[Result]]
       val outgoingResponse = Future.successful(resultFromAction)
-      when(mockAction.apply(any)).thenReturn(outgoingResponse)
+      when(mockAction.apply(any[RequestHeader]))
+        .thenReturn(outgoingResponse)
       mockAction
     }
 
@@ -78,7 +81,7 @@ class DeviceIdFilterSpec
 
       override val appName = "SomeAppName"
 
-      lazy val auditConnector = mock[AuditConnector](withSettings.strictness(Strictness.Lenient))
+      lazy val auditConnector = mock[AuditConnector]
 
       override protected implicit def ec: ExecutionContext = ExecutionContext.global
     }
@@ -87,18 +90,18 @@ class DeviceIdFilterSpec
     lazy val newFormatGoodCookieDeviceId = filter.mdtpCookie
 
     def requestPassedToAction(): RequestHeader = {
-      val updatedRequest = ArgCaptor[RequestHeader]
-      verify(action, times(1)).apply(updatedRequest.capture)
-      updatedRequest.value
+      val updatedRequest = ArgumentCaptor.forClass(classOf[RequestHeader])
+      verify(action, times(1)).apply(updatedRequest.capture())
+      updatedRequest.getValue
     }
 
     def mdtpdiSetCookie(result: Result): Cookie =
       result.newCookies.find(_.name == DeviceId.MdtpDeviceId).value
 
     def expectAuditIdEvent(badCookie: String, validCookie: String) = {
-      val captor = ArgCaptor[DataEvent]
-      verify(filter.auditConnector).sendEvent(captor)(any, any)
-      val event = captor.value
+      val captor = ArgumentCaptor.forClass(classOf[DataEvent])
+      verify(filter.auditConnector).sendEvent(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+      val event = captor.getValue
 
       event.auditType   shouldBe EventTypes.Failed
       event.auditSource shouldBe "SomeAppName"
@@ -129,7 +132,8 @@ class DeviceIdFilterSpec
     "successfully validate the hash of deviceId's built from more than one previous key" in new Setup {
       for (prevSecret <- filter.previousSecrets) {
         reset(action)
-        when(action.apply(any)).thenReturn(Future.successful(resultFromAction))
+        when(action.apply(any[RequestHeader]))
+          .thenReturn(Future.successful(resultFromAction))
 
         val uuid                    = filter.generateUUID
         val timestamp               = filter.getTimeStamp

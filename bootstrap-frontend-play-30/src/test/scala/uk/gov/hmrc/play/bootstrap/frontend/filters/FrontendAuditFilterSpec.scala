@@ -22,10 +22,10 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
+import org.mockito.Mockito.{reset, verify}
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar.{mock, verify}
-import org.mockito.captor.ArgCaptor
-import org.mockito.scalatest.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Tag, TestData}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -661,7 +661,7 @@ class FrontendAuditFilterServerSpec
   }
 }
 
-trait FrontendAuditFilterInstance {
+trait FrontendAuditFilterInstance extends MockitoSugar {
 
   val config =
     Configuration(
@@ -689,8 +689,8 @@ trait FrontendAuditFilterInstance {
     }
 
   protected def verifyAndRetrieveEvent: ExtendedDataEvent = {
-    val captor = ArgCaptor[ExtendedDataEvent]
-    verify(auditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
-    captor.value
+    val captor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+    verify(auditConnector).sendExtendedEvent(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    captor.getValue
   }
 }
