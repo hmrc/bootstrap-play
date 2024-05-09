@@ -127,6 +127,22 @@ class MyController @Inject() (val authConnector: AuthConnector) extends BaseCont
  }
 ```
 
+## Logging
+
+When run with `-Dlogger.resource=/application-json-logger.xml`, as is the case for deployed services, it will use
+the referenced log configuration rather than `logback.xml`. This logger logs as XML to the standard out, for integration with log pipelines - see [logback-json-logger](https://github.com/hmrc/logback-json-logger). It also includes MDC such as `X-Request-ID` and `X-Session-ID` (populated by `MDCFilter`) to aid tracing journeys through logs. See [MDC Logging](#mdc-logging) for testing this locally.
+
+You can use the `application-json-logger.xml` as provided by bootstrap - since it can be customised by standard application configuration (applied by the `LoggerModule`).
+
+E.g.
+```hocon
+logger.root                     = WARN # set the root logger level
+logger.uk.gov                   = INFO # set the level for all uk.gov loggers
+logger.uk.gov.myservice.myclass = DEBUG # set the levellogger for a specific logger. If using DEBUG then be as precise as necessary
+```
+
+Note, default logger configurations assume that packages are fully qualified and use `getClass` for name. E.g. `package uk.gov.hmrc.myservice; class MyClass { val logger = play.api.Logger(getClass) }` If you use packages with shorthand names like `package controllers` then it is harder to configure app wide loggers etc. you may get package conflicts, as well as it not being clear where a resource is coming from when importing.
+
 ## MDC Logging
 
 By default the logging MDC will be passed between threads by a custom `ExecutorService`.
@@ -258,6 +274,10 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
 ```
 
 ## Changes
+
+### Version 8.6.0
+- `application-json-logger.xml` has been included. Since it is customised by configuration (by `LoggerModule`) it is no longer required in services.
+
 ### Version 8.5.0
 - `JsonErrorHandler` has been updated to allow downgrading log the level of `401` status code error messages from `ERROR` to `WARN` with the `bootstrap.errorHandler.warnOnly.statusCodes` configuration.
 
