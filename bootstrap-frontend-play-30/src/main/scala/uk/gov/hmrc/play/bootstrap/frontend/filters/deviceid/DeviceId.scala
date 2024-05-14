@@ -65,12 +65,10 @@ object DeviceId {
       prefix == MdtpDeviceId
 
     def isValid(prefix: String, uuid: String, timestamp: String, hash: String) =
-      isValidPrefix(prefix) && validUuid(uuid) && validLongTime(timestamp) && deviceIdHashIsValid(
-        hash,
-        uuid,
-        timestamp.toLong,
-        secret,
-        previousSecrets)
+      isValidPrefix(prefix) &&
+        validUuid(uuid) &&
+        validLongTime(timestamp) &&
+        deviceIdHashIsValid(hash, uuid, timestamp.toLong, secret, previousSecrets)
 
     value.split("(#)|(_)") match {
       case Array(prefix, uuid, timestamp, hash) if isValid(prefix, uuid, timestamp, hash) =>

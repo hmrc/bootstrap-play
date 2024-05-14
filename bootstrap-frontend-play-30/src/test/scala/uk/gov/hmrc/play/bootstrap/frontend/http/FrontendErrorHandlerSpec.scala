@@ -72,7 +72,7 @@ class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceO
   "resolving a client error" should {
     "fall back to a standardErrorTemplate based result" in {
       val explicitlyHandledClientErrors = List(400, 404)
-      val clientErrorsHandledByFallback = (400 to 499) diff explicitlyHandledClientErrors
+      val clientErrorsHandledByFallback = (400 to 499).diff(explicitlyHandledClientErrors)
 
       forAll(clientErrorsHandledByFallback) { statusCode =>
         val result = onClientError(FakeRequest(), statusCode)
@@ -84,7 +84,7 @@ class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceO
     }
 
     "provide welsh translations for messages" in {
-      val clientErrors = 400 to 499
+      val clientErrors = (400 to 499).toList
 
       forAll(clientErrors) { statusCode =>
         val englishResult = onClientError(englishRequest, statusCode)

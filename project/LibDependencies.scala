@@ -14,14 +14,14 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.0.0",
-      "uk.gov.hmrc"             %% "crypto"                     % "7.7.0-SNAPSHOT",
+      "uk.gov.hmrc"             %% "crypto"                     % "8.0.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.0.0-SNAPSHOT",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.0.0",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% (if (playSuffix == "play-28") "filters-helpers"
                                     else                         "play-filters-helpers"
                                    )                            % playVersion(playSuffix),
-      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.3.0-SNAPSHOT",
+      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.4.0",
 
       // test dependencies
       playOrg(playSuffix)       %% "play-test"                  % playVersion(playSuffix)    % Test,

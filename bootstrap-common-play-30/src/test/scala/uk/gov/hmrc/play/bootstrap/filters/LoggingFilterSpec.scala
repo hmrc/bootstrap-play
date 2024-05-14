@@ -123,14 +123,18 @@ class LoggingFilterSpec
     }
   }
 
-  private def createLogger() = new LoggerLike {
+  private def createLogger() = new InspectableLogger
+
+  class InspectableLogger extends LoggerLike  {
     var loggedMessage: Option[String] = None
+
     override val logger: Logger       = NOPLogger.NOP_LOGGER
 
     override def info(s: => String)(implicit mc: MarkerContext): Unit =
       loggedMessage = Some(s)
 
-    lazy val loggingHappened: Boolean = loggedMessage.isDefined
+    lazy val loggingHappened: Boolean =
+      loggedMessage.isDefined
   }
 
   trait Setup {

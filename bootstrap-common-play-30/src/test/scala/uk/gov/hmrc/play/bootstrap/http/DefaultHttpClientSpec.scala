@@ -68,7 +68,7 @@ class DefaultHttpClientSpec
           .willReturn(ok(JsonPayloads.bankHolidays)))
 
       val bankHolidays: BankHolidays =
-        myHttpClient.GET[BankHolidays](s"http://localhost:$wireMockPort/bank-holidays.json").futureValue
+        myHttpClient.GET[BankHolidays](s"http://localhost:$wireMockPort/bank-holidays.json", Seq.empty, Seq.empty).futureValue
       bankHolidays.events.head shouldBe BankHoliday("New Year's Day")
     }
 
@@ -77,7 +77,7 @@ class DefaultHttpClientSpec
         get("/bank-holidays.json")
           .willReturn(ok(JsonPayloads.bankHolidays)))
 
-      val response: HttpResponse = myHttpClient.GET[HttpResponse](s"http://localhost:$wireMockPort/bank-holidays.json").futureValue
+      val response: HttpResponse = myHttpClient.GET[HttpResponse](s"http://localhost:$wireMockPort/bank-holidays.json", Seq.empty, Seq.empty).futureValue
       response.status shouldBe 200
       response.body   shouldBe JsonPayloads.bankHolidays
     }
@@ -89,7 +89,7 @@ class DefaultHttpClientSpec
 
       // By adding an Option to your case class, the 404 is translated into None
       val bankHolidays: Option[BankHolidays] =
-        myHttpClient.GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/404.json").futureValue
+        myHttpClient.GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/404.json", Seq.empty, Seq.empty).futureValue
       bankHolidays shouldBe None
     }
 
@@ -98,7 +98,7 @@ class DefaultHttpClientSpec
         get("/204.json")
           .willReturn(noContent))
 
-      val bankHolidays = myHttpClient.GET[Unit](s"http://localhost:$wireMockPort/204.json").futureValue
+      val bankHolidays = myHttpClient.GET[Unit](s"http://localhost:$wireMockPort/204.json", Seq.empty, Seq.empty).futureValue
       bankHolidays shouldBe (())
     }
 
@@ -108,7 +108,7 @@ class DefaultHttpClientSpec
           .willReturn(badRequest))
 
       myHttpClient
-        .GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/400.json")
+        .GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/400.json", Seq.empty, Seq.empty)
         .recover {
           case UpstreamErrorResponse.WithStatusCode(400) => // handle here a bad request
         }
@@ -121,7 +121,7 @@ class DefaultHttpClientSpec
           .willReturn(unauthorized))
 
       myHttpClient
-        .GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/401.json")
+        .GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/401.json", Seq.empty, Seq.empty)
         .recover {
           case UpstreamErrorResponse.Upstream4xxResponse(e) => // handle here a 4xx errors
         }
@@ -134,7 +134,7 @@ class DefaultHttpClientSpec
           .willReturn(serverError))
 
       myHttpClient
-        .GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/500.json")
+        .GET[Option[BankHolidays]](s"http://localhost:$wireMockPort/500.json", Seq.empty, Seq.empty)
         .recover {
           case UpstreamErrorResponse.Upstream5xxResponse(e) => // handle here a 5xx errors
         }
@@ -155,7 +155,7 @@ class DefaultHttpClientSpec
 
       // Use HttpResponse when the API always returns an empty body
       val response: HttpResponse =
-        myHttpClient.POST[User, HttpResponse](s"http://localhost:$wireMockPort/create-user", user).futureValue
+        myHttpClient.POST[User, HttpResponse](s"http://localhost:$wireMockPort/create-user", user, Seq.empty).futureValue
       response.status shouldBe 204
     }
 
@@ -167,7 +167,7 @@ class DefaultHttpClientSpec
 
       // Use a case class when the API returns a json body
       val userId: UserIdentifier =
-        myHttpClient.POST[User, UserIdentifier](s"http://localhost:$wireMockPort/create-user", user).futureValue
+        myHttpClient.POST[User, UserIdentifier](s"http://localhost:$wireMockPort/create-user", user, Seq.empty).futureValue
       userId.id shouldBe "123"
     }
   }

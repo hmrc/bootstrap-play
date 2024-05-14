@@ -70,10 +70,10 @@ class DefaultDeviceIdFilterSpec
 
     "successfully decode a deviceId generated from a previous secret" in {
       running(application(having = appConfig)) { application =>
-        val uuid = createDeviceId.generateUUID
+        val uuid = createDeviceId.generateUUID()
 
         val existingCookie = {
-          val timestamp = createDeviceId.getTimeStamp
+          val timestamp = createDeviceId.getTimeStamp()
           val deviceIdMadeFromPrevKey =
             DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, thePreviousSecret))
           createDeviceId.makeCookie(deviceIdMadeFromPrevKey)

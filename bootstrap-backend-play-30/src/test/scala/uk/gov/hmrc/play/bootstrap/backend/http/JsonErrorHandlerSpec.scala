@@ -318,7 +318,7 @@ class JsonErrorHandlerSpec
           eventually {
             val event = logEvents.loneElement
             event.getLevel   shouldBe Level.WARN
-            event.getMessage shouldBe "GET some-uri failed with uk.gov.hmrc.http.Upstream5xxResponse: any application exception"
+            event.getMessage shouldBe "GET some-uri failed with uk.gov.hmrc.http.UpstreamErrorResponse: any application exception"
           }
         }
       }
