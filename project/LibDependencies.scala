@@ -1,7 +1,7 @@
 import sbt._
 
 object LibDependencies {
-  private val httpVerbsVersion  = "14.14.0-SNAPSHOT"
+  private val httpVerbsVersion  = "15.0.0"
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.2"
   private val dropwizardVersion = "4.2.22"
@@ -13,10 +13,10 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
-      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "7.0.0-SNAPSHOT",
+      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.0.0",
       "uk.gov.hmrc"             %% "crypto"                     % "7.7.0-SNAPSHOT",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.7.0-SNAPSHOT",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.0.0-SNAPSHOT",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% (if (playSuffix == "play-28") "filters-helpers"
                                     else                         "play-filters-helpers"
