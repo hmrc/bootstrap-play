@@ -29,7 +29,7 @@ import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.core.DefaultWebCommands
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
 

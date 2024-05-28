@@ -42,6 +42,7 @@ class AllowlistFilter @Inject() (
 
   private val destinationKey           = "bootstrap.filters.allowlist.destination"
   private val redirectUrlWhenDeniedKey = "bootstrap.filters.allowlist.redirectUrlWhenDenied"
+  private val excludedKey              = "bootstrap.filters.allowlist.excluded"
 
   private lazy val allowlistFilterConfig = AllowlistFilterConfig(
     allowlist             = config.get[Seq[String]]("bootstrap.filters.allowlist.ips")
@@ -56,14 +57,15 @@ class AllowlistFilter @Inject() (
                               Call("GET", path)
                             },
 
-    excludedPaths         = config.get[Seq[String]]("bootstrap.filters.allowlist.excluded")
+    excludedPaths         = config.get[Seq[String]](excludedKey)
                               .toIndexedSeq
                               .map(_.trim)
                               .filter(_.nonEmpty)
                               .map(
                                 _.split(":") match {
-                                    case Array(method, url) => Call(method, url)
-                                    case Array(url)         => Call("GET", url)
+                                    case Array(method, path) => Call(method, path)
+                                    case Array(path)         => Call("GET", path)
+                                    case other               => throw config.reportError(excludedKey, s"$other has invalid format")
                                   }
                               )
     )

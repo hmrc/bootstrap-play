@@ -29,6 +29,7 @@ import uk.gov.hmrc.play.http.ws.WSHttp
 
 import scala.util.matching.Regex
 
+@annotation.nowarn("msg=deprecated")
 @Singleton
 class DefaultHttpClient @Inject()(
   config: Configuration,

@@ -34,7 +34,6 @@ import play.api.routing.Router.Attrs
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.reflectiveCalls
 
 class LoggingFilterSpec
   extends AnyWordSpecLike

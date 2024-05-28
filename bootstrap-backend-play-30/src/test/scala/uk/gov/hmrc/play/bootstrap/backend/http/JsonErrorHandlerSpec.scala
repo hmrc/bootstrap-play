@@ -299,7 +299,7 @@ class JsonErrorHandlerSpec
 
       def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit): Unit = {
         import ch.qos.logback.classic.{Logger => LogbackLogger}
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters._
 
         val logger = loggerLike.logger.asInstanceOf[LogbackLogger]
         val appender = new ListAppender[ILoggingEvent]()

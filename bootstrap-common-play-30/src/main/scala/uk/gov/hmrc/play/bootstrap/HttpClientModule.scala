@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpClient, HttpClientV2Provider}
 
+@annotation.nowarn("msg=deprecated")
 class HttpClientModule extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
