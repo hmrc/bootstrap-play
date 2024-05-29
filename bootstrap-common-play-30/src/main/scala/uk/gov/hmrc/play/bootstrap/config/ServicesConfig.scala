@@ -30,49 +30,49 @@ class ServicesConfig @Inject()(configuration: Configuration) {
       .getOptional[String](s"$rootServices.protocol")
       .getOrElse("http")
 
-  protected def config(serviceName: String) =
+  protected def config(serviceName: String): Configuration =
     configuration
       .getOptional[Configuration](s"$rootServices.$serviceName")
       .getOrElse(throw new IllegalArgumentException(s"Configuration for service $serviceName not found"))
 
-  def baseUrl(serviceName: String) = {
+  def baseUrl(serviceName: String): String = {
     val protocol = getConfString(s"$serviceName.protocol", defaultProtocol)
     val host     = getConfString(s"$serviceName.host", throwConfigNotFoundError(s"$serviceName.host"))
     val port     = getConfInt(s"$serviceName.port", throwConfigNotFoundError(s"$serviceName.port"))
     s"$protocol://$host:$port"
   }
 
-  def getConfString(confKey: String, defString: => String) =
+  def getConfString(confKey: String, defString: => String): String =
     configuration
       .getOptional[String](s"$rootServices.$confKey")
       .getOrElse(defString)
 
-  def getConfInt(confKey: String, defInt: => Int) =
+  def getConfInt(confKey: String, defInt: => Int): Int =
     configuration
       .getOptional[Int](s"$rootServices.$confKey")
       .getOrElse(defInt)
 
-  def getConfBool(confKey: String, defBool: => Boolean) =
+  def getConfBool(confKey: String, defBool: => Boolean): Boolean =
     configuration
       .getOptional[Boolean](s"$rootServices.$confKey")
       .getOrElse(defBool)
 
-  def getConfDuration(confKey: String, defDur: => Duration) =
+  def getConfDuration(confKey: String, defDur: => Duration): Duration =
     configuration
       .getOptional[String](s"$rootServices.$confKey")
       .map(Duration.create)
       .getOrElse(defDur)
 
-  def getInt(key: String) =
+  def getInt(key: String): Int =
     configuration.getOptional[Int](key).getOrElse(throwConfigNotFoundError(key))
 
-  def getString(key: String) =
+  def getString(key: String): String =
     configuration.getOptional[String](key).getOrElse(throwConfigNotFoundError(key))
 
-  def getBoolean(key: String) =
+  def getBoolean(key: String): Boolean =
     configuration.getOptional[Boolean](key).getOrElse(throwConfigNotFoundError(key))
 
-  def getDuration(key: String) =
+  def getDuration(key: String): Duration =
     configuration.getOptional[String](key).map(Duration.create).getOrElse(throwConfigNotFoundError(key))
 
   private def throwConfigNotFoundError(key: String) =

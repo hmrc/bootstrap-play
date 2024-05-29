@@ -19,11 +19,8 @@ package uk.gov.hmrc.play.health
 import javax.inject.Inject
 
 import play.api.mvc.{BaseController, ControllerComponents}
-import play.api.{Configuration, Environment}
 
 class HealthController @Inject()(
-  configuration: Configuration,
-  environment  : Environment,
   val controllerComponents: ControllerComponents
 ) extends BaseController {
 

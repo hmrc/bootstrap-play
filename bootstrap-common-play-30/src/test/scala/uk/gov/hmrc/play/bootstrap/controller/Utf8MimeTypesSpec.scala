@@ -23,9 +23,7 @@ import play.api.http.ContentTypes
 class Utf8MimeTypesSpec extends AnyWordSpecLike with Matchers {
 
   "Controller mimetypes" should {
-
     "have default application json" in {
-
       val controller                     = new ContentTypes {}
       val applicationJsonWithUtf8Charset = controller.JSON
 
@@ -33,7 +31,6 @@ class Utf8MimeTypesSpec extends AnyWordSpecLike with Matchers {
     }
 
     "have application json with utf8 character set" in {
-
       val controller                     = new ContentTypes with Utf8MimeTypes {}
       val applicationJsonWithUtf8Charset = controller.JSON
 
@@ -41,7 +38,6 @@ class Utf8MimeTypesSpec extends AnyWordSpecLike with Matchers {
     }
 
     "have text html with utf8 character set" in {
-
       val controller              = new ContentTypes with Utf8MimeTypes {}
       val textHtmlWithUtf8Charset = controller.HTML
 

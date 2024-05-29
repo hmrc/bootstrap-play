@@ -22,7 +22,9 @@ import play.api.mvc.Codec
 trait Utf8MimeTypes {
   self: ContentTypes =>
 
-  override val JSON = s"${MimeTypes.JSON};charset=utf-8"
+  override val JSON: String =
+    s"${MimeTypes.JSON};charset=utf-8"
 
-  override def HTML(implicit codec: Codec) = s"${MimeTypes.HTML};charset=utf-8"
+  override def HTML(implicit codec: Codec): String =
+    s"${MimeTypes.HTML};charset=utf-8"
 }

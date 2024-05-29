@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.logging
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
-import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.MDC
 import play.api.{Configuration, Logger}
@@ -71,7 +71,7 @@ abstract class MDCLoggingSpec
       }
     }
 
-    "must pass MDC information between thread contexts" in {
+    "pass MDC information between thread contexts" in {
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .build()
@@ -87,12 +87,12 @@ abstract class MDCLoggingSpec
         }
 
         whenReady(future) {
-          _.value mustEqual "bar"
+          _.value shouldEqual "bar"
         }
       }
     }
 
-    "must add all request information to the MDC" in {
+    "add all request information to the MDC" in {
       lazy val app = new GuiceApplicationBuilder()
         .configure(config)
         .router(router)
@@ -116,11 +116,11 @@ abstract class MDCLoggingSpec
 
         val result = route(app, request).value
 
-        status(result) mustBe OK
+        status(result) shouldBe OK
 
         val mdc = contentAsJson(result).as[Map[String, String]]
 
-        mdc must contain.only(
+        mdc should contain.only(
           HMRCHeaderNames.xSessionId    -> "some session id",
           HMRCHeaderNames.xRequestId    -> "some request id",
           HMRCHeaderNames.xForwardedFor -> "some forwarded for"

@@ -26,5 +26,6 @@ class DefaultAuthConnector @Inject()(
   servicesConfig  : ServicesConfig
 ) extends PlayAuthConnector {
 
-  override val serviceUrl: String = servicesConfig.baseUrl("auth")
+  override val serviceUrl: String =
+    servicesConfig.baseUrl("auth")
 }

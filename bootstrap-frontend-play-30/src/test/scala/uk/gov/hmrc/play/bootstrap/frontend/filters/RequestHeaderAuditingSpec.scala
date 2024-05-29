@@ -28,8 +28,7 @@ class RequestHeaderAuditingSpec
      with Matchers {
 
   "Redaction" should {
-
-    "Not occur when no redactions are configured" in {
+    "not occur when no redactions are configured" in {
       val headers =
         Headers(
           "Host" -> "localhost",
@@ -74,7 +73,7 @@ class RequestHeaderAuditingSpec
       auditableHeaders.redactedHeaderNames shouldBe Set.empty
     }
 
-    "Redact all values that correspond to a header, when configured" in {
+    "redact all values that correspond to a header, when configured" in {
       val headers =
         Headers(
           "Some-Header-1" -> "Some-Value",
@@ -112,7 +111,7 @@ class RequestHeaderAuditingSpec
         )
     }
 
-    "Redact individual cookies by name, when configured" in {
+    "redact individual cookies by name, when configured" in {
       val headers =
         Headers(
           "Some-Header-1" -> "Some-Value",
@@ -152,7 +151,7 @@ class RequestHeaderAuditingSpec
       auditableHeaders.redactedHeaderNames shouldBe Set("requestHeaders.cookie")
     }
 
-    "Only update existing headers, not add new redacted ones" in {
+    "only update existing headers, not add new redacted ones" in {
       val headers =
         Headers(
           "Some-Header-1" -> "Some-Value",

@@ -90,7 +90,7 @@ class SessionTimeoutFilterSpec
       )
   }
 
-  private def buildResult(request: Request[AnyContent]) = {
+  private def buildResult(request: Request[AnyContent]) =
     Ok(
       Json.obj(
         "session" -> request.session.data,
@@ -101,7 +101,6 @@ class SessionTimeoutFilterSpec
           }
           .toMap[String, String]
       ))
-  }
 
   "SessionTimeoutFilter" should {
     val timestamp = now().minus(5, ChronoUnit.MINUTES).toEpochMilli.toString

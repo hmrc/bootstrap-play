@@ -54,19 +54,19 @@ class FrontendErrorHandlerSpec extends AnyWordSpecLike with Matchers with GuiceO
   import TestFrontendErrorHandler._
 
   val welshRequest = FakeRequest(
-    method = "GET",
-    uri = "/",
+    method  = "GET",
+    uri     = "/",
     headers = FakeHeaders(Seq(HeaderNames.HOST -> "localhost")),
-    body = AnyContentAsEmpty,
-    attrs = TypedMap(CurrentLang -> Lang("cy"))
+    body    = AnyContentAsEmpty,
+    attrs   = TypedMap(CurrentLang -> Lang("cy"))
   )
 
   val englishRequest = FakeRequest(
-    method = "GET",
-    uri = "/",
+    method  = "GET",
+    uri     = "/",
     headers = FakeHeaders(Seq(HeaderNames.HOST -> "localhost")),
-    body = AnyContentAsEmpty,
-    attrs = TypedMap(CurrentLang -> Lang("en"))
+    body    = AnyContentAsEmpty,
+    attrs   = TypedMap(CurrentLang -> Lang("en"))
   )
 
   "resolving a client error" should {

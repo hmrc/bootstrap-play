@@ -52,9 +52,9 @@ trait HttpAuditEvent {
     request        : RequestHeader,
     detail         : Map[String, String] = Map.empty,
     truncationLog  : TruncationLog       = TruncationLog.Empty
-    )(implicit
-      hc: HeaderCarrier
-    ): DataEvent = {
+  )(implicit
+    hc: HeaderCarrier
+  ): DataEvent = {
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
 
     val tags = hc.toAuditTags(transactionName, request.path)
@@ -62,8 +62,8 @@ trait HttpAuditEvent {
     DataEvent(
       appName,
       eventType,
-      detail = detail ++ makeRequiredFields(hc, request) ++ optionalAuditFieldsSeq(request.headers.toMap),
-      tags = tags,
+      detail        = detail ++ makeRequiredFields(hc, request) ++ optionalAuditFieldsSeq(request.headers.toMap),
+      tags          = tags,
       truncationLog = truncationLog
     )
   }

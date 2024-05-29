@@ -60,36 +60,37 @@ trait SessionCookieCryptoFilter extends Filter with CryptoImplicits {
   override def apply(next: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] =
     encryptSession(next(decryptSession(rh)))
 
-  private def encryptSession(f: Future[Result]): Future[Result] = f.map { result =>
-    val newSessionAsCookie: Option[Cookie] =
-      result.newSession.map { session =>
-        val sessionCookie = sessionBaker.encodeAsCookie(session)
-        sessionCookie.copy(value = encrypter.encrypt(sessionCookie.value))
-      }
-
-    // done to prevent discarding session cookie in SET_COOKIE header
-    // as would be done in play.api.mvc.Result#bakeCookies
-    val resultWithSessionReplacedByCookie: Option[Result] =
-      newSessionAsCookie
-        .map { c =>
-          result
-            .copy(newSession = None)
-            .withCookies(c)
+  private def encryptSession(f: Future[Result]): Future[Result] =
+    f.map { result =>
+      val newSessionAsCookie: Option[Cookie] =
+        result.newSession.map { session =>
+          val sessionCookie = sessionBaker.encodeAsCookie(session)
+          sessionCookie.copy(value = encrypter.encrypt(sessionCookie.value))
         }
 
-    resultWithSessionReplacedByCookie.getOrElse(result)
-  }
+      // done to prevent discarding session cookie in SET_COOKIE header
+      // as would be done in play.api.mvc.Result#bakeCookies
+      val resultWithSessionReplacedByCookie: Option[Result] =
+        newSessionAsCookie
+          .map { c =>
+            result
+              .copy(newSession = None)
+              .withCookies(c)
+          }
+
+      resultWithSessionReplacedByCookie.getOrElse(result)
+    }
 
   private def decryptSession(rh: RequestHeader) =
     (for {
-      encryptedSessionCookie <- findSessionCookie(rh)
-      decryptedSessionCookie <- decrypt(encryptedSessionCookie)
-    } yield {
-      rh.addAttr(
-        key   = RequestAttrKey.Session,
-        value = Cell(sessionBaker.decodeFromCookie(Some(decryptedSessionCookie)))
-      )
-    }).getOrElse(rh)
+       encryptedSessionCookie <- findSessionCookie(rh)
+       decryptedSessionCookie <- decrypt(encryptedSessionCookie)
+     } yield
+       rh.addAttr(
+         key   = RequestAttrKey.Session,
+         value = Cell(sessionBaker.decodeFromCookie(Some(decryptedSessionCookie)))
+       )
+    ).getOrElse(rh)
 
   private def findSessionCookie(rh: RequestHeader): Option[Cookie] =
     rh.headers

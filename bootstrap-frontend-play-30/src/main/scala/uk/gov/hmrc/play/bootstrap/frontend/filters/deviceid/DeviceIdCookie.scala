@@ -36,10 +36,10 @@ trait DeviceIdCookie {
     DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, secret))
   }
 
-  def buildNewDeviceIdCookie() =
+  def buildNewDeviceIdCookie(): Cookie =
     makeCookie(generateDeviceId())
 
-  def makeCookie(deviceId: DeviceId) =
+  def makeCookie(deviceId: DeviceId): Cookie =
     Cookie(
       name   = DeviceId.MdtpDeviceId,
       value  = deviceId.value,

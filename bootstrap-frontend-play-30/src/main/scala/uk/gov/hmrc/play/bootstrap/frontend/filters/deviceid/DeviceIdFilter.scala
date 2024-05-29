@@ -42,7 +42,6 @@ trait DeviceIdFilter extends Filter with DeviceIdCookie {
       .find(deviceIdCookie)
       .map { deviceCookeValueId =>
         DeviceId.from(deviceCookeValueId.value, secret, previousSecrets) match {
-
           case Some(deviceId) =>
             // Valid new format cookie.
             // Ensure the cookie has appropriate 'secure' flag by setting it again, this will also extend the life of the cookie

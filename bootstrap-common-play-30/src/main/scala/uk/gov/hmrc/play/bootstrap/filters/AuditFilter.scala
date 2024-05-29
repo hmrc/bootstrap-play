@@ -65,21 +65,24 @@ trait CommonAuditFilter extends AuditFilter {
 
   private val logger = Logger(getClass)
 
-  val maxBodySize = config.get[Int]("bootstrap.auditing.maxBodyLength")
+  val maxBodySize: Int =
+    config.get[Int]("bootstrap.auditing.maxBodyLength")
 
-  val requestReceived = "RequestReceived"
+  val requestReceived: String =
+    "RequestReceived"
 
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier
 
-  override def apply(nextFilter: EssentialAction) = new EssentialAction {
-    override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
-      val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
-      if (needsAuditing(requestHeader))
-        onCompleteWithInput(next, performAudit(requestHeader))
-      else
-        next
+  override def apply(nextFilter: EssentialAction): EssentialAction =
+    new EssentialAction {
+      override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
+        val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
+        if (needsAuditing(requestHeader))
+          onCompleteWithInput(next, performAudit(requestHeader))
+        else
+          next
+      }
     }
-  }
 
   private def performAudit(requestHeader: RequestHeader)(requestBody: Data[String], result: Either[Throwable, (Result, Data[String])]): Unit = {
     val details =
@@ -201,7 +204,7 @@ trait CommonAuditFilter extends AuditFilter {
 }
 
 final case class Details(
-  details: JsObject,
+  details      : JsObject,
   truncationLog: TruncationLog,
   redactionLog : RedactionLog
 ) {

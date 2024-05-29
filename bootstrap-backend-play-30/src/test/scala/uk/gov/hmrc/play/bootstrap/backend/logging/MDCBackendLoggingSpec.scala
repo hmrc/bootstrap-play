@@ -19,7 +19,7 @@ package uk.gov.hmrc.play.bootstrap.backend.logging
 import uk.gov.hmrc.play.bootstrap.logging.MDCLoggingSpec
 
 class MDCBackendLoggingSpec extends MDCLoggingSpec {
-  "a microservice" must {
+  "a microservice" should {
     behave like anApplicationWithMDCLogging("backend.test.conf", isFrontend = false)
   }
 }

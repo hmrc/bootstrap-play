@@ -39,7 +39,6 @@ class DefaultDeviceIdFilterSpec
   import DefaultDeviceIdFilterSpec._
 
   "DeviceIdFilter" should {
-
     "create the deviceId when no cookie exists" in {
       running(application(having = appConfig)) { application =>
         val result = route(application, FakeRequest(GET, "/test")).value
@@ -55,7 +54,6 @@ class DefaultDeviceIdFilterSpec
     }
 
     "do nothing when a valid cookie exists" in {
-
       running(application(having = appConfig)) { application =>
         val existingCookie = createDeviceId.buildNewDeviceIdCookie()
 
@@ -90,7 +88,6 @@ class DefaultDeviceIdFilterSpec
     }
 
     "set cookie's secure property based on config" in {
-
       Seq(true, false).foreach { secureCookie =>
         running(application(having = appConfig + ("cookie.deviceId.secure" -> secureCookie))) { application =>
           val result = route(application, FakeRequest(GET, "/test")).value

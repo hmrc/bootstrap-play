@@ -84,11 +84,12 @@ abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
       ex
     )
 
-  def resolveError(rh: RequestHeader, ex: Throwable) = ex match {
-    case ApplicationException(result, _) => result
-    case _ =>
-      InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
-  }
+  def resolveError(rh: RequestHeader, ex: Throwable): Result =
+    ex match {
+      case ApplicationException(result, _) => result
+      case _ =>
+        InternalServerError(internalServerErrorTemplate(rh)).withHeaders(CACHE_CONTROL -> "no-cache")
+    }
 }
 
 case class ApplicationException(result: Result, message: String) extends Exception(message)

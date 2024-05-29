@@ -39,7 +39,7 @@ class HealthRoutesSpec
       .configure(testData.configMap ++ Map("play.http.router" -> "health.Routes"))
       .build()
 
-  "The Ping endpoint" must {
+  "The Ping endpoint" should {
     "respond with a 200 status code when the service is OK" in {
       status(route(app, FakeRequest("GET", "/ping/ping")).get) shouldBe 200
     }
