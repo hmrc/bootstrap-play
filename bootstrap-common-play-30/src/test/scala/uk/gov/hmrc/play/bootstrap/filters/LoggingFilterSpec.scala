@@ -23,7 +23,7 @@ import org.mockito.Mockito.when
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
@@ -36,7 +36,7 @@ import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import scala.concurrent.{ExecutionContext, Future}
 
 class LoggingFilterSpec
-  extends AnyWordSpecLike
+  extends AnyWordSpec
      with MockitoSugar
      with Matchers
      with OptionValues

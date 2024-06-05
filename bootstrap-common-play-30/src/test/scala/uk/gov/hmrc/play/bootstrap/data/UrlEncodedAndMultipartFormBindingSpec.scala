@@ -17,13 +17,13 @@
 package uk.gov.hmrc.play.bootstrap.data
 
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.mvc.Http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.play.bootstrap.data.MultipartGenerator.aMultipartFileWithParams
 
-class UrlEncodedAndMultipartFormBindingSpec extends AnyWordSpecLike with Matchers {
+class UrlEncodedAndMultipartFormBindingSpec extends AnyWordSpec with Matchers {
 
   val fixture = new UrlEncodedAndMultipartFormBinding()
 

@@ -24,7 +24,7 @@ import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc._
 import play.api.mvc.request.RequestAttrKey
@@ -36,7 +36,7 @@ import uk.gov.hmrc.play.audit.model.{DataEvent, EventTypes}
 import scala.concurrent.{ExecutionContext, Future}
 
 class DeviceIdFilterSpec
-  extends AnyWordSpecLike
+  extends AnyWordSpec
      with Matchers
      with ScalaFutures
      with MockitoSugar

@@ -17,10 +17,10 @@
 package uk.gov.hmrc.play.bootstrap.controller
 
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.ContentTypes
 
-class Utf8MimeTypesSpec extends AnyWordSpecLike with Matchers {
+class Utf8MimeTypesSpec extends AnyWordSpec with Matchers {
 
   "Controller mimetypes" should {
     "have default application json" in {

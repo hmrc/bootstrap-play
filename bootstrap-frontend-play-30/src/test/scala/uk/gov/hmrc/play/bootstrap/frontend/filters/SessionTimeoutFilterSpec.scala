@@ -22,7 +22,7 @@ import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.matchers.{MatchResult, Matcher}
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.bind
@@ -59,7 +59,7 @@ object SessionTimeoutFilterSpec {
 }
 
 class SessionTimeoutFilterSpec
-  extends AnyWordSpecLike
+  extends AnyWordSpec
      with Matchers
      with ScalaFutures
      with OptionValues

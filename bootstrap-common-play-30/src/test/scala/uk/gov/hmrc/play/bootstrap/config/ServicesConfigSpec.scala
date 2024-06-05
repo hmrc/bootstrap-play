@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.play.bootstrap.config
 
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 
 import scala.concurrent.duration._
 
-class ServicesConfigSpec extends AnyWordSpecLike with Matchers with MockitoSugar {
+class ServicesConfigSpec extends AnyWordSpec with Matchers with MockitoSugar {
 
   private val servicesConfig =
     new ServicesConfig(Configuration(

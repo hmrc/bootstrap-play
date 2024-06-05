@@ -17,13 +17,13 @@
 package uk.gov.hmrc.play.bootstrap.config
 
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.{Reads, __}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 
-class HttpAuditEventSpec extends AnyWordSpecLike with Matchers with GuiceOneAppPerSuite {
+class HttpAuditEventSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
   "The code to generate audit events" should {
     implicit val hc: HeaderCarrier = HeaderCarrier()
