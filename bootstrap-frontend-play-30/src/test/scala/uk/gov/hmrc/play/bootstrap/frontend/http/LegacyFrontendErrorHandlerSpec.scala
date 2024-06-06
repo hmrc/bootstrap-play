@@ -19,7 +19,6 @@ package uk.gov.hmrc.play.bootstrap.frontend.http
 import org.apache.pekko.stream.Materializer
 import org.scalatest.AppendedClues.convertToClueful
 import org.scalatest.Inspectors.forAll
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
@@ -35,24 +34,22 @@ import play.api.test.Helpers._
 import play.mvc.Http.HeaderNames
 import play.twirl.api.Html
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-class FrontendErrorHandlerSpec
-  extends AnyWordSpec
-     with Matchers
-     with GuiceOneAppPerTest
-     with ScalaFutures {
+@annotation.nowarn("msg=deprecated")
+class LegacyFrontendErrorHandlerSpec extends AnyWordSpec with Matchers with GuiceOneAppPerTest {
 
   override def fakeApplication(): Application  =
     new GuiceApplicationBuilder().configure(Map("play.i18n.langs" -> List("en", "cy"))).build()
 
   implicit lazy val materializer: Materializer = app.materializer
 
-  object TestFrontendErrorHandler extends FrontendErrorHandler {
-    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: RequestHeader): Future[Html] =
-      Future.successful(Html(s"$pageTitle\n$heading\n$message"))
-    override def messagesApi: MessagesApi      = app.injector.instanceOf[MessagesApi]
-    override val ec         : ExecutionContext = app.injector.instanceOf[ExecutionContext]
+  object TestFrontendErrorHandler extends LegacyFrontendErrorHandler {
+    override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit
+      rh: Request[_]
+    ): Html                               =
+      Html(s"$pageTitle\n$heading\n$message")
+    override def messagesApi: MessagesApi = app.injector.instanceOf[MessagesApi]
   }
 
   import TestFrontendErrorHandler._
@@ -105,7 +102,7 @@ class FrontendErrorHandlerSpec
   "resolving an error" should {
     "return a generic InternalServerError result" in {
       val exception = new Exception("Runtime exception")
-      val result    = resolveError(FakeRequest(), exception).futureValue
+      val result    = resolveError(FakeRequest(), exception)
 
       result.header.status shouldBe INTERNAL_SERVER_ERROR
       result.header.headers  should contain(CACHE_CONTROL -> "no-cache")
@@ -113,7 +110,7 @@ class FrontendErrorHandlerSpec
 
     "return a generic InternalServerError result if the exception cause is null" in {
       val exception = new Exception("Runtime exception", null)
-      val result    = resolveError(FakeRequest(), exception).futureValue
+      val result    = resolveError(FakeRequest(), exception)
 
       result.header.status shouldBe INTERNAL_SERVER_ERROR
       result.header.headers  should contain(CACHE_CONTROL -> "no-cache")
@@ -130,16 +127,19 @@ class FrontendErrorHandlerSpec
 
       val appException = ApplicationException(theResult, "application exception")
 
-      val result = resolveError(FakeRequest(), appException).futureValue
+      val result = resolveError(FakeRequest(), appException)
 
       result shouldBe theResult
     }
 
     "provide welsh translations for messages" in {
-      val exception = new Exception("Runtime exception")
+      val exception     = new Exception("Runtime exception")
+      val englishResult = resolveError(englishRequest, exception)
+      val welshResult   = resolveError(welshRequest, exception)
+
       for {
-        englishMessage <- contentAsString(resolveError(englishRequest, exception)).split("\n")
-        welshMessage   <- contentAsString(resolveError(welshRequest, exception)).split("\n")
+        englishMessage <- contentAsString(Future.successful(englishResult)).split("\n")
+        welshMessage   <- contentAsString(Future.successful(welshResult)).split("\n")
       } englishMessage shouldNot be(welshMessage) withClue ", missing global.error translation"
     }
   }

@@ -9,6 +9,12 @@ This library implements basic functionality required by the platform frontend/mi
 
 See [CHANGELOG](CHANGELOG.md) for changes.
 
+Built for:
+- Play 3.0 - Scala 2.13 and Scala 3
+- Play 2.9 - Scala 2.13
+- Play 2.8 - Scala 2.13
+
+
 ## Adding to your build
 
 In your SBT build add:
@@ -29,7 +35,7 @@ You can also add the test module
 ```scala
 libraryDependencies += "uk.gov.hmrc" %% "bootstrap-test-play-xx" % "x.x.x" % Test
 ```
-which will provide the appropriate version of other test dependencies like `http-verbs-test` and `scalatestplus-play`.
+which will provide the appropriate versions of other test dependencies like `http-verbs-test` and `scalatestplus-play`.
 
 
 ## Configure as a frontend microservice
@@ -131,7 +137,7 @@ class MyController @Inject() (val authConnector: AuthConnector) extends BaseCont
 ## Logging
 
 When run with `-Dlogger.resource=/application-json-logger.xml`, as is the case for deployed services, it will use
-the referenced log configuration rather than `logback.xml`. This logger logs as XML to the standard out, for integration with log pipelines - see [logback-json-logger](https://github.com/hmrc/logback-json-logger). It also includes MDC such as `X-Request-ID` and `X-Session-ID` (populated by `MDCFilter`) to aid tracing journeys through logs. See [MDC Logging](#mdc-logging) for testing this locally.
+the referenced log configuration rather than `logback.xml`. This logger logs as XML to the standard out, for integration with log pipelines - see [logback-json-logger](https://github.com/hmrc/logback-json-logger). It also includes Mapped Diagnostic Context (MDC) such as `X-Request-ID` and `X-Session-ID` (populated by `MDCFilter`) to aid tracing journeys through logs. See [MDC Logging](#mdc-logging) for testing this locally.
 
 You can use the `application-json-logger.xml` as provided by bootstrap - since it can be customised by standard application configuration (applied by the `LoggerModule`).
 
@@ -146,11 +152,54 @@ Note, default logger configurations assume that packages are fully qualified and
 
 ## MDC Logging
 
-By default the logging MDC will be passed between threads by a custom `ExecutorService`.
+By default the logging Mapped Diagnostic Context (MDC) will be passed between threads by a custom `ExecutorService`.
+
+As long as you inject the `ExecutionContext`, MDC should flow through to all logs. However it will be lost at async boundaries - the most notable is when using the mongo driver, which uses Reactive streams - e.g.
+
+
+```scala
+for {
+  ...
+  logger.log("Message with MDC")
+  _ <- mongoCollection.find().toFuture()
+  logger.log("Message without MDC") // MDC is lost here
+} yield ()
+```
+
+This can be wrapped with `uk.gov.hmrc.play.http.loggingMdc.preservingMdc`, e.g.
+
+```scala
+for {
+  ...
+  logger.log("Message with MDC")
+  _ <- MDC.preservingMdc(mongoCollection.find().toFuture())
+  logger.log("Message with MDC")
+} yield ()
+```
+
+If you are configuring a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
+```properties
+custom-dispatcher {
+  type = Dispatcher
+  executor = "uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator"
+  thread-pool-executor {
+    fixed-pool-size = 32
+  }
+}
+```
+
+### Testing MDC logging
+
 While this works in both test and production configurations it _does not work_ in `Dev`
 mode using the `AkkaHttpServer`.
 
-If you would like the same functionality in `Dev` mode, you must use the older
+For testing MDC, it is recommend to use
+
+```bash
+sbt runProd
+```
+
+However, if you would like the same functionality in `Dev` mode, you must use the
 `NettyHttpServer`.
 
 * Enable the `PlayNettyServer` plugin in your `build.sbt`
@@ -163,9 +212,9 @@ If you would like the same functionality in `Dev` mode, you must use the older
   PlayKeys.devSettings += "play.server.provider" -> "play.core.server.NettyServerProvider"
 ```
 
-* Note, this will add Netty to the classpath for builds, so you may want to only do this temporarily. If not, make sure you still use the `AkkaHttpServer` in `Prod` mode by specifying it in `application.conf`
-```hocon
-play.server.provider = play.core.server.AkkaHttpServerProvider
+However be aware that this will add Netty to the classpath. This should only be done temporarily (or better yet, just use `sbt runProd` to test) - but if left in, you *must* ensure that Pekko is restored in `Prod`, and not rely on classpath order. `application.conf`:
+```properties
+play.server.provider = play.core.server.PekkoHttpServerProvider
 ```
 
 ## Allow List Filter

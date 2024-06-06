@@ -17,12 +17,12 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters.crypto
 
 import org.apache.pekko.stream.Materializer
-import org.mockito.Mockito._
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.Mockito.{verify, verifyNoInteractions, verifyNoMoreInteractions, when}
 import org.scalatest.LoneElement
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames
 import play.api.mvc.Results._
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
@@ -34,21 +34,23 @@ import scala.concurrent.{ExecutionContext, Future}
 import play.api.mvc.CookieHeaderEncoding
 
 class SessionCookieCryptoFilterSpec
-    extends AnyWordSpec
-    with Matchers
-    with MockitoSugar
-    with ScalaFutures
-    with LoneElement {
+  extends AnyWordSpec
+     with Matchers
+     with MockitoSugar
+     with ScalaFutures
+     with LoneElement {
 
   "SessionCookieCryptoFilter" should {
     "decrypt session cookie and make values available as session on a request" in new Setup {
       val allCookies = "all cookies encoded as one string"
       val request    = FakeRequest().withHeaders(HeaderNames.COOKIE -> allCookies)
 
-      when(mockedSessionBaker.COOKIE_NAME).thenReturn(cookieName)
+      when(mockedSessionBaker.COOKIE_NAME)
+        .thenReturn(cookieName)
 
       val encryptedSessionCookie = Cookie(cookieName, "encrypted session cookie value")
-      when(mockedCookieDecoder(allCookies)).thenReturn(Seq(encryptedSessionCookie))
+      when(mockedCookieDecoder(allCookies))
+        .thenReturn(Seq(encryptedSessionCookie))
 
       val decryptedSessionCookieValue = "decrypted session cookie value"
       when(mockedDecrypter.decrypt(Crypted(encryptedSessionCookie.value)))

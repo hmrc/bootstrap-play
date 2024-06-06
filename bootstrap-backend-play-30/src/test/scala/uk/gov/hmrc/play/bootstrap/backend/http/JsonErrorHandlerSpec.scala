@@ -22,13 +22,14 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.util.ByteString
-import org.mockito.Strictness
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
+import org.mockito.Mockito.{verify, when}
 import org.scalatest.{EitherValues, LoneElement}
 import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.{Configuration, Logger, LoggerLike}
 import play.api.http.{HttpErrorHandler, MimeTypes, HeaderNames => PlayHeaderNames}
 import play.api.libs.json.Json
@@ -69,9 +70,9 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> notFoundException.getMessage)),
-          truncationLog   = eqTo(TruncationLog.Empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
+          truncationLog   = any[TruncationLog]
+        )(any[HeaderCarrier])
+      ).thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, notFoundException)
 
@@ -90,9 +91,9 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> authorisationException.getMessage)),
-          truncationLog   = eqTo(TruncationLog.Empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
+          truncationLog   = any[TruncationLog]
+        )(any[HeaderCarrier])
+      ).thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, authorisationException)
 
@@ -114,9 +115,9 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(TruncationLog.Empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
+          truncationLog   = any[TruncationLog]
+        )(any[HeaderCarrier])
+      ).thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
@@ -138,9 +139,9 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(TruncationLog.Empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
+          truncationLog   = any[TruncationLog]
+        )(any[HeaderCarrier])
+      ).thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
@@ -163,9 +164,9 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(TruncationLog.Empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
+          truncationLog   = any[TruncationLog]
+        )(any[HeaderCarrier])
+      ).thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
@@ -188,9 +189,9 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Unexpected error"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map("transactionFailureReason" -> exception.getMessage)),
-          truncationLog   = eqTo(TruncationLog.Empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
+          truncationLog   = any[TruncationLog]
+        )(any[HeaderCarrier])
+      ).thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
 
@@ -212,7 +213,7 @@ class JsonErrorHandlerSpec
       val realMessage      = "real message"
       val exception        = new AuthorisationException(realMessage) {}
       val createdDataEvent = DataEvent("auditSource", "auditType")
-      when(httpAuditEvent.dataEvent(any, any, any, any, any)(any))
+      when(httpAuditEvent.dataEvent(any[String], any[String], any[RequestHeader], any[Map[String, String]], any[TruncationLog])(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
@@ -234,7 +235,7 @@ class JsonErrorHandlerSpec
       val realStatusCode   = 500
       val exception        = new HttpException(realMessage, realStatusCode)
       val createdDataEvent = DataEvent("auditSource", "auditType")
-      when(httpAuditEvent.dataEvent(any, any, any, any, any)(any))
+      when(httpAuditEvent.dataEvent(any[String], any[String], any[RequestHeader], any[Map[String, String]], any[TruncationLog])(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
@@ -256,7 +257,7 @@ class JsonErrorHandlerSpec
       val upstreamError    = randomErrorStatusCode()
       val exception        = UpstreamErrorResponse("error message", upstreamError, reportAs)
       val createdDataEvent = DataEvent("auditSource", "auditType")
-      when(httpAuditEvent.dataEvent(any, any, any, any, any)(any))
+      when(httpAuditEvent.dataEvent(any[String], any[String], any[RequestHeader], any[Map[String, String]], any[TruncationLog])(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
@@ -276,7 +277,7 @@ class JsonErrorHandlerSpec
     ) {
       val exception        = new RuntimeException("real message")
       val createdDataEvent = DataEvent("auditSource", "auditType")
-      when(httpAuditEvent.dataEvent(any, any, any, any, any)(any))
+      when(httpAuditEvent.dataEvent(any[String], any[String], any[RequestHeader], any[Map[String, String]], any[TruncationLog])(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onServerError(requestHeader, exception)
@@ -298,7 +299,7 @@ class JsonErrorHandlerSpec
 
       def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit): Unit = {
         import ch.qos.logback.classic.{Logger => LogbackLogger}
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters._
 
         val logger = loggerLike.logger.asInstanceOf[LogbackLogger]
         val appender = new ListAppender[ILoggingEvent]()
@@ -317,7 +318,7 @@ class JsonErrorHandlerSpec
           eventually {
             val event = logEvents.loneElement
             event.getLevel   shouldBe Level.WARN
-            event.getMessage shouldBe "GET some-uri failed with uk.gov.hmrc.http.Upstream5xxResponse: any application exception"
+            event.getMessage shouldBe "GET some-uri failed with uk.gov.hmrc.http.UpstreamErrorResponse: any application exception"
           }
         }
       }
@@ -358,9 +359,9 @@ class JsonErrorHandlerSpec
             transactionName = eqTo("Request bad format exception"),
             request         = eqTo(requestHeader),
             detail          = eqTo(Map.empty),
-            truncationLog   = eqTo(TruncationLog.Empty)
-          )(any[HeaderCarrier]))
-          .thenReturn(createdDataEvent)
+            truncationLog   = any[TruncationLog]
+          )(any[HeaderCarrier])
+        ).thenReturn(createdDataEvent)
 
         val result = jsonErrorHandler.onClientError(requestHeader, BAD_REQUEST, errorMessage)
 
@@ -379,9 +380,9 @@ class JsonErrorHandlerSpec
           transactionName = eqTo("Resource Endpoint Not Found"),
           request         = eqTo(requestHeader),
           detail          = eqTo(Map.empty),
-          truncationLog   = eqTo(TruncationLog.Empty)
-        )(any[HeaderCarrier]))
-        .thenReturn(createdDataEvent)
+          truncationLog   = any[TruncationLog]
+        )(any[HeaderCarrier])
+      ).thenReturn(createdDataEvent)
 
       val result = jsonErrorHandler.onClientError(requestHeader, NOT_FOUND, "some message we want to override")
 
@@ -401,9 +402,9 @@ class JsonErrorHandlerSpec
             transactionName = eqTo(s"A client error occurred, status: $statusCode"),
             request         = eqTo(requestHeader),
             detail          = eqTo(Map.empty),
-            truncationLog   = eqTo(TruncationLog.Empty)
-          )(any[HeaderCarrier]))
-          .thenReturn(createdDataEvent)
+            truncationLog   = any[TruncationLog]
+          )(any[HeaderCarrier])
+        ).thenReturn(createdDataEvent)
 
         val errorMessage = "unauthorized"
 
@@ -425,7 +426,7 @@ class JsonErrorHandlerSpec
       val errorMessage = "real message"
 
       val createdDataEvent = DataEvent("auditSource", "auditType")
-      when(httpAuditEvent.dataEvent(any, any, any, any, any)(any))
+      when(httpAuditEvent.dataEvent(any[String], any[String], any[RequestHeader], any[Map[String, String]], any[TruncationLog])(any[HeaderCarrier]))
         .thenReturn(createdDataEvent)
 
       (400 to 499).filter(_ != 404).foreach { statusCode =>
@@ -512,7 +513,7 @@ class JsonErrorHandlerSpec
     when(auditConnector.sendEvent(any[DataEvent])(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(Success))
 
-    val httpAuditEvent = mock[HttpAuditEvent](withSettings.strictness(Strictness.Lenient))
+    val httpAuditEvent = mock[HttpAuditEvent]
 
     val configuration    =
       Configuration.from(config).withFallback(Configuration(ConfigFactory.load()))

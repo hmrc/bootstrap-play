@@ -52,9 +52,9 @@ trait HttpAuditEvent {
     request        : RequestHeader,
     detail         : Map[String, String] = Map.empty,
     truncationLog  : TruncationLog       = TruncationLog.Empty
-    )(implicit
-      hc: HeaderCarrier
-    ): DataEvent = {
+  )(implicit
+    hc: HeaderCarrier
+  ): DataEvent = {
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
 
     val tags = hc.toAuditTags(transactionName, request.path)
@@ -62,8 +62,8 @@ trait HttpAuditEvent {
     DataEvent(
       appName,
       eventType,
-      detail = detail ++ makeRequiredFields(hc, request) ++ optionalAuditFieldsSeq(request.headers.toMap),
-      tags = tags,
+      detail        = detail ++ makeRequiredFields(hc, request) ++ optionalAuditFieldsSeq(request.headers.toMap),
+      tags          = tags,
       truncationLog = truncationLog
     )
   }
@@ -81,14 +81,14 @@ trait HttpAuditEvent {
     import uk.gov.hmrc.play.audit.http.HeaderFieldsExtractor._
 
     val requiredFields =
-      JsObject(makeRequiredFields(hc, request).mapValues(JsString.apply).toSeq)
+      JsObject(makeRequiredFields(hc, request).view.mapValues(JsString.apply).toSeq)
 
     val tags = hc.toAuditTags(transactionName, request.path)
 
     ExtendedDataEvent(
       appName,
       eventType,
-      detail        = detail ++ requiredFields ++ JsObject(optionalAuditFieldsSeq(request.headers.toMap).mapValues(JsString.apply).toSeq),
+      detail        = detail ++ requiredFields ++ JsObject(optionalAuditFieldsSeq(request.headers.toMap).view.mapValues(JsString.apply).toSeq),
       tags          = tags,
       truncationLog = truncationLog,
       redactionLog  = redactionLog

@@ -32,11 +32,10 @@ trait Base64ConfigDecoder {
 
     val raw = value.unwrapped
 
-    if (value.valueType == ConfigValueType.STRING) {
+    if (value.valueType == ConfigValueType.STRING)
       Some(decode(raw.asInstanceOf[String]))
-    } else {
+    else
       None
-    }
   }
 
   private def decode(key: String, value: ConfigValue): (String, Any) =

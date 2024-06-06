@@ -18,11 +18,11 @@ package uk.gov.hmrc.play.bootstrap.frontend.filters
 
 import com.typesafe.config.ConfigException
 import org.apache.pekko.stream.Materializer
-import org.mockito.scalatest.MockitoSugar
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.{Configuration, PlayException}
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -33,7 +33,7 @@ import play.api.test.Helpers._
 import scala.concurrent.Future
 
 class AllowlistFilterSpec
-  extends AnyWordSpecLike
+  extends AnyWordSpec
      with Matchers
      with ScalaCheckDrivenPropertyChecks
      with MockitoSugar {

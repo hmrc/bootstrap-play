@@ -25,7 +25,12 @@ import scala.util.{Failure, Success, Try}
 trait WithJsonBody { self: Results =>
 
   protected def withJsonBody[T](
-    f: (T) => Future[Result])(implicit request: Request[JsValue], m: Manifest[T], reads: Reads[T]): Future[Result] =
+    f: (T) => Future[Result]
+  )(implicit
+    request: Request[JsValue],
+    m      : Manifest[T],
+    reads  : Reads[T]
+  ): Future[Result] =
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
       case Success(JsError(errs)) =>

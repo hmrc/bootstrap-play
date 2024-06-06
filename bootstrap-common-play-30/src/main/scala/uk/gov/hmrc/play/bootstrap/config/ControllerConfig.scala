@@ -44,11 +44,12 @@ object ControllerConfigs {
   def fromConfig(configuration: Configuration): ControllerConfigs = {
 
     val configMap = (
-      for (config             <- configuration.getOptional[Configuration]("controllers").toSeq;
-           controllerName     <- controllerNames(config);
-           entryForController <- readCompositeValue(config, controllerName);
-           parsedEntryForController = ControllerConfig.fromConfig(entryForController))
-        yield (controllerName, parsedEntryForController)
+      for {
+        config             <- configuration.getOptional[Configuration]("controllers").toSeq;
+        controllerName     <- controllerNames(config);
+        entryForController <- readCompositeValue(config, controllerName);
+        parsedEntryForController = ControllerConfig.fromConfig(entryForController)
+       } yield (controllerName, parsedEntryForController)
     ).toMap
 
     ControllerConfigs(configMap)
@@ -63,10 +64,10 @@ object ControllerConfigs {
   }
 
   private def readCompositeValue(configuration: Configuration, key: String): Option[Configuration] =
-    if (configuration.underlying.hasPathOrNull(key)) {
+    if (configuration.underlying.hasPathOrNull(key))
       configuration.underlying.getValue(key) match {
         case o: ConfigObject => Some(Configuration(o.toConfig))
         case _               => None
       }
-    } else None
+    else None
 }

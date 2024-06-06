@@ -33,7 +33,7 @@ class ApplicationLoaderSpec extends Base64ConfigDecoderTests {
     loader.load(context).configuration
   }
 
-  ".load" must {
+  ".load" should {
     behave like aBase64Decoder()
   }
 }

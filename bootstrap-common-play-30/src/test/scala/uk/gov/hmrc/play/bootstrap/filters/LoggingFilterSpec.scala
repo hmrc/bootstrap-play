@@ -19,12 +19,12 @@ package uk.gov.hmrc.play.bootstrap.filters
 import java.util.{Date, TimeZone}
 
 import org.apache.pekko.stream.Materializer
-import org.mockito.Strictness
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.Mockito.when
 import org.scalatest.{BeforeAndAfterAll, OptionValues}
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.Logger
 import org.slf4j.helpers.NOPLogger
 import play.api.{LoggerLike, MarkerContext}
@@ -34,10 +34,9 @@ import play.api.routing.Router.Attrs
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.reflectiveCalls
 
 class LoggingFilterSpec
-  extends AnyWordSpecLike
+  extends AnyWordSpec
      with MockitoSugar
      with Matchers
      with OptionValues
@@ -91,7 +90,7 @@ class LoggingFilterSpec
       val now                             = mock[() => Long]
       when(now.apply())
         .thenReturn(expectedRequestStartMillis)
-        .andThen(expectedRequestStartMillis + expectedRequestDurationInMillis)
+        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
 
       val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
 
@@ -111,7 +110,7 @@ class LoggingFilterSpec
       val now                             = mock[() => Long]
       when(now.apply())
         .thenReturn(expectedRequestStartMillis)
-        .andThen(expectedRequestStartMillis + expectedRequestDurationInMillis)
+        .thenReturn(expectedRequestStartMillis + expectedRequestDurationInMillis)
 
       val loggingFilter = new TestLoggingFilter(logger, controllerNeedsLogging = true, now)
       val ex            = new Exception("test-exception")
@@ -123,21 +122,25 @@ class LoggingFilterSpec
     }
   }
 
-  private def createLogger() = new LoggerLike {
+  private def createLogger() = new InspectableLogger
+
+  class InspectableLogger extends LoggerLike  {
     var loggedMessage: Option[String] = None
+
     override val logger: Logger       = NOPLogger.NOP_LOGGER
 
     override def info(s: => String)(implicit mc: MarkerContext): Unit =
       loggedMessage = Some(s)
 
-    lazy val loggingHappened: Boolean = loggedMessage.isDefined
+    lazy val loggingHappened: Boolean =
+      loggedMessage.isDefined
   }
 
   trait Setup {
     val testReqToResp =
       (_: RequestHeader) => Future.successful(Results.NoContent)
 
-    val handlerDef = mock[HandlerDef](withSettings.strictness(Strictness.Lenient))
+    val handlerDef = mock[HandlerDef]
     when(handlerDef.controller)
       .thenReturn("controller-name")
 

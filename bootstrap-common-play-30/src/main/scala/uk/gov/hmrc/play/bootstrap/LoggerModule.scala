@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class LoggerModule extends Module {
 
@@ -40,6 +40,7 @@ class LoggerModule extends Module {
         .toMap
     (for {
        (k, v) <- (config ++ props) // props second to take precedence
+                   .view
                    .filterKeys(_ != "resource") // logger.resource configures logback location, not a level
                    .map {
                      case (k, v: String) => k -> Option(Level.toLevel(v, null))

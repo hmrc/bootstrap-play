@@ -18,10 +18,10 @@ package uk.gov.hmrc.play.bootstrap.audit
 
 import com.codahale.metrics.{Counter, MetricRegistry}
 import uk.gov.hmrc.play.bootstrap.metrics.Metrics
-import org.mockito.Strictness
-import org.mockito.scalatest.MockitoSugar
+import org.mockito.Mockito.{verify, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.slf4j.Logger
 import uk.gov.hmrc.play.bootstrap.graphite.GraphiteReporterProviderConfig
 import uk.gov.hmrc.play.audit.http.connector.DatastreamMetrics
@@ -35,7 +35,7 @@ class DatastreamMetricsProviderSpec
 
   "DisabledDatastreamMetricsProvider" should {
     class TestDisabledDatastreamMetricsProvider extends DisabledDatastreamMetricsProvider {
-      override val logger = mock[Logger](withSettings.strictness(Strictness.Lenient))
+      override val logger = mock[Logger]
     }
 
     "return a fully-disabled DatastreamMetrics" in {

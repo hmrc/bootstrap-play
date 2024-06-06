@@ -71,12 +71,11 @@ class HeadersFilterSpec
       .build()
   }
 
-  ".apply" must {
+  ".apply" should {
     "add x-request-id to a request which doesn't already have an x-request-id header" in {
       val result = route(app, FakeRequest(GET, "/test")).value
       val body   = contentAsJson(result)
 
-      println(s"x=" + (body \ HeaderNames.xRequestId).toOption)
       (body \ HeaderNames.xRequestId).as[Seq[String]] should not be empty
     }
 

@@ -17,14 +17,14 @@
 package uk.gov.hmrc.play.bootstrap.data
 
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.data.{DefaultFormBinding, Form}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.mvc.Http.HeaderNames.CONTENT_TYPE
 import uk.gov.hmrc.play.bootstrap.data.MultipartGenerator.aMultipartFileWithParams
 
-class DefaultFormBindingSpec extends AnyWordSpecLike with Matchers {
+class DefaultFormBindingSpec extends AnyWordSpec with Matchers {
 
   val fixture = new DefaultFormBinding(Form.FromJsonMaxChars)
 

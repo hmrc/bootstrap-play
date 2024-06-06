@@ -22,10 +22,10 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.scaladsl.Source
 import org.apache.pekko.util.ByteString
+import org.mockito.Mockito.{reset, verify}
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar.{mock, verify}
-import org.mockito.captor.ArgCaptor
-import org.mockito.scalatest.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Tag, TestData}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -35,7 +35,7 @@ import play.api.{Application, Configuration}
 import play.api.http.{HttpChunk, HttpEntity}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json, Reads, __}
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{WSClient, writeableOf_String}
 import play.api.libs.ws.ahc.AhcWSClient
 import play.api.mvc.Results.NotFound
 import play.api.mvc.{Action => _, _}
@@ -87,9 +87,8 @@ class FrontendAuditFilterSpec
 
   private def nextAction = Action(NotFound("404 Not Found"))
 
-  private def exceptionThrowingAction = Action { _ =>
-    throw new RuntimeException("Something went wrong")
-  }
+  private def exceptionThrowingAction =
+    Action(block = _ => throw new RuntimeException("Something went wrong"))
 
   private object NonStrictCookies extends Tag("NonStringCookies")
 
@@ -104,7 +103,7 @@ class FrontendAuditFilterSpec
       .build()
   }
 
-  val fiveSecondsPatience = PatienceConfig(5.seconds, 200.millis)
+  implicit val fiveSecondsPatience: PatienceConfig = PatienceConfig(5.seconds, 200.millis)
 
   "A password" should {
     "be obfuscated with the password at the beginning" in {
@@ -183,7 +182,7 @@ class FrontendAuditFilterSpec
           event.auditType shouldBe "RequestReceived"
           event.detail.as(Reads.at[String](__ \ "requestBody")) shouldBe "csrfToken=acb&userId=113244018119&password=#########&key1="
           event.redactionLog.redactedFields shouldBe List("detail.requestBody")
-        }(fiveSecondsPatience, implicitly, implicitly)
+        }
       }
 
     "audit all request headers according to configuration" when {
@@ -219,7 +218,7 @@ class FrontendAuditFilterSpec
               "some-header-1" -> Json.arr("some-value", "some-other-value"),
               "some-header-2" -> Json.arr("########")
           )
-        }(fiveSecondsPatience, implicitly, implicitly)
+        }
       }
 
       "if not configured to do so" in {
@@ -228,7 +227,7 @@ class FrontendAuditFilterSpec
          eventually {
            val event = verifyAndRetrieveEvent
            event.detail.as(Reads.nullable[JsValue](__ \ "requestHeaders")) shouldBe None
-         }(fiveSecondsPatience, implicitly, implicitly)
+         }
       }
     }
 
@@ -661,7 +660,7 @@ class FrontendAuditFilterServerSpec
   }
 }
 
-trait FrontendAuditFilterInstance {
+trait FrontendAuditFilterInstance extends MockitoSugar {
 
   val config =
     Configuration(
@@ -689,8 +688,8 @@ trait FrontendAuditFilterInstance {
     }
 
   protected def verifyAndRetrieveEvent: ExtendedDataEvent = {
-    val captor = ArgCaptor[ExtendedDataEvent]
-    verify(auditConnector).sendExtendedEvent(captor)(any[HeaderCarrier], any[ExecutionContext])
-    captor.value
+    val captor = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+    verify(auditConnector).sendExtendedEvent(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    captor.getValue
   }
 }

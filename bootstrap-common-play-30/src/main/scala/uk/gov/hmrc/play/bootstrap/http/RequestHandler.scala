@@ -41,13 +41,13 @@ class RequestHandler @Inject()(
 ) {
 
   // Play 2.0 doesn't support trailing slash
-  override def routeRequest(request: RequestHeader): Option[Handler] = super.routeRequest(request).orElse {
-    if (request.path.endsWith("/")) {
-      val pathWithoutSlash        = request.path.dropRight(1)
-      val requestWithModifiedPath = request.withTarget(request.target.withPath(pathWithoutSlash))
-      super.routeRequest(requestWithModifiedPath)
-    } else {
-      None
+  override def routeRequest(request: RequestHeader): Option[Handler] =
+    super.routeRequest(request).orElse {
+      if (request.path.endsWith("/")) {
+        val pathWithoutSlash        = request.path.dropRight(1)
+        val requestWithModifiedPath = request.withTarget(request.target.withPath(pathWithoutSlash))
+        super.routeRequest(requestWithModifiedPath)
+      } else
+        None
     }
-  }
 }

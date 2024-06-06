@@ -20,7 +20,7 @@ import com.codahale.metrics.{MetricFilter, SharedMetricRegistries}
 import uk.gov.hmrc.play.bootstrap.metrics.{DisabledMetrics, DisabledMetricsFilter, Metrics, MetricsImpl, MetricsFilter, MetricsFilterImpl}
 import org.scalatest.{BeforeAndAfterEach, GivenWhenThen}
 import org.scalatest.freespec.AnyFreeSpec
-import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 import play.api.Configuration
 import play.api.inject.Injector
@@ -52,18 +52,18 @@ class GraphiteMetricsModuleSpec
   "if 'metrics.enabled' set to false" in {
     withInjector(Configuration("metrics.enabled" -> false)) { injector =>
       Then("kenshoo metrics are disabled")
-      injector.instanceOf[MetricsFilter] mustBe a[DisabledMetricsFilter]
+      injector.instanceOf[MetricsFilter] shouldBe a[DisabledMetricsFilter]
     }
   }
 
   "if missing kenshoo metrics enabled, but 'microservice.metrics.graphite.enabled' missing" in {
     withInjector(Configuration("metrics.enabled" -> "true")) { injector =>
       Then("kensho metrics are enabled")
-      injector.instanceOf[MetricsFilter] mustBe a[MetricsFilterImpl]
-      injector.instanceOf[Metrics] mustBe a[MetricsImpl]
+      injector.instanceOf[MetricsFilter] shouldBe a[MetricsFilterImpl]
+      injector.instanceOf[Metrics]       shouldBe a[MetricsImpl]
 
       Then("graphite reporting in disabled")
-      injector.instanceOf[GraphiteReporting] mustBe a[DisabledGraphiteReporting]
+      injector.instanceOf[GraphiteReporting] shouldBe a[DisabledGraphiteReporting]
     }
   }
 
@@ -92,36 +92,36 @@ class GraphiteMetricsModuleSpec
       withInjector(configuration) { injector =>
         if (kenshooEnabled)
           //enabled kenshoo metrics filter included
-          injector.instanceOf[MetricsFilter] mustBe a[MetricsFilterImpl]
+          injector.instanceOf[MetricsFilter] shouldBe a[MetricsFilterImpl]
 
         if (!kenshooEnabled) {
           //disabled kenshoo metrics filter included
-          injector.instanceOf[MetricsFilter] mustBe a[DisabledMetricsFilter]
+          injector.instanceOf[MetricsFilter] shouldBe a[DisabledMetricsFilter]
 
           //there is a binding to graphite disabledMetrics
-          injector.instanceOf[Metrics] mustBe a[DisabledMetrics]
+          injector.instanceOf[Metrics] shouldBe a[DisabledMetrics]
         }
 
         //there is a binding to graphite's metricsimpl or graphitemetricsimpl
         if (kenshooEnabled) {
-          injector.instanceOf[Metrics] mustBe a[MetricsImpl]
-          injector.instanceOf[MetricFilter] mustEqual MetricFilter.ALL
+          injector.instanceOf[Metrics]      shouldBe a[MetricsImpl]
+          injector.instanceOf[MetricFilter] shouldEqual MetricFilter.ALL
         }
 
         if (kenshooEnabled && graphiteEnabled) {
           //there is an enabled graphite reporter
-          injector.instanceOf[GraphiteReporting] mustBe a[EnabledGraphiteReporting]
+          injector.instanceOf[GraphiteReporting] shouldBe a[EnabledGraphiteReporting]
 
           //there is a binding to enabled DatastreamMetrics
-          injector.instanceOf[DatastreamMetrics] must not be DatastreamMetrics.disabled
+          injector.instanceOf[DatastreamMetrics] should not be DatastreamMetrics.disabled
         }
 
         if (!kenshooEnabled || !graphiteEnabled) {
           //there is a disabled graphite reporter
-          injector.instanceOf[GraphiteReporting] mustBe a[DisabledGraphiteReporting]
+          injector.instanceOf[GraphiteReporting] shouldBe a[DisabledGraphiteReporting]
 
           //there is a binding to disabled DatastreamMetrics
-          injector.instanceOf[DatastreamMetrics] mustBe DatastreamMetrics.disabled
+          injector.instanceOf[DatastreamMetrics] shouldBe DatastreamMetrics.disabled
         }
       }
     }

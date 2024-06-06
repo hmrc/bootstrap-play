@@ -23,15 +23,17 @@ import play.api.mvc.QueryStringBindable
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrlPolicy.Id
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object RedirectUrlPolicy {
   type Id[A] = A
 
-  implicit def toFuture(in: RedirectUrlPolicy[Id]): RedirectUrlPolicy[Future] = new RedirectUrlPolicy[Future] {
-    override def applies(url: String): Future[Boolean] = Future.successful(in.applies(url))
-  }
+  implicit def toFuture(in: RedirectUrlPolicy[Id]): RedirectUrlPolicy[Future] =
+    new RedirectUrlPolicy[Future] {
+      override def applies(url: String): Future[Boolean] =
+        Future.successful(in.applies(url))
+    }
 }
 
 case class SafeRedirectUrl @deprecated(
@@ -45,22 +47,26 @@ case class SafeRedirectUrl @deprecated(
 sealed trait RedirectUrlPolicy[T[_]] {
   self =>
   def applies(url: String): T[Boolean]
-  def |(that: RedirectUrlPolicy[T])(implicit f: Applicative[T]): RedirectUrlPolicy[T] = new RedirectUrlPolicy[T] {
-    override def applies(url: String): T[Boolean] =
-      f.map(f.product(self.applies(url), that.applies(url)))(results => results._1 || results._2)
-  }
+  def |(that: RedirectUrlPolicy[T])(implicit f: Applicative[T]): RedirectUrlPolicy[T] =
+    new RedirectUrlPolicy[T] {
+      override def applies(url: String): T[Boolean] =
+        f.map(f.product(self.applies(url), that.applies(url)))(results => results._1 || results._2)
+    }
 }
 
 case object UnsafePermitAll extends RedirectUrlPolicy[Id] {
-  override def applies(url: String): Id[Boolean] = true
+  override def applies(url: String): Id[Boolean] =
+    true
 }
 
 case object OnlyRelative extends RedirectUrlPolicy[Id] {
-  override def applies(url: String): Boolean = RedirectUrl.isRelativeUrl(url)
+  override def applies(url: String): Boolean =
+    RedirectUrl.isRelativeUrl(url)
 }
 
 case class PermitAllOnDev(environment: Environment) extends RedirectUrlPolicy[Id] {
-  override def applies(url: String): Id[Boolean] = environment.mode == Mode.Dev
+  override def applies(url: String): Id[Boolean] =
+    environment.mode == Mode.Dev
 }
 
 object AbsoluteWithHostnameFromAllowlist {
@@ -68,19 +74,23 @@ object AbsoluteWithHostnameFromAllowlist {
   def apply(allowedHosts: String*): RedirectUrlPolicy[Id] =
     apply(allowedHosts.toSet)
 
-  def apply(allowedHosts: Set[String]) = new RedirectUrlPolicy[Id] {
-    override def applies(url: String): Id[Boolean] = Try(new URL(url)) match {
-      case Success(parsedUrl) if allowedHosts.contains(parsedUrl.getHost) => true
-      case _                                                              => false
+  def apply(allowedHosts: Set[String]): RedirectUrlPolicy[Id] =
+    new RedirectUrlPolicy[Id] {
+      override def applies(url: String): Id[Boolean] =
+        Try(new URL(url)) match {
+          case Success(parsedUrl) => allowedHosts.contains(parsedUrl.getHost)
+          case _                  => false
+        }
     }
-  }
 
-  def apply(allowedHostsFn: => Future[Set[String]])(implicit ec: ExecutionContext) = new RedirectUrlPolicy[Future] {
-    override def applies(url: String): Future[Boolean] = Try(new URL(url)) match {
-      case Success(parsedUrl) => allowedHostsFn.map(_.contains(parsedUrl.getHost))
-      case _                  => Future.successful(false)
+  def apply(allowedHostsFn: => Future[Set[String]])(implicit ec: ExecutionContext): RedirectUrlPolicy[Future] =
+    new RedirectUrlPolicy[Future] {
+      override def applies(url: String): Future[Boolean] =
+        Try(new URL(url)) match {
+          case Success(parsedUrl) => allowedHostsFn.map(_.contains(parsedUrl.getHost))
+          case _                  => Future.successful(false)
+        }
     }
-  }
 }
 
 @scala.annotation.implicitNotFound(
@@ -97,23 +107,24 @@ case class RedirectUrl(private val url: String) {
     RedirectUrl.errorFor(url)
   )
 
-  def getEither[T[_]](policy: RedirectUrlPolicy[T])(implicit f: Applicative[T]) =
+  def getEither[T[_]](policy: RedirectUrlPolicy[T])(implicit f: Applicative[T]): T[Either[String, SafeRedirectUrl]] =
     f.map(policy.applies(url)) { result =>
-      if (result) {
+      if (result)
         Right(SafeRedirectUrl(url))
-      } else {
+      else
         Left(s"Provided URL [$url] doesn't comply with redirect policy")
-      }
     }
 
-  def get[T[_]](policy: RedirectUrlPolicy[T])(implicit f: Applicative[T]) =
+  def get[T[_]](policy: RedirectUrlPolicy[T])(implicit f: Applicative[T]): T[SafeRedirectUrl] =
     f.map(getEither(policy))(
       _.fold[SafeRedirectUrl](
         message => throw new IllegalArgumentException(message),
-        value => value
-      ))
+        value   => value
+      )
+    )
 
-  val unsafeValue = url
+  val unsafeValue: String =
+    url
 }
 
 object RedirectUrl {

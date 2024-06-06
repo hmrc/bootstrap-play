@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.tools
 
-import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.LoggerLike
@@ -37,7 +37,7 @@ class LogCapturingSpec extends AnyWordSpec with Matchers with LogCapturing {
       testClass.logMessage(expected1)
       testClass.logMessage(expected2)
 
-      events.map(_.getMessage) mustBe Seq(expected1, expected2)
+      events.map(_.getMessage) shouldBe Seq(expected1, expected2)
     }
   }
 

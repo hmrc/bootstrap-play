@@ -1,5 +1,27 @@
 ## Changes
 
+### Version 9.0.0
+
+- Cross built for Scala 3 and 2.13. Scala 2.12 has been dropped.
+- Long deprecated classes have been removed. These have just changed packages, so the functionality is still available. Apart from the following, which can just be removed from configuration:
+  ```properties
+  play.http.filters = "uk.gov.hmrc.play.bootstrap.backend.filters.BackendFilters"
+  play.http.filters = "uk.gov.hmrc.play.bootstrap.frontend.filters.FrontendFilters"
+  ```
+- `uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler` supports asynchronous rendering.
+
+  It will need an `ExecutionContext` injecting and the `standardErrorTemplate` and `notFoundTemplate` functions now return `Future`s. If you're not rendering asyncronously, you can just wrap the previous implementation in `Future.success`
+
+  The request param now takes `RequestHeader` rather than `Request[_]` since the request body is not actually available. This may require similar changes in view templates.
+
+  `uk.gov.hmrc.play.bootstrap.frontend.http.LegacyFrontendErrorHandler` exists to ease the upgrade, since it can simply be extended instead. However it is deprecated, and will eventually be removed.
+
+- HttpVerbs has been bumped to `15.0.0` where `HttpClient` has been deprecated in favour or `HttpClientV2`. This will need enabling with
+  ```properties
+  play.modules.enabled += "uk.gov.hmrc.play.bootstrap.HttpClientV2Module"
+  ```
+  See [http-verbs README](https://github.com/hmrc/http-verbs)
+
 ### Version 8.6.0
 - `application-json-logger.xml` has been included. Since it is customised by configuration (by `LoggerModule`) it is no longer required in services.
 

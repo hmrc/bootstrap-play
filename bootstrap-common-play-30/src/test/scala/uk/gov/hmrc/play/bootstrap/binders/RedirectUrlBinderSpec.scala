@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.binders
 
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.concurrent.ScalaFutures
 import play.api.{Environment, Mode}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RedirectUrlBinderSpec extends AnyWordSpecLike with Matchers with ScalaFutures {
+class RedirectUrlBinderSpec extends AnyWordSpec with Matchers with ScalaFutures {
 
   "Should allow to get safe binding if all url's are permitted" in {
     val policy = UnsafePermitAll

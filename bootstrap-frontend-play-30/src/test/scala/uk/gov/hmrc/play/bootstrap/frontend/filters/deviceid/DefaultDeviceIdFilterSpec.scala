@@ -17,11 +17,11 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
 import javax.inject.Inject
-import org.mockito.scalatest.MockitoSugar
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.{DefaultHttpFilters, HttpFilters}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
@@ -30,7 +30,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.DeviceId.MdtpDeviceId
 
 class DefaultDeviceIdFilterSpec
-  extends AnyWordSpecLike
+  extends AnyWordSpec
      with Matchers
      with MockitoSugar
      with OptionValues
@@ -39,7 +39,6 @@ class DefaultDeviceIdFilterSpec
   import DefaultDeviceIdFilterSpec._
 
   "DeviceIdFilter" should {
-
     "create the deviceId when no cookie exists" in {
       running(application(having = appConfig)) { application =>
         val result = route(application, FakeRequest(GET, "/test")).value
@@ -55,7 +54,6 @@ class DefaultDeviceIdFilterSpec
     }
 
     "do nothing when a valid cookie exists" in {
-
       running(application(having = appConfig)) { application =>
         val existingCookie = createDeviceId.buildNewDeviceIdCookie()
 
@@ -70,10 +68,10 @@ class DefaultDeviceIdFilterSpec
 
     "successfully decode a deviceId generated from a previous secret" in {
       running(application(having = appConfig)) { application =>
-        val uuid = createDeviceId.generateUUID
+        val uuid = createDeviceId.generateUUID()
 
         val existingCookie = {
-          val timestamp = createDeviceId.getTimeStamp
+          val timestamp = createDeviceId.getTimeStamp()
           val deviceIdMadeFromPrevKey =
             DeviceId(uuid, timestamp, DeviceId.generateHash(uuid, timestamp, thePreviousSecret))
           createDeviceId.makeCookie(deviceIdMadeFromPrevKey)
@@ -90,7 +88,6 @@ class DefaultDeviceIdFilterSpec
     }
 
     "set cookie's secure property based on config" in {
-
       Seq(true, false).foreach { secureCookie =>
         running(application(having = appConfig + ("cookie.deviceId.secure" -> secureCookie))) { application =>
           val result = route(application, FakeRequest(GET, "/test")).value

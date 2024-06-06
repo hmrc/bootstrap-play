@@ -47,9 +47,8 @@ class CacheControlFilter @Inject()(
 
   private val logger = Logger(getClass)
 
-  if (config.cacheableContentTypes.nonEmpty) {
+  if (config.cacheableContentTypes.nonEmpty)
     logger.info(s"Will allow caching of content types starting with: ${config.cacheableContentTypes.mkString(", ")}")
-  }
 
   override def apply(f: (RequestHeader) => Future[Result])(rh: RequestHeader): Future[Result] =
     f(rh).map { result =>
@@ -65,11 +64,10 @@ class CacheControlFilter @Inject()(
       def headerShouldBeSet =
         !(status == Status.NOT_MODIFIED || existingHeader.isDefined || contentTypeIsCacheable)
 
-      if (headerShouldBeSet) {
+      if (headerShouldBeSet)
         result.withHeaders(CACHE_CONTROL -> CacheControlFilter.headerValue)
-      } else {
+      else
         result
-      }
     }
 }
 

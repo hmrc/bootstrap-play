@@ -28,17 +28,16 @@ abstract class RestrictedFormBinding extends FormBinding {
 
   protected def matchBody(body: Any): Map[String, Seq[String]]
 
-  override def apply(request: play.api.mvc.Request[_]): Map[String, Seq[String]] = {
+  override def apply(request: play.api.mvc.Request[_]): Map[String, Seq[String]] =
     request.method.toUpperCase match {
       case HttpVerbs.POST | HttpVerbs.PUT | HttpVerbs.PATCH => parseBody(request)
       case _                                                => request.queryString
     }
-  }
 
   private def parseBody(request: Request[_]) = {
     val unwrap = request.body match {
       case body: AnyContent =>
-        body.asFormUrlEncoded.orElse(body.asMultipartFormData).getOrElse(body)
+        body.asFormUrlEncoded.orElse(body.asMultipartFormData).getOrElse(body): Any
       case body => body
     }
     matchBody(unwrap)
@@ -47,7 +46,8 @@ abstract class RestrictedFormBinding extends FormBinding {
   protected def noBody(): Map[String, Seq[String]] = {
     logger.warn(
       "Could not find a body for form binding - possibly an invalid content type for this controller - " +
-      "if you are parsing multipart requests please use 'with WithUrlEncodedAndMultipartFormBinding' on your controller")
+      "if you are parsing multipart requests please use 'with WithUrlEncodedAndMultipartFormBinding' on your controller"
+    )
     Map.empty
   }
 }
@@ -55,23 +55,24 @@ abstract class RestrictedFormBinding extends FormBinding {
 // Based on play.api.data.DefaultFormBinding - removing the ability to bind forms from JSON and multipart data
 class UrlEncodedOnlyFormBinding extends RestrictedFormBinding {
 
-  override protected def matchBody(unwrap: Any): Map[String, Seq[String]] = unwrap match {
-    case body: Map[_, _]                   => body.asInstanceOf[Map[String, Seq[String]]]
-    case _                                 => noBody()
-  }
+  override protected def matchBody(unwrap: Any): Map[String, Seq[String]] =
+    unwrap match {
+      case body: Map[_, _]                   => body.asInstanceOf[Map[String, Seq[String]]]
+      case _                                 => noBody()
+    }
 }
 
 // Based on play.api.data.DefaultFormBinding - removing the ability to bind forms from JSON
 class UrlEncodedAndMultipartFormBinding extends RestrictedFormBinding {
 
-  override protected def matchBody(unwrap: Any): Map[String, Seq[String]] = unwrap match {
-    case body: Map[_, _]                   => body.asInstanceOf[Map[String, Seq[String]]]
-    case body: MultipartFormData[_]        => multipartFormParse(body)
-    case Right(body: MultipartFormData[_]) => multipartFormParse(body)
-    case _                                 => noBody()
-  }
+  override protected def matchBody(unwrap: Any): Map[String, Seq[String]] =
+    unwrap match {
+      case body: Map[_, _]                   => body.asInstanceOf[Map[String, Seq[String]]]
+      case body: MultipartFormData[_]        => multipartFormParse(body)
+      case Right(body: MultipartFormData[_]) => multipartFormParse(body)
+      case _                                 => noBody()
+    }
 
-  private def multipartFormParse(body: MultipartFormData[_]) = body.asFormUrlEncoded
+  private def multipartFormParse(body: MultipartFormData[_]) =
+    body.asFormUrlEncoded
 }
-
-

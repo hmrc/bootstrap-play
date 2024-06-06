@@ -46,7 +46,7 @@ class MdcPropagatingDispatcherConfigurator(
   prerequisites: DispatcherPrerequisites
 ) extends MessageDispatcherConfigurator(config, prerequisites) {
 
-  override val dispatcher: MessageDispatcher =
+  override def dispatcher(): MessageDispatcher =
     new Dispatcher(
       this,
       config.getString("id"),

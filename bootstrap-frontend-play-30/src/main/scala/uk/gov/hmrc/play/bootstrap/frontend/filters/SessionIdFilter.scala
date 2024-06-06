@@ -20,7 +20,7 @@ import java.util.UUID
 
 import com.google.inject.Inject
 import org.apache.pekko.stream.Materializer
-import play.api.mvc._
+import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.mvc.request.{Cell, RequestAttrKey}
 import uk.gov.hmrc.http.{SessionKeys, HeaderNames => HMRCHeaderNames}
 
@@ -29,13 +29,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class SessionIdFilter(
   override val mat: Materializer,
   uuid: => UUID,
-  sessionCookieBaker: SessionCookieBaker,
   implicit val ec: ExecutionContext
 ) extends Filter {
 
   @Inject
-  def this(mat: Materializer, ec: ExecutionContext, sessionCookieBaker: SessionCookieBaker) =
-    this(mat, UUID.randomUUID(), sessionCookieBaker, ec)
+  def this(mat: Materializer, ec: ExecutionContext) =
+    this(mat, UUID.randomUUID(), ec)
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
 

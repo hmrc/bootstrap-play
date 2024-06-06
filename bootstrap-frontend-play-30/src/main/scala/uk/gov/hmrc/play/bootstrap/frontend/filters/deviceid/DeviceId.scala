@@ -56,7 +56,7 @@ object DeviceId {
 
   def deviceIdHashIsValid(hash: String, uuid: String, timestamp: Long, secret: String, previousSecrets: Seq[String]) = {
     val secrets     = Seq(secret) ++ previousSecrets
-    val hashChecker = secrets.map(item => () => hash == generateHash(uuid, timestamp, item)).toStream
+    val hashChecker = secrets.map(item => () => hash == generateHash(uuid, timestamp, item)).to(LazyList)
     hashChecker.map(_()).collectFirst { case true => true }.getOrElse(false)
   }
 
@@ -65,12 +65,10 @@ object DeviceId {
       prefix == MdtpDeviceId
 
     def isValid(prefix: String, uuid: String, timestamp: String, hash: String) =
-      isValidPrefix(prefix) && validUuid(uuid) && validLongTime(timestamp) && deviceIdHashIsValid(
-        hash,
-        uuid,
-        timestamp.toLong,
-        secret,
-        previousSecrets)
+      isValidPrefix(prefix) &&
+        validUuid(uuid) &&
+        validLongTime(timestamp) &&
+        deviceIdHashIsValid(hash, uuid, timestamp.toLong, secret, previousSecrets)
 
     value.split("(#)|(_)") match {
       case Array(prefix, uuid, timestamp, hash) if isValid(prefix, uuid, timestamp, hash) =>

@@ -1,7 +1,7 @@
 import sbt._
 
 object LibDependencies {
-  private val httpVerbsVersion  = "14.13.0"
+  private val httpVerbsVersion  = "15.0.0"
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.2"
   private val dropwizardVersion = "4.2.22"
@@ -13,19 +13,19 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
-      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "7.1.0",
-      "uk.gov.hmrc"             %% "crypto"                     % "7.6.0",
+      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.0.0",
+      "uk.gov.hmrc"             %% "crypto"                     % "8.0.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "8.8.0",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.0.0",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% (if (playSuffix == "play-28") "filters-helpers"
                                     else                         "play-filters-helpers"
                                    )                            % playVersion(playSuffix),
-      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.2.0",
+      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.4.0",
 
       // test dependencies
       playOrg(playSuffix)       %% "play-test"                  % playVersion(playSuffix)    % Test,
-      "org.mockito"             %% "mockito-scala-scalatest"    % "1.17.14"      % Test,
+      "org.scalatestplus"       %% "mockito-3-4"                % "3.2.10.0"     % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
       "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
@@ -70,7 +70,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% s"http-verbs-test-$playSuffix" % httpVerbsVersion,
       "org.scalatestplus.play"  %% "scalatestplus-play"           % scalaTestPlusPlayVersion(playSuffix),
       // provides the optional dependency of scalatest as pulled in by scalatestplus-play
-      "com.vladsch.flexmark"   %  "flexmark-all"                  % (if (playSuffix == "play-28") "0.35.10"
+      "com.vladsch.flexmark"    %  "flexmark-all"                 % (if (playSuffix == "play-28") "0.35.10"
                                                                      else                         "0.64.8"
                                                                     ),
       // we use the same version of scalatest across play versions for simplicity for internal testing
@@ -98,7 +98,7 @@ object LibDependencies {
 
   private def playVersion(playSuffix: String) =
     playSuffix match {
-      case "play-28" => "2.8.21"
+      case "play-28" => "2.8.22"
       case "play-29" => "2.9.3"
       case "play-30" => "3.0.3"
     }

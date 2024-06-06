@@ -18,7 +18,7 @@ package uk.gov.hmrc.play.bootstrap.config
 
 import com.typesafe.config.ConfigException
 import org.apache.commons.codec.binary.Base64
-import org.scalatest.matchers.must.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 
@@ -37,12 +37,12 @@ trait Base64ConfigDecoderTests extends AnyWordSpec with Matchers {
     )
 
     "not replace non-encoded values" in {
-      config.getOptional[String]("foo") mustBe Some("bar")
-      config.getOptional[Int]("womble") mustBe Some(7331)
+      config.getOptional[String]("foo") shouldBe Some("bar")
+      config.getOptional[Int]("womble") shouldBe Some(7331)
     }
 
     "decode encoded values" in {
-      config.getOptional[String]("baz") mustBe Some("quux")
+      config.getOptional[String]("baz") shouldBe Some("quux")
     }
 
     "throw an exception when trying to decode a non-string value" in {
@@ -53,7 +53,7 @@ trait Base64ConfigDecoderTests extends AnyWordSpec with Matchers {
         )
       }
 
-      exception.getMessage mustEqual "hardcoded value: Invalid value at 'spoon.base64': only strings can be Base64 decoded"
+      exception.getMessage shouldEqual "hardcoded value: Invalid value at 'spoon.base64': only strings can be Base64 decoded"
     }
   }
 }
@@ -63,7 +63,7 @@ class Base64ConfigDecoderSpec extends Base64ConfigDecoderTests with Base64Config
   override def decode(config: (String, Any)*): Configuration =
     decodeConfig(Configuration(config.toSeq: _*))
 
-  ".decode" must {
+  ".decode" should {
     behave like aBase64Decoder()
   }
 }
