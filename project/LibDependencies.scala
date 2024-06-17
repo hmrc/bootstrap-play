@@ -25,7 +25,7 @@ object LibDependencies {
 
       // test dependencies
       playOrg(playSuffix)       %% "play-test"                  % playVersion(playSuffix)    % Test,
-      "org.scalatestplus"       %% "mockito-3-4"                % "3.2.10.0"     % Test,
+      "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
       "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
@@ -75,7 +75,7 @@ object LibDependencies {
                                                                     ),
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
-      "org.scalatest"           %% "scalatest"                    % "3.2.18"      % Test,
+      "org.scalatest"           %% "scalatest"                    % "3.2.17"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"                 % "0.64.8"      % Test,
       (if (playSuffix == "play-30")
          "org.apache.pekko"     %% "pekko-stream-testkit"         % pekkoVersion  % Test
@@ -91,7 +91,7 @@ object LibDependencies {
     Seq(
       playOrg(playSuffix)       %% "play"                       % playVersion(playSuffix),
       // test dependencies
-      "org.scalatest"           %% "scalatest"                  % "3.2.18"      % Test,
+      "org.scalatest"           %% "scalatest"                  % "3.2.17"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"      % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
     )
