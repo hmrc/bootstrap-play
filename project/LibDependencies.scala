@@ -1,7 +1,7 @@
 import sbt._
 
 object LibDependencies {
-  private val httpVerbsVersion  = "15.0.0"
+  private val httpVerbsVersion  = "15.1.0"
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.2"
   private val dropwizardVersion = "4.2.22"
@@ -24,11 +24,11 @@ object LibDependencies {
       "uk.gov.hmrc"             %% "logback-json-logger"        % "5.4.0",
 
       // test dependencies
-      playOrg(playSuffix)       %% "play-test"                  % playVersion(playSuffix)    % Test,
-      "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test,
-      "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
-      "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
+      "org.scalatest"           %% "scalatest"                  % "3.2.17"       % Test,
+      "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test, // not provided for Play 2.8 by scalatestplus-play
+      "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
+      "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test
     ) ++
       (
         if (playSuffix == "play-28") {
@@ -66,9 +66,10 @@ object LibDependencies {
 
   def test(playSuffix: String) =
     Seq(
-      playOrg(playSuffix)       %% "play-test"                    % playVersion(playSuffix),
       "uk.gov.hmrc"             %% s"http-verbs-test-$playSuffix" % httpVerbsVersion,
       "org.scalatestplus.play"  %% "scalatestplus-play"           % scalaTestPlusPlayVersion(playSuffix),
+      // this is already provided by scalatestplus-play, but we want the latest version
+      playOrg(playSuffix)       %% "play-test"                    % playVersion(playSuffix),
       // provides the optional dependency of scalatest as pulled in by scalatestplus-play
       "com.vladsch.flexmark"    %  "flexmark-all"                 % (if (playSuffix == "play-28") "0.35.10"
                                                                      else                         "0.64.8"
@@ -91,16 +92,16 @@ object LibDependencies {
     Seq(
       playOrg(playSuffix)       %% "play"                       % playVersion(playSuffix),
       // test dependencies
-      "org.scalatest"           %% "scalatest"                  % "3.2.17"      % Test,
-      "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"      % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
+      "org.scalatest"           %% "scalatest"                  % "3.2.17"      % Test,
+      "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"      % Test
     )
 
   private def playVersion(playSuffix: String) =
     playSuffix match {
       case "play-28" => "2.8.22"
-      case "play-29" => "2.9.3"
-      case "play-30" => "3.0.3"
+      case "play-29" => "2.9.4"
+      case "play-30" => "3.0.4"
     }
 
   private def playOrg(playSuffix: String): String =
