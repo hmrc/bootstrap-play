@@ -20,21 +20,22 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Reads}
 import play.api.mvc.{Request, Result, Results}
 
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 trait WithJsonBody { self: Results =>
 
   protected def withJsonBody[T](
-    f: (T) => Future[Result]
+    f: T => Future[Result]
   )(implicit
     request: Request[JsValue],
-    m      : Manifest[T],
+    ct     : ClassTag[T],
     reads  : Reads[T]
   ): Future[Result] =
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
       case Success(JsError(errs)) =>
-        Future.successful(BadRequest(s"Invalid ${m.runtimeClass.getSimpleName} payload: $errs"))
+        Future.successful(BadRequest(s"Invalid ${ct.runtimeClass.getSimpleName} payload: $errs"))
       case Failure(e) => Future.successful(BadRequest(s"Could not parse body due to ${e.getMessage}"))
     }
 
