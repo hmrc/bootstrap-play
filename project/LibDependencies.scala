@@ -3,7 +3,7 @@ import sbt._
 object LibDependencies {
   private val httpVerbsVersion  = "15.1.0"
   private val akkaVersion       = "2.6.21"
-  private val pekkoVersion      = "1.0.2"
+  private val pekkoVersion      = "1.0.3"
   private val dropwizardVersion = "4.2.22"
 
   def common(playSuffix: String) =
@@ -100,8 +100,8 @@ object LibDependencies {
   private def playVersion(playSuffix: String) =
     playSuffix match {
       case "play-28" => "2.8.22"
-      case "play-29" => "2.9.4"
-      case "play-30" => "3.0.4"
+      case "play-29" => "2.9.5"
+      case "play-30" => "3.0.5"
     }
 
   private def playOrg(playSuffix: String): String =
