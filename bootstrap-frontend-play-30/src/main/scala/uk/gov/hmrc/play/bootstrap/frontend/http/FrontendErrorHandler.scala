@@ -18,15 +18,19 @@ package uk.gov.hmrc.play.bootstrap.frontend.http
 
 import play.api.http.HeaderNames.CACHE_CONTROL
 import play.api.http.HttpErrorHandler
-import play.api.i18n.{I18nSupport, Messages}
+import play.api.i18n.{I18nSupport, Lang, LangImplicits, Messages}
 import play.api.mvc.Results.{BadRequest, InternalServerError, NotFound}
 import play.api.mvc.{RequestHeader, Result, Results}
 import play.api.{Logger, PlayException}
 import play.twirl.api.Html
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
-abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
+abstract class FrontendErrorHandler
+  extends HttpErrorHandler
+     with I18nSupport
+     with LangImplicits {
 
   private val logger = Logger(getClass)
 
@@ -46,6 +50,14 @@ abstract class FrontendErrorHandler extends HttpErrorHandler with I18nSupport {
 
   /** To be provided to wire up to a View */
   def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: RequestHeader): Future[Html]
+
+  // workaround for https://github.com/playframework/playframework/issues/8113
+  // Some errors occur before the cookie is parsed, in which case request2Messages (which requires lang from cookie) will fail
+  implicit override def request2Messages(implicit request: RequestHeader): Messages =
+    // An alternative could be to use `implicit val rh2: RequestHeader = requestFactory.copyRequest(rh)` (which doesn't copy but actually populates attrs from headers)
+    // but would be a breaking change to add dependency on requestFactory
+    Try(super.request2Messages)
+      .getOrElse(lang2Messages(Lang.defaultLang))
 
   def badRequestTemplate(implicit request: RequestHeader): Future[Html] =
     standardErrorTemplate(

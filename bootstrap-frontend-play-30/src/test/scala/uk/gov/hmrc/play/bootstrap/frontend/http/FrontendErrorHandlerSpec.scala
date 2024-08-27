@@ -19,13 +19,13 @@ package uk.gov.hmrc.play.bootstrap.frontend.http
 import org.apache.pekko.stream.Materializer
 import org.scalatest.AppendedClues.convertToClueful
 import org.scalatest.Inspectors.forAll
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerTest
+import org.scalatestplus.play.guice.{GuiceOneAppPerTest, GuiceOneServerPerTest}
 import play.api.Application
 import play.api.http.HttpEntity
-import play.api.i18n.{Lang, MessagesApi}
+import play.api.i18n.{Lang, Messages, MessagesApi}
 import play.api.i18n.Messages.Attrs.CurrentLang
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.typedmap.TypedMap
@@ -35,6 +35,7 @@ import play.api.test.Helpers._
 import play.mvc.Http.HeaderNames
 import play.twirl.api.Html
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class FrontendErrorHandlerSpec
@@ -44,7 +45,9 @@ class FrontendErrorHandlerSpec
      with ScalaFutures {
 
   override def fakeApplication(): Application  =
-    new GuiceApplicationBuilder().configure(Map("play.i18n.langs" -> List("en", "cy"))).build()
+    new GuiceApplicationBuilder()
+      .configure(Map("play.i18n.langs" -> List("en", "cy")))
+      .build()
 
   implicit lazy val materializer: Materializer = app.materializer
 
@@ -54,8 +57,6 @@ class FrontendErrorHandlerSpec
     override def messagesApi: MessagesApi      = app.injector.instanceOf[MessagesApi]
     override val ec         : ExecutionContext = app.injector.instanceOf[ExecutionContext]
   }
-
-  import TestFrontendErrorHandler._
 
   val welshRequest = FakeRequest(
     method  = "GET",
@@ -79,7 +80,7 @@ class FrontendErrorHandlerSpec
       val clientErrorsHandledByFallback = (400 to 499).diff(explicitlyHandledClientErrors)
 
       forAll(clientErrorsHandledByFallback) { statusCode =>
-        val result = onClientError(FakeRequest(), statusCode)
+        val result = TestFrontendErrorHandler.onClientError(FakeRequest(), statusCode)
 
         contentAsString(result) shouldBe """Sorry, there is a problem with the service
                                            |Sorry, there is a problem with the service
@@ -91,8 +92,8 @@ class FrontendErrorHandlerSpec
       val clientErrors = (400 to 499).toList
 
       forAll(clientErrors) { statusCode =>
-        val englishResult = onClientError(englishRequest, statusCode)
-        val welshResult   = onClientError(welshRequest, statusCode)
+        val englishResult = TestFrontendErrorHandler.onClientError(englishRequest, statusCode)
+        val welshResult   = TestFrontendErrorHandler.onClientError(welshRequest, statusCode)
 
         for {
           englishMessage <- contentAsString(englishResult).split("\n")
@@ -105,22 +106,21 @@ class FrontendErrorHandlerSpec
   "resolving an error" should {
     "return a generic InternalServerError result" in {
       val exception = new Exception("Runtime exception")
-      val result    = resolveError(FakeRequest(), exception).futureValue
+      val result    = TestFrontendErrorHandler.resolveError(FakeRequest(), exception).futureValue
 
-      result.header.status shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers  should contain(CACHE_CONTROL -> "no-cache")
+      result.header.status  shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return a generic InternalServerError result if the exception cause is null" in {
       val exception = new Exception("Runtime exception", null)
-      val result    = resolveError(FakeRequest(), exception).futureValue
+      val result    = TestFrontendErrorHandler.resolveError(FakeRequest(), exception).futureValue
 
-      result.header.status shouldBe INTERNAL_SERVER_ERROR
-      result.header.headers  should contain(CACHE_CONTROL -> "no-cache")
+      result.header.status  shouldBe INTERNAL_SERVER_ERROR
+      result.header.headers should contain(CACHE_CONTROL -> "no-cache")
     }
 
     "return 303 (See Other) result for an application error" in {
-
       val responseCode = SEE_OTHER
       val location     = "http://some.test.location/page"
       val theResult    = Result(
@@ -130,7 +130,7 @@ class FrontendErrorHandlerSpec
 
       val appException = ApplicationException(theResult, "application exception")
 
-      val result = resolveError(FakeRequest(), appException).futureValue
+      val result = TestFrontendErrorHandler.resolveError(FakeRequest(), appException).futureValue
 
       result shouldBe theResult
     }
@@ -138,9 +138,43 @@ class FrontendErrorHandlerSpec
     "provide welsh translations for messages" in {
       val exception = new Exception("Runtime exception")
       for {
-        englishMessage <- contentAsString(resolveError(englishRequest, exception)).split("\n")
-        welshMessage   <- contentAsString(resolveError(welshRequest, exception)).split("\n")
+        englishMessage <- contentAsString(TestFrontendErrorHandler.resolveError(englishRequest, exception)).split("\n")
+        welshMessage   <- contentAsString(TestFrontendErrorHandler.resolveError(welshRequest, exception)).split("\n")
       } englishMessage shouldNot be(welshMessage) withClue ", missing global.error translation"
+    }
+  }
+}
+
+class TestFrontendErrorHandlerWithMessages @Inject()(
+  override val messagesApi: MessagesApi
+)(implicit
+  override val ec: ExecutionContext
+) extends FrontendErrorHandler {
+  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit rh: RequestHeader): Future[Html] =
+    Future.successful(Html(Messages("key")))
+}
+
+class FrontendErrorHandlerWithMessagesSpec
+  extends AnyWordSpec
+     with Matchers
+     with GuiceOneServerPerTest
+     with ScalaFutures
+     with IntegrationPatience {
+
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure(Map(
+        "play.http.errorHandler" -> classOf[TestFrontendErrorHandlerWithMessages].getName
+      ))
+      .build()
+
+  "resolving an error" should {
+    "return 404 for invalid url" in {
+      // using java.net directly to ensure that the trailing `]` is not escaped
+      val connection = new java.net.URL(s"http://localhost:$port/test]").openConnection.asInstanceOf[java.net.HttpURLConnection]
+      connection.connect()
+
+      connection.getResponseCode shouldBe 400
     }
   }
 }
