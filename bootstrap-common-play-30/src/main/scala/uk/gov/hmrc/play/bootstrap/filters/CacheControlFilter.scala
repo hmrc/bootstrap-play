@@ -26,17 +26,16 @@ import play.api.mvc.{Filter, RequestHeader, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class CacheControlConfig(cacheableContentTypes: Seq[String] = Seq.empty)
+case class CacheControlConfig(
+  cacheableContentTypes: Seq[String] = Seq.empty
+)
 
 object CacheControlConfig {
 
-  def fromConfig(configuration: Configuration): CacheControlConfig = {
-
-    val cacheableContentTypes: Seq[String] =
-      configuration.getOptional[Seq[String]]("caching.allowedContentTypes").getOrElse(Seq.empty)
-
-    CacheControlConfig(cacheableContentTypes)
-  }
+  def fromConfig(configuration: Configuration): CacheControlConfig =
+    CacheControlConfig(
+      cacheableContentTypes = configuration.get[Seq[String]]("caching.allowedContentTypes")
+    )
 }
 
 class CacheControlFilter @Inject()(

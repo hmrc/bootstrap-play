@@ -32,8 +32,8 @@ import scala.util.matching.Regex
 @annotation.nowarn("msg=deprecated")
 @Singleton
 class DefaultHttpClient @Inject()(
-  config: Configuration,
-  val httpAuditing: HttpAuditing,
+  config      : Configuration,
+  httpAuditing: HttpAuditing,
   override val wsClient: WSClient,
   override protected val actorSystem: ActorSystem
 ) extends uk.gov.hmrc.http.HttpClient
@@ -52,6 +52,9 @@ class DefaultHttpAuditing @Inject() (
 ) extends HttpAuditing {
   override val auditDisabledForPattern: Regex =
     config.get[String]("httpclient.audit.disabledFor").r
+
+  override val fieldMaskPattern: Regex =
+    config.get[String]("httpclient.audit.fieldMaskPattern").r
 }
 
 

@@ -14,9 +14,9 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.2.0",
-      "uk.gov.hmrc"             %% "crypto"                     % "8.0.0",
+      "uk.gov.hmrc"             %% "crypto"                     % "8.1.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.0.0",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.1.0",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% (if (playSuffix == "play-28") "filters-helpers"
                                     else                         "play-filters-helpers"
@@ -26,7 +26,7 @@ object LibDependencies {
       // test dependencies
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
       "org.scalatest"           %% "scalatest"                  % "3.2.17"       % Test,
-      "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test, // not provided for Play 2.8 by scalatestplus-play
+      "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test, // added explicitly, since not provided for Play 2.8 by scalatestplus-play
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
       "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test
     ) ++

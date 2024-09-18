@@ -1,5 +1,9 @@
 ## Changes
 
+### Version 9.5.0
+
+Fields to be obfuscated in audits of outbound (http-verbs) calls can be customised with `httpclient.audit.fieldMaskPattern` configuration.
+
 ### Version 9.0.0
 
 - Cross built for Scala 3 and 2.13. Scala 2.12 has been dropped.
