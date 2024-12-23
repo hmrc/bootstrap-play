@@ -42,6 +42,7 @@ class LoggerModule extends Module {
        (k, v) <- (config ++ props) // props second to take precedence
                    .view
                    .filterKeys(_ != "resource") // logger.resource configures logback location, not a level
+                   .filterKeys(_ != "json.dateformat") // logger.json.dateformat configures the timestamp format, not a level
                    .map {
                      case (k, v: String) => k -> Option(Level.toLevel(v, null))
                      case (k, _        ) => k -> None
