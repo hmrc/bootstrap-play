@@ -100,8 +100,8 @@ object LibDependencies {
   private def playVersion(playSuffix: String) =
     playSuffix match {
       case "play-28" => "2.8.22"
-      case "play-29" => "2.9.5"
-      case "play-30" => "3.0.5"
+      case "play-29" => "2.9.6"
+      case "play-30" => "3.0.6"
     }
 
   private def playOrg(playSuffix: String): String =
