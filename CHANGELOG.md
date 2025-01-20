@@ -1,5 +1,9 @@
 ## Changes
 
+### Version 9.7.0
+
+Updates `auth-client` to fix reported Auth-Client-Version.
+
 ### Version 9.5.0
 
 Fields to be obfuscated in audits of outbound (http-verbs) calls can be customised with `httpclient.audit.fieldMaskPattern` configuration.

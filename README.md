@@ -166,7 +166,7 @@ for {
 } yield ()
 ```
 
-This can be wrapped with `uk.gov.hmrc.play.http.loggingMdc.preservingMdc`, e.g.
+This can be wrapped with `uk.gov.hmrc.play.http.logging.Mdc.preservingMdc`, e.g.
 
 ```scala
 for {
