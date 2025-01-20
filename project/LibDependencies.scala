@@ -13,7 +13,7 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
-      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.2.0",
+      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.3.0",
       "uk.gov.hmrc"             %% "crypto"                     % "8.1.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.1.0",
