@@ -16,7 +16,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.3.0",
       "uk.gov.hmrc"             %% "crypto"                     % "8.1.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.1.0",
+      "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.2.0",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% (if (playSuffix == "play-28") "filters-helpers"
                                     else                         "play-filters-helpers"
