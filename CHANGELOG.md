@@ -1,5 +1,9 @@
 ## Changes
 
+### Version 9.8.0
+
+Updates `play-auditing` to include `auditProvider` field.
+
 ### Version 9.7.0
 
 Updates `auth-client` to fix reported Auth-Client-Version.
