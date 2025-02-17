@@ -1,5 +1,10 @@
 ## Changes
 
+### Version 9.9.0
+
+- Updates `auth-client` for CL600 for OLfG (One Login).
+- Drops Play 2.8
+
 ### Version 9.8.0
 
 Updates `play-auditing` to include `auditProvider` field.
