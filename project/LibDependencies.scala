@@ -1,10 +1,10 @@
 import sbt._
 
 object LibDependencies {
-  private val httpVerbsVersion  = "15.1.0"
+  private val httpVerbsVersion  = "15.2.0"
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.3"
-  private val dropwizardVersion = "4.2.22"
+  private val dropwizardVersion = "4.2.30"
 
   def common(playSuffix: String) =
     Seq(
@@ -13,45 +13,22 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
-      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.3.0",
-      "uk.gov.hmrc"             %% "crypto"                     % "8.1.0",
+      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.4.0",
+      "uk.gov.hmrc"             %% "crypto"                     % "8.2.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.2.0",
       // the following are not used by bootstrap - but transitively added for clients
-      playOrg(playSuffix)       %% (if (playSuffix == "play-28") "filters-helpers"
-                                    else                         "play-filters-helpers"
-                                   )                            % playVersion(playSuffix),
-      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.4.0",
+      playOrg(playSuffix)       %% "play-filters-helpers"       % playVersion(playSuffix),
+      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.5.0",
 
       // test dependencies
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
       "org.scalatest"           %% "scalatest"                  % "3.2.17"       % Test,
       "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test, // added explicitly, since not provided for Play 2.8 by scalatestplus-play
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
-      "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test
-    ) ++
-      (
-        if (playSuffix == "play-28") {
-          // jackson overrides (CVE-2020-36518 mitigation)
-          val jacksonVersion         = "2.12.7"
-          val jacksonDatabindVersion = "2.12.7.1"
-          Seq(
-            "com.fasterxml.jackson.core"       %  "jackson-core"                   % jacksonVersion,
-            "com.fasterxml.jackson.core"       %  "jackson-annotations"            % jacksonVersion,
-            "com.fasterxml.jackson.datatype"   %  "jackson-datatype-jdk8"          % jacksonVersion,
-            "com.fasterxml.jackson.datatype"   %  "jackson-datatype-jsr310"        % jacksonVersion,
-            "com.fasterxml.jackson.core"       %  "jackson-databind"               % jacksonDatabindVersion,
-            "com.fasterxml.jackson.dataformat" %  "jackson-dataformat-cbor"        % jacksonVersion,
-            "com.fasterxml.jackson.module"     %  "jackson-module-parameter-names" % jacksonVersion,
-            "com.fasterxml.jackson.module"     %% "jackson-module-scala"           % jacksonVersion,
-
-            "com.github.tomakehurst" % "wiremock-jre8" % "2.27.2"       % Test, // last version with jackson dependencies compatible with play
-          )
-        } else
-          Seq(
-            "com.github.tomakehurst" % "wiremock"      % "3.0.0-beta-7" % Test  // last version with jackson dependencies compatible with play
-          )
-      )
+      "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
+      "com.github.tomakehurst"  %  "wiremock"                   % "3.0.0-beta-7" % Test  // last version with jackson dependencies compatible with play
+    )
 
   def backend(playSuffix: String) =
     common(playSuffix)
@@ -71,9 +48,7 @@ object LibDependencies {
       // this is already provided by scalatestplus-play, but we want the latest version
       playOrg(playSuffix)       %% "play-test"                    % playVersion(playSuffix),
       // provides the optional dependency of scalatest as pulled in by scalatestplus-play
-      "com.vladsch.flexmark"    %  "flexmark-all"                 % (if (playSuffix == "play-28") "0.35.10"
-                                                                     else                         "0.64.8"
-                                                                    ),
+      "com.vladsch.flexmark"    %  "flexmark-all"                 % "0.64.8",
       // we use the same version of scalatest across play versions for simplicity for internal testing
       // but most clients probably just want to use the one provided transitively by scalatestplus-play
       "org.scalatest"           %% "scalatest"                    % "3.2.17"      % Test,
@@ -99,21 +74,18 @@ object LibDependencies {
 
   private def playVersion(playSuffix: String) =
     playSuffix match {
-      case "play-28" => "2.8.22"
       case "play-29" => "2.9.6"
       case "play-30" => "3.0.6"
     }
 
   private def playOrg(playSuffix: String): String =
     playSuffix match {
-      case "play-28" => "com.typesafe.play"
       case "play-29" => "com.typesafe.play"
       case "play-30" => "org.playframework"
     }
 
   private def scalaTestPlusPlayVersion(playSuffix: String): String =
     playSuffix match {
-      case "play-28" => "5.1.0"
       case "play-29" => "6.0.1"
       case "play-30" => "7.0.1"
     }
