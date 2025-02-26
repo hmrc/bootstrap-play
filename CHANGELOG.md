@@ -1,5 +1,9 @@
 ## Changes
 
+### Version 9.10.0
+
+- Sets `mdtpdi` cookie attribute `SameSite=None` to override default browser behaviour where it would be treated as `SameSite=Lax` when not explicitly set.
+
 ### Version 9.9.0
 
 - Updates `auth-client` for CL600 for OLfG (One Login).
