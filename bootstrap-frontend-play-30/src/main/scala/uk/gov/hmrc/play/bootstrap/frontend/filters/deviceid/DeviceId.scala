@@ -38,7 +38,7 @@ case class DeviceId(uuid: String, timestamp: Long, hash: String) {
 
   def value = s"$MdtpDeviceId$Token1$uuid$Token1$timestamp$Token2$hash"
 
-  def cookie = Cookie(DeviceId.MdtpDeviceId, value, Some(TenYears), secure = true)
+  def cookie = Cookie(DeviceId.MdtpDeviceId, value, Some(TenYears), secure = true, sameSite = Some(Cookie.SameSite.None))
 }
 
 object DeviceId {
