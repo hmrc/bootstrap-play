@@ -41,9 +41,10 @@ trait DeviceIdCookie {
 
   def makeCookie(deviceId: DeviceId): Cookie =
     Cookie(
-      name   = DeviceId.MdtpDeviceId,
-      value  = deviceId.value,
-      maxAge = Some(DeviceId.TenYears),
-      secure = secure
+      name     = DeviceId.MdtpDeviceId,
+      value    = deviceId.value,
+      maxAge   = Some(DeviceId.TenYears),
+      secure   = secure,
+      sameSite = Some(Cookie.SameSite.None)
     )
 }
