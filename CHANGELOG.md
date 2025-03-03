@@ -1,6 +1,6 @@
 ## Changes
 
-### Version 9.10.0
+### Version 9.11.0
 
 - Sets `mdtpdi` cookie attribute `SameSite=None` to override default browser behaviour where it would be treated as `SameSite=Lax` when not explicitly set.
 

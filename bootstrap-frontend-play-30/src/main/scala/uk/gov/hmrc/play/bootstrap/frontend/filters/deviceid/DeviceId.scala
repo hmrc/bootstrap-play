@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid
 
-import play.api.mvc.Cookie
-
 import java.security.MessageDigest
 import java.util.{Base64, UUID}
 import scala.util.Try
@@ -34,11 +32,9 @@ import scala.util.Try
   */
 case class DeviceId(uuid: String, timestamp: Long, hash: String) {
 
-  import DeviceId.{MdtpDeviceId, TenYears, Token1, Token2}
+  import DeviceId.{MdtpDeviceId, Token1, Token2}
 
   def value = s"$MdtpDeviceId$Token1$uuid$Token1$timestamp$Token2$hash"
-
-  def cookie = Cookie(DeviceId.MdtpDeviceId, value, Some(TenYears), secure = true, sameSite = Some(Cookie.SameSite.None))
 }
 
 object DeviceId {
