@@ -12,7 +12,6 @@ See [CHANGELOG](CHANGELOG.md) for changes.
 Built for:
 - Play 3.0 - Scala 2.13 and Scala 3
 - Play 2.9 - Scala 2.13
-- Play 2.8 - Scala 2.13
 
 
 ## Adding to your build
