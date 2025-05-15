@@ -8,7 +8,6 @@ object LibDependencies {
 
   def common(playSuffix: String) =
     Seq(
-      "ch.qos.logback"          %  "logback-core"               % "1.2.3",
       playOrg(playSuffix)       %% "play-guice"                 % playVersion(playSuffix),
       "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
@@ -74,8 +73,8 @@ object LibDependencies {
 
   private def playVersion(playSuffix: String) =
     playSuffix match {
-      case "play-29" => "2.9.6"
-      case "play-30" => "3.0.6"
+      case "play-29" => "2.9.7"
+      case "play-30" => "3.0.7"
     }
 
   private def playOrg(playSuffix: String): String =
