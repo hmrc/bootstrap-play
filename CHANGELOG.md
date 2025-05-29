@@ -1,5 +1,10 @@
 ## Changes
 
+### Version 9.12.0
+
+- Updates `play-auditing` which removes unnecessary "authorization" field from implicit OutboundCall audits.
+- Updates dropwizard metrics dependencies.
+
 ### Version 9.11.0
 
 - Sets `mdtpdi` cookie attribute `SameSite=None` to override default browser behaviour where it would be treated as `SameSite=Lax` when not explicitly set.
