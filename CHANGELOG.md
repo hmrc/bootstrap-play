@@ -1,6 +1,6 @@
 ## Changes
 
-### Version 9.12.0
+### Version 9.13.0
 
 - Updates `play-auditing` which removes unnecessary "authorization" field from implicit OutboundCall audits.
 - Updates dropwizard metrics dependencies.
