@@ -1,10 +1,10 @@
-global.error.badRequest400.title=Cais gwallus – 400
+global.error.badRequest400.title=Cais gwallus
 global.error.badRequest400.heading=Cais gwallus
 global.error.badRequest400.message=Gwiriwch eich bod wedi nodi’r cyfeiriad gwe cywir.
-global.error.pageNotFound404.title=Heb ddod o hyd i’r dudalen – 404
+global.error.pageNotFound404.title=Heb ddod o hyd i’r dudalen
 global.error.pageNotFound404.heading=Ni ellir dod o hyd i’r dudalen hon
 global.error.pageNotFound404.message=Gwiriwch eich bod wedi nodi’r cyfeiriad gwe cywir.
-global.error.InternalServerError500.title=Mae’n ddrwg gennym, mae problem gyda’r gwasanaeth – 500
+global.error.InternalServerError500.title=Mae’n ddrwg gennym, mae problem gyda’r gwasanaeth
 global.error.InternalServerError500.heading=Mae’n ddrwg gennym, mae problem gyda’r gwasanaeth
 global.error.InternalServerError500.message=Rhowch gynnig arall arni yn nes ymlaen.
 global.error.fallbackClientError4xx.title=Mae’n ddrwg gennym - mae problem gyda’r gwasanaeth

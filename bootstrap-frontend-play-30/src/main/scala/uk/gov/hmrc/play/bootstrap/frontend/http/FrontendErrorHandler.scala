@@ -48,7 +48,8 @@ abstract class FrontendErrorHandler
     resolveError(request, exception)
   }
 
-  /** To be provided to wire up to a View */
+  /** To be provided to wire up to a View.
+   *  The page title should be modified to adhere to the organisation guidelines - See Default Error Handling section in README */
   def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit request: RequestHeader): Future[Html]
 
   // workaround for https://github.com/playframework/playframework/issues/8113

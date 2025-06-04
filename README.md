@@ -57,6 +57,9 @@ include "backend.conf"
 appName = "my-backend"
 ```
 
+## Default Frontend Error Handling
+Frontend services should implement their own ErrorHandler by extending `FrontendErrorHandler` and overriding `standardErrorTemplate` to ensure page titles and content meet the organisation’s guidance - for example, the [HMRC page title guidance](https://design.tax.service.gov.uk/hmrc-design-patterns/page-title/).
+
 ## Default HTTP clients
 
 Two http clients are available and can be injected into any connector by enabling the appropriate modules.
