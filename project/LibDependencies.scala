@@ -18,7 +18,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.4.0",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% "play-filters-helpers"       % playVersion(playSuffix),
-      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.5.0",
+      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.6.0",
 
       // test dependencies
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
@@ -74,7 +74,7 @@ object LibDependencies {
   private def playVersion(playSuffix: String) =
     playSuffix match {
       case "play-29" => "2.9.7"
-      case "play-30" => "3.0.7"
+      case "play-30" => "3.0.8"
     }
 
   private def playOrg(playSuffix: String): String =
