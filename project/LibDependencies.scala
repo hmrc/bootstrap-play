@@ -5,7 +5,7 @@ object LibDependencies {
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.3"
   private val dropwizardVersion = "4.2.32"
-  private val jacksonVersion    = "2.15.0"
+  private val jacksonVersion    = "2.15.3"
 
   def common(playSuffix: String) =
     Seq(
@@ -27,8 +27,10 @@ object LibDependencies {
       "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test, // added explicitly, since not provided for Play 2.8 by scalatestplus-play
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
       "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
-      "com.github.tomakehurst"  %  "wiremock"                   % "3.0.0-beta-8" % Test  // last version with jackson dependencies compatible with play
-    ) ++ Seq(
+      "org.wiremock"            %  "wiremock"                   % "3.3.1"        % Test  // last version with compatible jackson
+    ) ++
+     // jackson overrides (CVE-2025-52999 mitigation)
+     Seq(
       "com.fasterxml.jackson.core"       %  "jackson-annotations"            % jacksonVersion,
       "com.fasterxml.jackson.core"       %  "jackson-core"                   % jacksonVersion,
       "com.fasterxml.jackson.core"       %  "jackson-databind"               % jacksonVersion,
