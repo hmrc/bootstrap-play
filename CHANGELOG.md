@@ -1,5 +1,10 @@
 ## Changes
 
+### Version 9.14.0
+
+- Forces Jackson dependencies to version 2.15.3
+- Updates playframework to 3.0.8
+
 ### Version 9.13.0
 
 - Updates `play-auditing` which removes unnecessary "authorization" field from implicit OutboundCall audits.
