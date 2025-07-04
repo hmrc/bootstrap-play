@@ -30,6 +30,7 @@ trait WithUrlEncodedOnlyFormBinding { self: BaseControllerHelpers =>
     new UrlEncodedOnlyFormBinding
 }
 
+@deprecated("Remove and test form submission with URL encoded body. This limits attack vectors by not supporting other content types.", "9.15.0")
 trait WithUnsafeDefaultFormBinding { self: BaseControllerHelpers =>
   override implicit lazy val defaultFormBinding: FormBinding =
     new DefaultFormBinding(parse.DefaultMaxTextLength)
