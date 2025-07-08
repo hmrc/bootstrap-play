@@ -2,11 +2,14 @@
 
 ### Version 9.15.0
 
-`WithUnsafeDefaultFormBinding` has been deprecated.
+- Ensures all cookies have `Secure` attribute. Note, this will not impact development without TLS for `localhost`.
+- Updates `play-auditing` to include `auditProvider` in audits.
+- Returns errors from `WithJsonBody` as JSON.
+- `WithUnsafeDefaultFormBinding` has been deprecated.
 
-The `WithUnsafeDefaultFormBinding` allows endpoints to accept both url-encoded form data and JSON. But if forms are only expecting url-encoded form data, they should only accept encoded-form data and test with the same format. Supporting JSON as well just makes the tests less realistic and increases the attack vectors.
+  The `WithUnsafeDefaultFormBinding` allows endpoints to accept both url-encoded form data and JSON. But if forms are only expecting url-encoded form data, they should only accept encoded-form data and test with the same format. Supporting JSON as well just makes the tests less realistic and increases the attack vectors.
 
-See [Version 5.24.0](#version-5240) for how to fix unit tests.
+  See [Version 5.24.0](#version-5240) for how to fix unit tests.
 
 ### Version 9.14.0
 
