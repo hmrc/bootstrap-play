@@ -18,6 +18,7 @@ package uk.gov.hmrc.play.bootstrap.backend.http
 
 import play.api.libs.json.{Json, OFormat}
 
+@deprecated("Use uk.gov.hmrc.play.bootstrap.http.ErrorResponse", "9.15.0")
 case class ErrorResponse(
   statusCode: Int,
   message: String,
@@ -25,6 +26,7 @@ case class ErrorResponse(
   requested: Option[String]   = None
 )
 
+@deprecated("Use uk.gov.hmrc.play.bootstrap.http.ErrorResponse", "9.15.0")
 object ErrorResponse {
   implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }

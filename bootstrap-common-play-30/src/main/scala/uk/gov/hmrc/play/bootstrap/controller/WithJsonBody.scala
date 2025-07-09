@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.play.bootstrap.controller
 
+import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Reads}
 import play.api.mvc.{Request, Result, Results}
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -34,9 +36,7 @@ trait WithJsonBody { self: Results =>
   ): Future[Result] =
     Try(request.body.validate[T]) match {
       case Success(JsSuccess(payload, _)) => f(payload)
-      case Success(JsError(errs)) =>
-        Future.successful(BadRequest(s"Invalid ${ct.runtimeClass.getSimpleName} payload: $errs"))
-      case Failure(e) => Future.successful(BadRequest(s"Could not parse body due to ${e.getMessage}"))
+      case Success(JsError(errs))         => Future.successful(BadRequest(toJson(ErrorResponse(400, s"Invalid ${ct.runtimeClass.getSimpleName} payload: $errs"))))
+      case Failure(e)                     => Future.successful(BadRequest(toJson(ErrorResponse(400, s"Could not parse body due to ${e.getMessage}"))))
     }
-
 }
