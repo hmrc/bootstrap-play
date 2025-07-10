@@ -29,6 +29,7 @@ import play.api.routing.Router
 import play.api.test.FakeRequest
 import play.core.DefaultWebCommands
 
+import javax.inject.Provider
 import scala.jdk.CollectionConverters._
 
 class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
@@ -63,7 +64,10 @@ class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
   }
 
   trait Setup {
-    val mockedRouter = mock[Router]
+    val mockedRouterProvider = mock[Provider[Router]]
+    val mockedRouter         = mock[Router]
+    when(mockedRouterProvider.get())
+      .thenReturn(mockedRouter)
 
     val mockedHttpErrorHandler = mock[HttpErrorHandler]
 
@@ -79,7 +83,7 @@ class RequestHandlerSpec extends AnyWordSpec with Matchers with MockitoSugar {
       new RequestHandler(
         webCommands   = new DefaultWebCommands,
         optDevContext = new OptionalDevContext(None),
-        router        = mockedRouter,
+        router        = mockedRouterProvider,
         errorHandler  = mockedHttpErrorHandler,
         configuration = mockedConfiguration,
         filters       = mockedFilters

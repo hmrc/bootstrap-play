@@ -180,6 +180,7 @@ for {
 ```
 
 If you are configuring a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
+
 ```properties
 custom-dispatcher {
   type = Dispatcher
@@ -192,8 +193,7 @@ custom-dispatcher {
 
 ### Testing MDC logging
 
-While this works in both test and production configurations it _does not work_ in `Dev`
-mode using the `AkkaHttpServer`.
+While this works in both test and production configurations it _does not work_ in `Dev` mode using the `PekkoHttpServer`.
 
 For testing MDC, it is recommend to use
 
@@ -201,23 +201,28 @@ For testing MDC, it is recommend to use
 sbt runProd
 ```
 
-However, if you would like the same functionality in `Dev` mode, you must use the
-`NettyHttpServer`.
+However, if you would like the same functionality in `Dev` mode, you must use the `NettyHttpServer`.
 
 * Enable the `PlayNettyServer` plugin in your `build.sbt`
 ```scala
-  .enablePlugins(PlayNettyServer)
+.enablePlugins(PlayNettyServer)
 ```
 
 * Set the `NettyServerProvider` in the `devSettings` of your `build.sbt`
 ```scala
-  PlayKeys.devSettings += "play.server.provider" -> "play.core.server.NettyServerProvider"
+PlayKeys.devSettings += "play.server.provider" -> "play.core.server.NettyServerProvider"
 ```
 
 However be aware that this will add Netty to the classpath. This should only be done temporarily (or better yet, just use `sbt runProd` to test) - but if left in, you *must* ensure that Pekko is restored in `Prod`, and not rely on classpath order. `application.conf`:
 ```properties
 play.server.provider = play.core.server.PekkoHttpServerProvider
 ```
+
+### Logging MDC loss
+
+There is a `bootstrap.mdcdataloss.warn.enabled` configuration, which can be enabled. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. It's probably sufficient to just turn this on in QA. The cause of MDC loss is most likely that `Mdc.preservingMdc` is required across an async boundary.
+
+Given there is always some loss due to thread optimisations in Play (e.g. use of Pekko's FastFuture), alerts will not be generated until they exceed a configured threshold (`bootstrap.mdcdataloss.warn.thresholdPercent`).
 
 ## Allow List Filter
 
