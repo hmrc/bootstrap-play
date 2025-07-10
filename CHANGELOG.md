@@ -1,5 +1,9 @@
 ## Changes
 
+### Version 9.17.0
+
+- Adds logging when MDC is lost. It can be enabled with `bootstrap.mdcdataloss.warn.enabled` config. See [README](README.md#logging-mdc-loss)
+
 ### Version 9.15.0
 
 - Ensures all cookies have `Secure` attribute. Note, this will not impact development without TLS for `localhost`.
