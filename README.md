@@ -180,6 +180,7 @@ for {
 ```
 
 If you are configuring a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
+
 ```properties
 custom-dispatcher {
   type = Dispatcher
@@ -193,7 +194,7 @@ custom-dispatcher {
 ### Testing MDC logging
 
 While this works in both test and production configurations it _does not work_ in `Dev`
-mode using the `AkkaHttpServer`.
+mode using the `PekkoHttpServer`.
 
 For testing MDC, it is recommend to use
 
@@ -218,6 +219,8 @@ However be aware that this will add Netty to the classpath. This should only be 
 ```properties
 play.server.provider = play.core.server.PekkoHttpServerProvider
 ```
+
+There is a `bootstrap.mdcdataloss.warn` configuration, which is `false` by default. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. This often indicates that an `Mdc.preservingMdc` across an async boundary is missing.
 
 ## Allow List Filter
 

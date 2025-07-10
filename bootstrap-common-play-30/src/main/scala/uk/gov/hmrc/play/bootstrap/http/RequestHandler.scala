@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import javax.inject.Inject
+import javax.inject.{Inject,  Provider}
 
 import play.core.WebCommands
 import play.api.OptionalDevContext
@@ -27,7 +27,7 @@ import play.api.routing.Router
 class RequestHandler @Inject()(
   webCommands  : WebCommands,
   optDevContext: OptionalDevContext,
-  router       : Router,
+  router       : Provider[Router],
   errorHandler : HttpErrorHandler,
   configuration: HttpConfiguration,
   filters      : HttpFilters
