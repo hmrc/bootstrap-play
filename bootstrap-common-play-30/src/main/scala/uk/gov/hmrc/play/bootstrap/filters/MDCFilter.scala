@@ -22,7 +22,7 @@ import play.api.{Configuration, Logger}
 import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.routing.{HandlerDef, Router}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 
 import scala.concurrent.{ExecutionContext, Future}
 
