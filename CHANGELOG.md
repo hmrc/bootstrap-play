@@ -2,7 +2,7 @@
 
 ### Version 9.17.0
 
-- Adds logging when MDC is lost. It can be enabled with `bootstrap.mdcdataloss.warn.enabled` config. See [README](README.md#logging-mdc-loss)
+- Adds logging when MDC is lost. It can be enabled with `bootstrap.mdc.tracking.enabled` config. See [README](README.md#logging-mdc-loss)
 
 ### Version 9.15.0
 

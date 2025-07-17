@@ -34,11 +34,11 @@ trait MDCFilter extends Filter {
   val configuration: Configuration
   implicit val ec: ExecutionContext
 
-  private val warnMdcDataLossEnabled: Boolean =
-    configuration.get[Boolean]("bootstrap.mdcdataloss.warn.enabled")
+  private val isMdcTrackingEnabled: Boolean =
+    configuration.get[Boolean]("bootstrap.mdc.tracking.enabled")
 
-  private val warnMdcDataLossThresholdPercent: Int =
-    configuration.get[Int]("bootstrap.mdcdataloss.warn.thresholdPercent")
+  private val mdcTrackingWarnThresholdPercent: Int =
+    configuration.get[Int]("bootstrap.mdc.tracking.warnThresholdPercent")
 
   protected def hc(implicit rh: RequestHeader): HeaderCarrier
 
@@ -51,10 +51,10 @@ trait MDCFilter extends Filter {
     }
 
     f(rh).map { res =>
-      if (warnMdcDataLossEnabled) {
+      if (isMdcTrackingEnabled) {
         import Router.RequestImplicits._
         rh.handlerDef match {
-          case Some(handlerDef) => trackMdcLoss(handlerDef, data)
+          case Some(handlerDef) => trackMdc(handlerDef, data)
           case _                => // 404s for example will not have a HandlerDef - we don't want to track these anyway
         }
       }
@@ -70,13 +70,19 @@ trait MDCFilter extends Filter {
       Map.empty[String, (Long, Long)]
     )
 
-  def resetMdcTracking(): Unit =
+  def resetMdcTracking(): Unit = {
+    if (!isMdcTrackingEnabled)
+      throw new IllegalStateException("MDC tracking is not enabled")
     mdcStatus.set(Map.empty)
+  }
 
-  def containsLoss(): Boolean =
+  def isMdcLost(): Boolean = {
+    if (!isMdcTrackingEnabled)
+      throw new IllegalStateException("MDC tracking is not enabled")
     !mdcStatus.get.forall(_._2._1 == 0)
+  }
 
-  private def trackMdcLoss(handlerDef: HandlerDef, data: Map[String, String]): Unit = {
+  private def trackMdc(handlerDef: HandlerDef, data: Map[String, String]): Unit = {
     val request =
       s"${handlerDef.verb} ${handlerDef.controller}.${handlerDef.method}"
 
@@ -94,7 +100,7 @@ trait MDCFilter extends Filter {
     if (!isMdcPreserved) {
       val (loss, total) = m(request)
       val p = BigDecimal(100 * loss / total).setScale(0, BigDecimal.RoundingMode.HALF_UP)
-      if (p > warnMdcDataLossThresholdPercent)
+      if (p > mdcTrackingWarnThresholdPercent)
         logger.warn(s"MDC Data has been dropped for endpoint: $request. (For this instance: loss/total = $loss/$total - i.e. ${p}%)")
     }
   }
