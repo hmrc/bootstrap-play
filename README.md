@@ -179,6 +179,8 @@ for {
 } yield ()
 ```
 
+Or with
+
 If you are configuring a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
 
 ```properties
@@ -193,30 +195,6 @@ custom-dispatcher {
 
 ### Testing MDC logging
 
-While this works in both test and production configurations it _does not work_ in `Dev` mode using the `PekkoHttpServer`.
-
-For testing MDC, it is recommend to use
-
-```bash
-sbt runProd
-```
-
-However, if you would like the same functionality in `Dev` mode, you must use the `NettyHttpServer`.
-
-* Enable the `PlayNettyServer` plugin in your `build.sbt`
-```scala
-.enablePlugins(PlayNettyServer)
-```
-
-* Set the `NettyServerProvider` in the `devSettings` of your `build.sbt`
-```scala
-PlayKeys.devSettings += "play.server.provider" -> "play.core.server.NettyServerProvider"
-```
-
-However be aware that this will add Netty to the classpath. This should only be done temporarily (or better yet, just use `sbt runProd` to test) - but if left in, you *must* ensure that Pekko is restored in `Prod`, and not rely on classpath order. `application.conf`:
-```properties
-play.server.provider = play.core.server.PekkoHttpServerProvider
-```
 
 ### Logging MDC loss
 
