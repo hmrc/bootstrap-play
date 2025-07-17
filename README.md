@@ -154,34 +154,11 @@ Note, default logger configurations assume that packages are fully qualified and
 
 ## MDC Logging
 
-By default the logging Mapped Diagnostic Context (MDC) will be passed between threads by a custom `ExecutorService`.
+See [Logback docs](https://logback.qos.ch/manual/mdc.html) for an explanation of Mapped Diagnostic Context (MDC).
 
-As long as you inject the `ExecutionContext`, MDC should flow through to all logs. However it will be lost at async boundaries - the most notable is when using the mongo driver, which uses Reactive streams - e.g.
+There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in generated logs. They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
 
-
-```scala
-for {
-  ...
-  logger.log("Message with MDC")
-  _ <- mongoCollection.find().toFuture()
-  logger.log("Message without MDC") // MDC is lost here
-} yield ()
-```
-
-This can be wrapped with `uk.gov.hmrc.mdc.Mdc.preservingMdc`, e.g.
-
-```scala
-for {
-  ...
-  logger.log("Message with MDC")
-  _ <- MDC.preservingMdc(mongoCollection.find().toFuture())
-  logger.log("Message with MDC")
-} yield ()
-```
-
-Or with
-
-If you are configuring a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
+If you want to configure a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
 
 ```properties
 custom-dispatcher {
@@ -193,14 +170,46 @@ custom-dispatcher {
 }
 ```
 
-### Testing MDC logging
+However, even with this Execution Context, MDC may be lost at async boundaries. Some examples are AsyncHttpClient which uses an internal Execution Context, and mongo-scala-driver which uses Reactive Streams. The most obvious case to be aware of is when using `headOption` or `head` with the mongo driver (`toFuture` and `toFutureOption` are OK when extending `PlayMongoRepository` - see [hmrc-mongo](https://github.com/hmrc/hmrc-mongo/)).
+
+If you encounter a Future which is dropping MDC, then it can be wrapped with `MDC.preservingMdc` - See [mdc](https://github.com/hmrc/mdc) for details.
 
 
-### Logging MDC loss
+### Verifying MDC logging
 
-There is a `bootstrap.mdcdataloss.warn.enabled` configuration, which can be enabled. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. It's probably sufficient to just turn this on in QA. The cause of MDC loss is most likely that `Mdc.preservingMdc` is required across an async boundary.
+How to identify where a `MDC.preservingMdc` is required?
+
+#### Logging MDC loss
+
+There is a `bootstrap.mdcdataloss.warn.enabled` configuration, which can be enabled. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. It is recommended to just turn this on in the lower envs (e.g. QA) and not in production, since it may not be performant.
 
 Given there is always some loss due to thread optimisations in Play (e.g. use of Pekko's FastFuture), alerts will not be generated until they exceed a configured threshold (`bootstrap.mdcdataloss.warn.thresholdPercent`).
+
+#### Integration tests
+
+The MDC loss can be verified during integration tests too.
+
+```scala
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure("bootstrap.mdcdataloss.warn.enabled" -> true) // enable mdc data loss tracking
+      .build()
+
+  private val mdcFilter =
+    app.injector.instanceOf[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
+
+  "Controller" should "preserveMdc" in:
+    mdcFilter.resetMdcTracking()
+
+    wsClient
+      .url(endpoint)
+      .withHttpHeaders("X-Request-ID"  -> "123") // include some headers for MDC
+      .get()
+      .futureValue
+      .status shouldBe OK
+
+    mdcFilter.containsLoss() shouldBe false
+```
 
 ## Allow List Filter
 
