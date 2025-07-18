@@ -154,32 +154,12 @@ Note, default logger configurations assume that packages are fully qualified and
 
 ## MDC Logging
 
-By default the logging Mapped Diagnostic Context (MDC) will be passed between threads by a custom `ExecutorService`.
+See [Logback docs](https://logback.qos.ch/manual/mdc.html) for an explanation of Mapped Diagnostic Context (MDC).
 
-As long as you inject the `ExecutionContext`, MDC should flow through to all logs. However it will be lost at async boundaries - the most notable is when using the mongo driver, which uses Reactive streams - e.g.
+There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in generated logs. They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
 
+If you want to configure a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
 
-```scala
-for {
-  ...
-  logger.log("Message with MDC")
-  _ <- mongoCollection.find().toFuture()
-  logger.log("Message without MDC") // MDC is lost here
-} yield ()
-```
-
-This can be wrapped with `uk.gov.hmrc.play.http.logging.Mdc.preservingMdc`, e.g.
-
-```scala
-for {
-  ...
-  logger.log("Message with MDC")
-  _ <- MDC.preservingMdc(mongoCollection.find().toFuture())
-  logger.log("Message with MDC")
-} yield ()
-```
-
-If you are configuring a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
 ```properties
 custom-dispatcher {
   type = Dispatcher
@@ -190,33 +170,45 @@ custom-dispatcher {
 }
 ```
 
-### Testing MDC logging
+However, even with this Execution Context, MDC may be lost at async boundaries. Some examples are AsyncHttpClient which uses an internal Execution Context, and mongo-scala-driver which uses Reactive Streams. The most obvious case to be aware of is when using `headOption` or `head` with the mongo driver (`toFuture` and `toFutureOption` are OK when extending `PlayMongoRepository` - see [hmrc-mongo](https://github.com/hmrc/hmrc-mongo/)).
 
-While this works in both test and production configurations it _does not work_ in `Dev`
-mode using the `AkkaHttpServer`.
+If you encounter a Future which is dropping MDC, then it can be wrapped with `MDC.preservingMdc` - See [mdc](https://github.com/hmrc/mdc) for details.
 
-For testing MDC, it is recommend to use
 
-```bash
-sbt runProd
-```
+### Verifying MDC logging
 
-However, if you would like the same functionality in `Dev` mode, you must use the
-`NettyHttpServer`.
+How to identify where a `MDC.preservingMdc` is required?
 
-* Enable the `PlayNettyServer` plugin in your `build.sbt`
+#### Logging MDC loss
+
+There is a `bootstrap.mdc.tracking.enabled` configuration, which can be enabled. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. It is recommended to just turn this on in the lower envs (e.g. QA) and not in production, since it may not be performant.
+
+Note, even with the appropriate use of `preservingMdc`, there is always a small percent of loss due to thread optimisations in Play (e.g. use of Pekko's FastFuture). For this reason, warnings will only be logged once the number of requests which loose MDC exceeds a configured threshold (`bootstrap.mdc.tracking.warnThresholdPercent `).
+
+#### Integration tests
+
+The MDC loss can be verified during integration tests too.
+
 ```scala
-  .enablePlugins(PlayNettyServer)
-```
+override def fakeApplication(): Application =
+  new GuiceApplicationBuilder()
+    .configure("bootstrap.mdc.tracking.enabled" -> true) // enable mdc data loss tracking
+    .build()
 
-* Set the `NettyServerProvider` in the `devSettings` of your `build.sbt`
-```scala
-  PlayKeys.devSettings += "play.server.provider" -> "play.core.server.NettyServerProvider"
-```
+private val mdcFilter =
+  app.injector.instanceOf[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
 
-However be aware that this will add Netty to the classpath. This should only be done temporarily (or better yet, just use `sbt runProd` to test) - but if left in, you *must* ensure that Pekko is restored in `Prod`, and not rely on classpath order. `application.conf`:
-```properties
-play.server.provider = play.core.server.PekkoHttpServerProvider
+"Controller" should "preserveMdc" in:
+  mdcFilter.resetMdcTracking()
+
+  wsClient
+    .url(endpoint)
+    .withHttpHeaders("X-Request-ID"  -> "123") // include some headers for MDC
+    .get()
+    .futureValue
+    .status shouldBe OK
+
+  mdcFilter.isMdcLost() shouldBe false
 ```
 
 ## Allow List Filter

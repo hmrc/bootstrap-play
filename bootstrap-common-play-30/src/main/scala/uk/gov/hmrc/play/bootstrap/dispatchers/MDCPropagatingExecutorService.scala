@@ -19,8 +19,8 @@ package uk.gov.hmrc.play.bootstrap.dispatchers
 import java.util.concurrent.{ExecutorService, ThreadFactory}
 
 import com.typesafe.config.Config
-import org.apache.pekko.dispatch._
-import org.slf4j.MDC
+import org.apache.pekko.dispatch.{DispatcherPrerequisites, ExecutorServiceConfigurator, ExecutorServiceDelegate, ExecutorServiceFactory, ForkJoinExecutorConfigurator}
+import uk.gov.hmrc.mdc.MdcExecutorService
 
 class MDCPropagatingExecutorServiceConfigurator(
   config       : Config,
@@ -41,25 +41,12 @@ class MDCPropagatingExecutorServiceConfigurator(
   }
 }
 
-class MDCPropagatingExecutorService(val executor: ExecutorService) extends ExecutorServiceDelegate {
+class MDCPropagatingExecutorService(
+  delegate: ExecutorService
+) extends ExecutorServiceDelegate
+     with MdcExecutorService {
+  override val executor = delegate
 
-  override def execute(command: Runnable): Unit = {
-    val mdcData = MDC.getCopyOfContextMap
-
-    executor.execute { () =>
-      val oldMdcData = MDC.getCopyOfContextMap
-      setMDC(mdcData)
-      try {
-        command.run()
-      } finally {
-        setMDC(oldMdcData)
-      }
-    }
-  }
-
-  private def setMDC(context: java.util.Map[String, String]): Unit =
-    if (context == null)
-      MDC.clear()
-    else
-      MDC.setContextMap(context)
+  override def execute(command: Runnable): Unit =
+    super[MdcExecutorService].execute(command)
 }
