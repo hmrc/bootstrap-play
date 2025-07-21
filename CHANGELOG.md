@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 9.18.0
+- Ensures `Router` is eagerly initialised to address a regression in previous release.
+
 ### Version 9.17.0
 
 - Adds logging when MDC is lost. It can be enabled with `bootstrap.mdc.tracking.enabled` config. See [README](README.md#logging-mdc-loss)
