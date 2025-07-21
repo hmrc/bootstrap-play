@@ -185,32 +185,6 @@ There is a `bootstrap.mdc.tracking.enabled` configuration, which can be enabled.
 
 Note, even with the appropriate use of `preservingMdc`, there is always a small percent of loss due to thread optimisations in Play (e.g. use of Pekko's FastFuture). For this reason, warnings will only be logged once the number of requests which loose MDC exceeds a configured threshold (`bootstrap.mdc.tracking.warnThresholdPercent `).
 
-#### Integration tests
-
-The MDC loss can be verified during integration tests too.
-
-```scala
-override def fakeApplication(): Application =
-  new GuiceApplicationBuilder()
-    .configure("bootstrap.mdc.tracking.enabled" -> true) // enable mdc data loss tracking
-    .build()
-
-private val mdcFilter =
-  app.injector.instanceOf[uk.gov.hmrc.play.bootstrap.filters.MDCFilter]
-
-"Controller" should "preserveMdc" in:
-  mdcFilter.resetMdcTracking()
-
-  wsClient
-    .url(endpoint)
-    .withHttpHeaders("X-Request-ID"  -> "123") // include some headers for MDC
-    .get()
-    .futureValue
-    .status shouldBe OK
-
-  mdcFilter.isMdcLost() shouldBe false
-```
-
 ## Allow List Filter
 
 The library includes a frontend Filter that can block requests from IP addresses that are not on an _allow list_.

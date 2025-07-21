@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.bootstrap.http
 
-import javax.inject.{Inject,  Provider}
+import javax.inject.{Inject, Provider}
 
 import play.core.WebCommands
 import play.api.OptionalDevContext
@@ -27,14 +27,17 @@ import play.api.routing.Router
 class RequestHandler @Inject()(
   webCommands  : WebCommands,
   optDevContext: OptionalDevContext,
-  router       : Provider[Router],
+  // we don't inject the Provider[Router] since we want to ensure that the
+  // Router is initialised eagerly. Use of reverse routes before this happens (seen in tests)
+  // will be missing expected prefix. (related to https://github.com/playframework/playframework/issues/4977)
+  router       : Router,
   errorHandler : HttpErrorHandler,
   configuration: HttpConfiguration,
   filters      : HttpFilters
 ) extends DefaultHttpRequestHandler(
   webCommands   = webCommands,
   optDevContext = optDevContext,
-  router        = router,
+  router        = (() => router): Provider[Router],
   errorHandler  = errorHandler,
   configuration = configuration,
   filters       = filters
