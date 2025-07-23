@@ -24,7 +24,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.mdc.{Mdc, RequestMdc}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
 
 trait MDCFilter extends Filter {
 
@@ -51,20 +50,17 @@ trait MDCFilter extends Filter {
     )
     RequestMdc.add(rh.id, data)
 
-    val res = f(rh)
-
-    res.onComplete { _ =>
-      if (isMdcTrackingEnabled) {
-        import Router.RequestImplicits._
-        rh.handlerDef match {
-          case Some(handlerDef) => trackMdc(handlerDef, data)
-          case _                => // 404s for example will not have a HandlerDef - we don't want to track these anyway
+    f(rh)
+      .andThen { _ =>
+        if (isMdcTrackingEnabled) {
+          import Router.RequestImplicits._
+          rh.handlerDef match {
+            case Some(handlerDef) => trackMdc(handlerDef, data)
+            case _                => // 404s for example will not have a HandlerDef - we don't want to track these anyway
+          }
         }
+        // we do not clean up MDC here, since it would _not_ be available for the ErrorHandler
       }
-      // we do not clean up MDC here, since it would _not_ be available for the ErrorHandler
-    }
-
-    res
   }
 
   // Tracks (lossCount, totalCount) for each request (verb/controller method).

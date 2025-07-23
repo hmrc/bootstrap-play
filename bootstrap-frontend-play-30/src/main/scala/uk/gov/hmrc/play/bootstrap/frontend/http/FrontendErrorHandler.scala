@@ -38,7 +38,10 @@ abstract class FrontendErrorHandler
   protected implicit val ec: ExecutionContext
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
-    RequestMdc.initMdc(request.id)
+    // Use `Try` since if an invalid url is provided, then we will come here, but without a request id
+    // (also won't have hit the MdcFilter)
+    Try(request.id).map(RequestMdc.initMdc)
+
     statusCode match {
       case play.mvc.Http.Status.BAD_REQUEST => badRequestTemplate(request).map(BadRequest(_))
       case play.mvc.Http.Status.NOT_FOUND   => notFoundTemplate(request).map(NotFound(_))

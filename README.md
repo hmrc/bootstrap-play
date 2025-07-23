@@ -174,6 +174,30 @@ However, even with this Execution Context, MDC may be lost at async boundaries. 
 
 If you encounter a Future which is dropping MDC, then it can be wrapped with `MDC.preservingMdc` - See [mdc](https://github.com/hmrc/mdc) for details.
 
+### RequestMdc
+
+The [mdc library](https://github.com/hmrc/mdc) also provides a `RequestMdc`. When adding MDC for logging, it should be added to the RequestMdc. This ensures that if the MDC ever goes missing, it can be restored whenever a `RequestHeader` is in scope.
+
+```scala
+// To add data to MDC, if you have a `RequestHeader` in scope, rather than this:
+org.slf4j.MDC.put("a" -> "key")
+// Do this instead:
+uk.gov.hmrc.RequestMdc.add(request.id, Map("a" -> "key"))
+```
+
+Then whenever the `RequestHeader` is in scope, it can be ensured to be available, even after async boundaries.
+
+```scala
+uk.gov.hmrc.RequestMdc.initMdc(request.id)
+```
+
+This is useful since Play often drops MDC (from thread optimisations) - usually between Play Filters, Actions and ErrorHandlers. Bootstrap customises the DefaultActionFilter to initialise MDC.
+
+If you are creating your own `ActionFunction`s (`ActionBuilder` or `ActionRefiner`), then either compose with the default action builder (`defaultActionBuilder.andThen(customActionFunction)`), or make `initMdc` the first call in `invokeBlock`.
+
+### Async activity
+
+It is recommended to explicitly call `org.slf4j.MDC.clear()` at the beginning of any async activity (e.g. schedulers) to ensure there is no left over MDC, which can confuse the logs.
 
 ### Verifying MDC logging
 

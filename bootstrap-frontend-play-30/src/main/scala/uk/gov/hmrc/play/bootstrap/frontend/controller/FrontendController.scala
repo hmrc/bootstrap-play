@@ -22,35 +22,13 @@ import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody, WithU
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.mdc.RequestMdc
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 trait FrontendBaseController
   extends MessagesBaseController
      with Utf8MimeTypes
      with WithJsonBody
-     with FrontendHeaderCarrierProvider {
-
-  // same as default, but initialises Mdc for request
-  override def Action: ActionBuilder[MessagesRequest, AnyContent] = {
-    val defaultActionBuilder = controllerComponents.messagesActionBuilder.compose(controllerComponents.actionBuilder)
-    new ActionBuilder[MessagesRequest, AnyContent] {
-      override protected val executionContext: ExecutionContext =
-        controllerComponents.executionContext
-
-      override def invokeBlock[T](
-        request: Request[T],
-        block  : MessagesRequest[T] => Future[Result]
-      ): Future[Result] = {
-        RequestMdc.initMdc(request.id)
-        defaultActionBuilder
-          .invokeBlock(request, block)
-      }
-
-      override val parser: BodyParser[AnyContent] =
-        defaultActionBuilder.parser
-    }
-  }
-}
+     with FrontendHeaderCarrierProvider
 
 abstract class FrontendController(
   override val controllerComponents: MessagesControllerComponents
@@ -59,7 +37,8 @@ abstract class FrontendController(
 
 trait FrontendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier = {
-    RequestMdc.initMdc(request.id)
+    // This is also called by `FrontendErrorHandler.onClientError` - see there why we need `Try`
+    Try(request.id).map(RequestMdc.initMdc)
     HeaderCarrierConverter.fromRequestAndSession(request, request.session)
   }
 }
