@@ -20,17 +20,46 @@ import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody, WithUrlEncodedOnlyFormBinding}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.mdc.RequestMdc
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait FrontendBaseController
   extends MessagesBaseController
-    with Utf8MimeTypes
-    with WithJsonBody
-    with FrontendHeaderCarrierProvider
+     with Utf8MimeTypes
+     with WithJsonBody
+     with FrontendHeaderCarrierProvider {
 
-abstract class FrontendController(override val controllerComponents: MessagesControllerComponents)
-    extends FrontendBaseController with WithUrlEncodedOnlyFormBinding
+  // same as default, but initialises Mdc for request
+  override def Action: ActionBuilder[MessagesRequest, AnyContent] = {
+    val defaultActionBuilder = controllerComponents.messagesActionBuilder.compose(controllerComponents.actionBuilder)
+    new ActionBuilder[MessagesRequest, AnyContent] {
+      override protected val executionContext: ExecutionContext =
+        controllerComponents.executionContext
+
+      override def invokeBlock[T](
+        request: Request[T],
+        block  : MessagesRequest[T] => Future[Result]
+      ): Future[Result] = {
+        RequestMdc.initMdc(request.id)
+        defaultActionBuilder
+          .invokeBlock(request, block)
+      }
+
+      override val parser: BodyParser[AnyContent] =
+        defaultActionBuilder.parser
+    }
+  }
+}
+
+abstract class FrontendController(
+  override val controllerComponents: MessagesControllerComponents
+) extends FrontendBaseController
+     with WithUrlEncodedOnlyFormBinding
 
 trait FrontendHeaderCarrierProvider {
-  implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
+  implicit protected def hc(implicit request: RequestHeader): HeaderCarrier = {
+    RequestMdc.initMdc(request.id)
     HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+  }
 }

@@ -17,14 +17,14 @@
 package uk.gov.hmrc.play.bootstrap.filters
 
 import org.apache.pekko.stream.Materializer
-import org.slf4j.MDC
 import play.api.{Configuration, Logger}
 import play.api.mvc.{Filter, RequestHeader, Result}
 import play.api.routing.{HandlerDef, Router}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mdc.Mdc
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
+import uk.gov.hmrc.mdc.{Mdc, RequestMdc}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.CollectionConverters._
 
 trait MDCFilter extends Filter {
 
@@ -43,14 +43,17 @@ trait MDCFilter extends Filter {
   protected def hc(implicit rh: RequestHeader): HeaderCarrier
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
-    val data = hc(rh).mdcData
+    val headerCarrier = hc(rh)
+    val data = Map(
+      HeaderNames.xRequestId    -> headerCarrier.requestId.fold("-")(_.value),
+      HeaderNames.xSessionId    -> headerCarrier.sessionId.fold("-")(_.value),
+      HeaderNames.xForwardedFor -> headerCarrier.forwarded.fold("-")(_.value)
+    )
+    RequestMdc.add(rh.id, data)
 
-    data.foreach {
-      case (k, v) =>
-        MDC.put(k, v)
-    }
+    val res = f(rh)
 
-    f(rh).map { res =>
+    res.onComplete { _ =>
       if (isMdcTrackingEnabled) {
         import Router.RequestImplicits._
         rh.handlerDef match {
@@ -58,8 +61,10 @@ trait MDCFilter extends Filter {
           case _                => // 404s for example will not have a HandlerDef - we don't want to track these anyway
         }
       }
-      res
+      // we do not clean up MDC here, since it would _not_ be available for the ErrorHandler
     }
+
+    res
   }
 
   // Tracks (lossCount, totalCount) for each request (verb/controller method).
