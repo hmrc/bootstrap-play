@@ -23,6 +23,7 @@ import play.api.mvc.Results.{BadRequest, InternalServerError, NotFound}
 import play.api.mvc.{RequestHeader, Result, Results}
 import play.api.{Logger, PlayException}
 import play.twirl.api.Html
+import uk.gov.hmrc.mdc.RequestMdc
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -36,14 +37,17 @@ abstract class FrontendErrorHandler
 
   protected implicit val ec: ExecutionContext
 
-  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] =
+  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
+    RequestMdc.initMdc(request.id)
     statusCode match {
       case play.mvc.Http.Status.BAD_REQUEST => badRequestTemplate(request).map(BadRequest(_))
       case play.mvc.Http.Status.NOT_FOUND   => notFoundTemplate(request).map(NotFound(_))
       case _                                => fallbackClientErrorTemplate(request).map(Results.Status(statusCode)(_))
     }
+  }
 
   override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = {
+    RequestMdc.initMdc(request.id)
     logError(request, exception)
     resolveError(request, exception)
   }

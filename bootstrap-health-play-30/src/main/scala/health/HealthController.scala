@@ -19,10 +19,15 @@ package uk.gov.hmrc.play.health
 import javax.inject.Inject
 
 import play.api.mvc.{BaseController, ControllerComponents}
+import uk.gov.hmrc.mdc.RequestMdc
 
 class HealthController @Inject()(
   val controllerComponents: ControllerComponents
 ) extends BaseController {
 
-  def ping = Action(Ok)
+  def ping =
+    Action { request =>
+      RequestMdc.initMdc(request.id)
+      Ok
+    }
 }
