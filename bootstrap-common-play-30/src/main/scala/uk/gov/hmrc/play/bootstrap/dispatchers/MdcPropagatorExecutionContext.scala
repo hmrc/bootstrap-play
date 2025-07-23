@@ -33,7 +33,7 @@ import scala.concurrent.duration._
   * This can be enabled with.
   *
   * ```config
-  *   akka.actor.default-dispatcher {
+  *   pekko.actor.default-dispatcher {
   *     type = "uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"
   *   }
   * ```

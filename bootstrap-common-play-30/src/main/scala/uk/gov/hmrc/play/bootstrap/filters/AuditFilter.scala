@@ -34,7 +34,7 @@ import uk.gov.hmrc.play.audit.EventKeys
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.model.{ExtendedDataEvent, RedactionLog, TruncationLog}
 import uk.gov.hmrc.play.http.BodyCaptor
-import uk.gov.hmrc.mdc.Mdc
+import uk.gov.hmrc.mdc.{Mdc, RequestMdc}
 
 import scala.concurrent.{ExecutionContext, Promise}
 
@@ -78,7 +78,7 @@ trait CommonAuditFilter extends AuditFilter {
       override def apply(requestHeader: RequestHeader): Accumulator[ByteString, Result] = {
         val next: Accumulator[ByteString, Result] = nextFilter(requestHeader)
         if (needsAuditing(requestHeader))
-          onCompleteWithInput(next, performAudit(requestHeader))
+          onCompleteWithInput(requestHeader, next, performAudit(requestHeader))
         else
           next
       }
@@ -132,6 +132,7 @@ trait CommonAuditFilter extends AuditFilter {
     request.attrs.get(Attrs.HandlerDef).map(_.controller).forall(controllerNeedsAuditing)
 
   protected def onCompleteWithInput(
+    rh            : RequestHeader,
     next          : Accumulator[ByteString, Result],
     handler       : (Data[String], Either[Throwable, (Result, Data[String])]) => Unit
   )(implicit ec: ExecutionContext
@@ -157,6 +158,7 @@ trait CommonAuditFilter extends AuditFilter {
 
     wrappedAcc
       .map { result =>
+        RequestMdc.initMdc(rh.id)
         val responseBodyPromise = Promise[Data[String]]()
 
         lazy val responseBodyCaptor: Sink[ByteString, NotUsed] =

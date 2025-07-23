@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.play.bootstrap.backend.http
 
-import javax.inject.Inject
 import play.api.{Configuration, Logger}
 import play.api.http.HttpErrorHandler
 import play.api.http.Status._
@@ -32,8 +31,11 @@ import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendHeaderCarrierProvider
 import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
+@Singleton
 class JsonErrorHandler @Inject()(
   auditConnector: AuditConnector,
   httpAuditEvent: HttpAuditEvent,
@@ -67,7 +69,10 @@ class JsonErrorHandler @Inject()(
     configuration.get[Boolean]("bootstrap.errorHandler.suppress5xxErrorMessages")
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
-    RequestMdc.initMdc(request.id)
+    // Use `Try` since if an invalid url is provided, then we will come here, but without a request id
+    // (also won't have hit the MdcFilter)
+    Try(request.id).map(RequestMdc.initMdc)
+
     implicit val headerCarrier: HeaderCarrier = hc(request)
     val result = statusCode match {
       case NOT_FOUND =>

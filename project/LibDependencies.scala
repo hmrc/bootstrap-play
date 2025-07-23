@@ -16,7 +16,7 @@ object LibDependencies {
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.6.0",
       "uk.gov.hmrc"             %% "crypto"                     % "8.3.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
-      "uk.gov.hmrc"             %% "mdc"                        % "0.2.0-SNAPSHOT", // TODO update http-verbs to provide this
+      "uk.gov.hmrc"             %% "mdc"                        % "0.2.0", // TODO update http-verbs to provide this
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.6.0",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% "play-filters-helpers"       % playVersion(playSuffix),
@@ -79,7 +79,6 @@ object LibDependencies {
   def health(playSuffix: String) =
     Seq(
       playOrg(playSuffix)       %% "play"                       % playVersion(playSuffix),
-      "uk.gov.hmrc"             %% "mdc"                        % "0.2.0-SNAPSHOT",
       // test dependencies
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
       "org.scalatest"           %% "scalatest"                  % "3.2.17"      % Test,

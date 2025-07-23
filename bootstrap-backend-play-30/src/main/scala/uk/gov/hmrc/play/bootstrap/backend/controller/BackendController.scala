@@ -22,34 +22,13 @@ import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.mdc.RequestMdc
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 trait BackendBaseController
   extends play.api.mvc.BaseController
      with Utf8MimeTypes
      with WithJsonBody
-     with BackendHeaderCarrierProvider {
-
-  // same as default, but initialises Mdc for request
-  override def Action: ActionBuilder[Request, AnyContent] = {
-    val defaultActionBuilder = controllerComponents.actionBuilder
-    new ActionBuilder[Request, AnyContent] {
-      override protected val executionContext: ExecutionContext =
-        controllerComponents.executionContext
-
-      override def invokeBlock[T](
-        request: Request[T],
-        block  : Request[T] => Future[Result]
-      ): Future[Result] = {
-        RequestMdc.initMdc(request.id)
-        defaultActionBuilder.invokeBlock(request, block)
-      }
-
-      override val parser: BodyParser[AnyContent] =
-        defaultActionBuilder.parser
-    }
-  }
-}
+     with BackendHeaderCarrierProvider
 
 abstract class BackendController(
   override val controllerComponents: ControllerComponents
@@ -57,7 +36,8 @@ abstract class BackendController(
 
 trait BackendHeaderCarrierProvider {
   implicit protected def hc(implicit request: RequestHeader): HeaderCarrier = {
-    RequestMdc.initMdc(request.id)
+    // This is also called by `JsonErrorHandler.onClientError` - see there why we need `Try`
+    Try(request.id).map(RequestMdc.initMdc)
     HeaderCarrierConverter.fromRequest(request)
   }
 }
