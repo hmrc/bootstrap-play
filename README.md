@@ -158,42 +158,57 @@ See [Logback docs](https://logback.qos.ch/manual/mdc.html) for an explanation of
 
 There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in generated logs. They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
 
-If you want to configure a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
+If you want to configure a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"` e.g.
 
 ```properties
 custom-dispatcher {
-  type = Dispatcher
-  executor = "uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator"
+  type = "uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"
   thread-pool-executor {
     fixed-pool-size = 32
   }
 }
 ```
 
-However, even with this Execution Context, MDC may be lost at async boundaries. Some examples are AsyncHttpClient which uses an internal Execution Context, and mongo-scala-driver which uses Reactive Streams. The most obvious case to be aware of is when using `headOption` or `head` with the mongo driver (`toFuture` and `toFutureOption` are OK when extending `PlayMongoRepository` - see [hmrc-mongo](https://github.com/hmrc/hmrc-mongo/)).
+This Execution Context has it's MDC restored in `prepare()`, which is also called by `Promise#onComplete`, this means that MDC should flow through to all async (`Future`s) executions, including those that use Promises (e.g. mongo-scala).
 
-If you encounter a Future which is dropping MDC, then it can be wrapped with `MDC.preservingMdc` - See [mdc](https://github.com/hmrc/mdc) for details.
+There are some known limitations where MDC can still be lost.
+  * Using Pekko streams.
+  * Ws-client which uses it's own Execution Context
+  * When invoked from Play (boundaries between Filters -> Actions -> ErrorHandlers)
 
-### RequestMdc
+In these cases, the MDC can be restored by
+  * If a `RequestHeader` is in scope, any MDC for the request can be restored with
 
-The [mdc library](https://github.com/hmrc/mdc) also provides a `RequestMdc`. When adding MDC for logging, it should be added to the RequestMdc. This ensures that if the MDC ever goes missing, it can be restored whenever a `RequestHeader` is in scope.
+    ```scala
+    uk.gov.hmrc.mdc.RequestMdc.initMdc(request.id)
+    ```
 
-```scala
-// To add data to MDC, if you have a `RequestHeader` in scope, rather than this:
-org.slf4j.MDC.put("a" -> "key")
-// Do this instead:
-uk.gov.hmrc.RequestMdc.add(request.id, Map("a" -> "key"))
-```
+    This works because the `MdcFilter` calls `uk.gov.hmrc.mdc.RequestMdc.add(request.id, mdcData)` to add MDC data, and stores it against the requestId to recover on demand.
 
-Then whenever the `RequestHeader` is in scope, it can be ensured to be available, even after async boundaries.
+    If adding your own MDC data, you should also use the `RequestMdc`
 
-```scala
-uk.gov.hmrc.RequestMdc.initMdc(request.id)
-```
+    ```scala
+    // To add data to MDC, if you have a `RequestHeader` in scope, rather than this:
+    org.slf4j.MDC.put("a" -> "key")
+    // Do this instead:
+    uk.gov.hmrc.RequestMdc.add(request.id, Map("a" -> "key"))
+    ```
+  * If no `RequestHeader` is available, you can wrap the Future block with `uk.gov.hmrc.mdc.Mdc.preservingMdc` which will effectively copy the MDC from the caller to the result of the Future block.
 
-This is useful since Play often drops MDC (from thread optimisations) - usually between Play Filters, Actions and ErrorHandlers. Bootstrap customises the DefaultActionFilter to initialise MDC.
+    ```scala
+    for
+      _ <- Mdc.preservingMdc(futureWhichLoosesMdc)
+      _ =  logger.debug("log continues to have MDC")
+    yield()
+    ```
 
-If you are creating your own `ActionFunction`s (`ActionBuilder` or `ActionRefiner`), then either compose with the default action builder (`defaultActionBuilder.andThen(customActionFunction)`), or make `initMdc` the first call in `invokeBlock`.
+See the [mdc library](https://github.com/hmrc/mdc) for more details.
+
+
+Note that bootstrap-play already does this for the default `ActionBuilder` and provided `ErrorHandler`s. If you are creating your own, you will need to ensure appropriate calls to `RequestMdc.initMdc`.
+
+
+If you are creating your own `ActionFunction`s (`ActionBuilder` or `ActionRefiner`), then an alternative to calling `RequestMdc.initMdc` first thing in `invokeBlock` is to compose with the default action builder (`defaultActionBuilder.andThen(customActionFunction)`).
 
 ### Async activity
 

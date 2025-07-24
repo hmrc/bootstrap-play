@@ -28,7 +28,7 @@ import scala.concurrent.duration._
 
 /** This provides an ExecutionContext which copies MDC data over in `prepare()`.
   * Since `prepare()` is implicitly called by `Promise#onComplete`, MDC data will not be lost on many async boundaries.
-  * It may still be required to explicitly call `prepare()` in some scenarios (e.g. with akka)
+  * It may still be required to explicitly call `prepare()` in some scenarios (e.g. with pekko)
   *
   * This can be enabled with.
   *
@@ -37,9 +37,6 @@ import scala.concurrent.duration._
   *     type = "uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"
   *   }
   * ```
-  *
-  * It is not enabled by default yet, since there are a few situations in play-framework where prepare is not being called, where
-  * MDCPropagatingExecutorServiceConfigurator works better - although MDC will need to be explicitly preserved with Promises.
   */
 class MdcPropagatingDispatcherConfigurator(
   config       : Config,
