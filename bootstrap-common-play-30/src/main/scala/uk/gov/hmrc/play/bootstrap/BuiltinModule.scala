@@ -17,8 +17,9 @@
 package uk.gov.hmrc.play.bootstrap
 
 import play.api.{Configuration, Environment}
+import play.api.i18n.MessagesApi
 import play.api.inject.Binding
-import play.api.mvc.{BodyParsers, DefaultActionBuilder, Request, Result}
+import play.api.mvc.{BodyParsers, DefaultActionBuilder, MessagesActionBuilder, MessagesRequest, Request, Result}
 import uk.gov.hmrc.mdc.RequestMdc
 
 import javax.inject.{Inject, Singleton}
@@ -31,9 +32,12 @@ class BuiltinModule extends play.api.inject.Module {
       .map { b =>
         if (b.key.clazz.getName == classOf[DefaultActionBuilder].getName)
           bind[DefaultActionBuilder].to[BootstrapDefaultActionBuilder]
+        else if (b.key.clazz.getName == classOf[MessagesActionBuilder].getName)
+          bind[MessagesActionBuilder].to[BootstrapDefaultMessagesActionBuilder]
         else
           b
       }
+
 }
 
 
@@ -50,6 +54,24 @@ class BootstrapDefaultActionBuilder @Inject()(
   ): Future[Result] = {
     RequestMdc.initMdc(request.id)
     block(request)
+      .andThen(_ => RequestMdc.initMdc(request.id))
+  }
+}
+
+@Singleton
+class BootstrapDefaultMessagesActionBuilder @Inject()(
+  override val parser: BodyParsers.Default,
+  messagesApi        : MessagesApi
+)(implicit
+  override val executionContext: ExecutionContext
+) extends MessagesActionBuilder {
+
+  override def invokeBlock[T](
+    request: Request[T],
+    block  : MessagesRequest[T] => Future[Result]
+  ): Future[Result] = {
+    RequestMdc.initMdc(request.id)
+    block(new MessagesRequest[T](request, messagesApi))
       .andThen(_ => RequestMdc.initMdc(request.id))
   }
 }
