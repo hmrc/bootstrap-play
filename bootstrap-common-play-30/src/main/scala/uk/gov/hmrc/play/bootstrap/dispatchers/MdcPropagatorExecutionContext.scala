@@ -43,7 +43,7 @@ class MdcPropagatingDispatcherConfigurator(
   prerequisites: DispatcherPrerequisites
 ) extends MessageDispatcherConfigurator(config, prerequisites) {
 
-  override def dispatcher(): MessageDispatcher =
+  private val instance =
     new Dispatcher(
       this,
       config.getString("id"),
@@ -52,6 +52,9 @@ class MdcPropagatingDispatcherConfigurator(
       configureExecutor(),
       config.getDuration("shutdown-timeout", TimeUnit.MILLISECONDS).millis
     ) with MdcPropagatorExecutionContext
+
+  override def dispatcher(): MessageDispatcher =
+    instance
 }
 
 /**

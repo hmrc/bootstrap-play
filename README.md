@@ -156,13 +156,14 @@ Note, default logger configurations assume that packages are fully qualified and
 
 See [Logback docs](https://logback.qos.ch/manual/mdc.html) for an explanation of Mapped Diagnostic Context (MDC).
 
-There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in generated logs. They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
+There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in subsequent logs. They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
 
 If you want to configure a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"` e.g.
 
 ```properties
 custom-dispatcher {
   type = "uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"
+  executor = "default-executor"
   thread-pool-executor {
     fixed-pool-size = 32
   }
@@ -204,25 +205,13 @@ In these cases, the MDC can be restored by
 
 See the [mdc library](https://github.com/hmrc/mdc) for more details.
 
-
 Note that bootstrap-play already does this for the default `ActionBuilder` and provided `ErrorHandler`s. If you are creating your own, you will need to ensure appropriate calls to `RequestMdc.initMdc`.
 
-
-If you are creating your own `ActionFunction`s (`ActionBuilder` or `ActionRefiner`), then an alternative to calling `RequestMdc.initMdc` first thing in `invokeBlock` is to compose with the default action builder (`defaultActionBuilder.andThen(customActionFunction)`).
+If you are creating your own `ActionBuilder` (with `new ActionBuilder`), then either ensure it is composed with the default Action Builder (`defaultActionBuilder.andThen(customActionFunction)`), or call `RequestMdc.initMdc` first thing in `invokeBlock`. Other types of `ActionFunction`s should be fine, since they require composing with a default Action Builder.
 
 ### Async activity
 
 It is recommended to explicitly call `org.slf4j.MDC.clear()` at the beginning of any async activity (e.g. schedulers) to ensure there is no left over MDC, which can confuse the logs.
-
-### Verifying MDC logging
-
-How to identify where a `MDC.preservingMdc` is required?
-
-#### Logging MDC loss
-
-There is a `bootstrap.mdc.tracking.enabled` configuration, which can be enabled. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. It is recommended to just turn this on in the lower envs (e.g. QA) and not in production, since it may not be performant.
-
-Note, even with the appropriate use of `preservingMdc`, there is always a small percent of loss due to thread optimisations in Play (e.g. use of Pekko's FastFuture). For this reason, warnings will only be logged once the number of requests which loose MDC exceeds a configured threshold (`bootstrap.mdc.tracking.warnThresholdPercent `).
 
 ## Allow List Filter
 
