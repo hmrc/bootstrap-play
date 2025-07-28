@@ -1,5 +1,17 @@
 ## Changes
 
+### Version 9.19.0
+- `ApplicationCrypto` from `crypto` has been deprecated. Frontends can inject `uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCrypto` instead.
+- `JsonCrypto` has been deprecated in crypto's `ApplicationCrypto`, and removed from the one provided by bootstrap-frontend-play.
+
+  This is because the key `json.encryption.key` is ambiguous.
+
+  If this key is being used for encrypting the service's own data in mongo, prefer the key name `mongodb.encryption.key`, and create your own Crypto for it.
+
+  If it is used for inter-service encryption (query/path parameters, json bodies), then use `queryParameter.encryption`. A crypto `QueryParameterCrypto` is provided by the `ApplicationCrypto` for this. Note, that is managed by the platform and could be rotated at any time.
+
+  If inter-service encryption is required that only the involved services can decrypt, then you will need to create an appropriately named key for this and your own Crypto.
+
 ### Version 9.18.0
 - Ensures `Router` is eagerly initialised to address a regression in previous release.
 

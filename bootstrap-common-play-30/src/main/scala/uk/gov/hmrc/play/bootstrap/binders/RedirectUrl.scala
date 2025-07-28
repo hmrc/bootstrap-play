@@ -110,7 +110,7 @@ case class RedirectUrl(private val url: String) {
     RedirectUrl.errorFor(url)
   )
 
-  @annotation.nowarn
+  @annotation.nowarn("msg=deprecated")
   def getEither[T[_]](policy: RedirectUrlPolicy[T])(implicit f: Applicative[T]): T[Either[String, SafeRedirectUrl]] =
     f.map(policy.applies(url)) { result =>
       if (result)
