@@ -291,6 +291,67 @@ def redirect(redirectUrl: RedirectUrl): Action[AnyContent] =
   }
 ```
 
+## Crypto
+
+Bootstrap adds [crypto](https://github.com/hmrc/crypto) to the classpath for encryption and decryption. For frontends, it also provides `AppliationCrypto`.
+
+When using Crypto for encrypting/decrypting data. Care should be taken to understand who owns the keys and how long the encrypted data should last.
+
+Encryption keys provided by the platform can be rotated at any moment, and should not be used for stored data. Stored data should be encrypted with keys owned by the service itself.
+
+Keys included for Frontends are:
+
+- `cookie.encryption` - this is for encrypting the cookie, and should not be used for stored data.
+
+- `queryParameter.encryption` - this can be used to encrypt query parameters for frontends. Typically callbacks and redirects. Note, it defaults to the same crypto as `cookie.encryption`, which is shared by all frontends. It should be overridden if it should be private to the service.
+  The default value is owned by the Platform and could be rotated at any time, so it should not be used for stored data.
+
+- `sso.encryption` - this is owned by the SSO Portal, and should not be used for any other purpose.
+
+If a service requires a private key for encrypting mongo, it must create it's own. We recommend using the key name `mongodb.encryption` for consistency.
+
+If a service requires encryption for inter-service communication, one of the services should own the key, and share it with the required services. They will be responsible for managing any necessary key rotations.
+
+### Rotating keys
+
+  Platform keys should only be used for the designated purpose, and may be rotated as deemed necessary.
+
+  The Crypto library supports fields named `key` and `previousKeys`. The `key` is the key to be used for encryption. Decryption will attempt with `key` first, and fallback on any keys listed in the `previousKeys` array.
+
+  In order to rotate a key without downtime, it is recommended to first add the new key to `previousKeys` array and redeploy.
+
+  ```config
+  my.encryption: {
+    key: key1
+    previousKeys: [key2]
+  }
+  ```
+
+  This ensures all instances are compatible to decrypt data encrypted with either the old or new key, but still continue to encrypt with the old key.
+
+  Then swap the keys round, and redeploy.
+
+  ```config
+  my.encryption: {
+    key: key2
+    previousKeys: [key1]
+  }
+  ```
+
+  The instances will start to encrypt with the new key as they pick up the config.
+
+### Dummy key
+
+  A dummy key is provided in bootstrap config to help with local development. It can be used by a service in it's application.conf.
+
+  ```config
+  my.encryption = ${dummy.encryption}
+  ```
+
+  This avoids any leak-detection considerations, and clearly indicates that the key is only for local development.
+
+  The dummy value is wiped (with `null`) at deployment time. The service must provide it's own encrypted value for deployment.
+
 
 ## License
 

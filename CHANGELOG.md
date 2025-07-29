@@ -4,13 +4,23 @@
 - `ApplicationCrypto` from `crypto` has been deprecated. Frontends can inject `uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCrypto` instead.
 - `JsonCrypto` has been deprecated in crypto's `ApplicationCrypto`, and removed from the one provided by bootstrap-frontend-play.
 
-  This is because the key `json.encryption.key` is ambiguous.
+  This is because the intended use of the key `json.encryption.key` is ambiguous.
 
-  If this key is being used for encrypting the service's own data in mongo, prefer the key name `mongodb.encryption.key`, and create your own Crypto for it.
+  If this key is to be used for encrypting the service's own data in mongo, prefer the key name `mongodb.encryption.key`, and create your own Crypto for it.
 
-  If it is used for inter-service encryption (query/path parameters, json bodies), then use `queryParameter.encryption`. A crypto `QueryParameterCrypto` is provided by the `ApplicationCrypto` for this. Note, that is managed by the platform and could be rotated at any time.
+  If it's for encrypting query or path parameters for returning to your service (e.g. callbacks or redirects), then use `queryParameter.encryption` (`ApplicationCrypto` provides `QueryParameterCrypto` for this).
 
-  If inter-service encryption is required that only the involved services can decrypt, then you will need to create an appropriately named key for this and your own Crypto.
+  If it is for encrypting data between two services, you should create and manage your own key for this purpose, giving it an appropriate name.
+
+  See [README](README.md#crypto)
+
+- A dummy encryption key has been provided in Config for local development. You can assign it to your own keys
+
+  ```config
+  mongodb.encryption=${dummy.encryption}
+  ```
+
+  The value still needs replacing for deployment. It can only be used for substitution at local development time, and it must not be read as is (it will not be available at deployment time).
 
 ### Version 9.18.0
 - Ensures `Router` is eagerly initialised to address a regression in previous release.
