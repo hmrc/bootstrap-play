@@ -70,6 +70,7 @@ class ApplicationCrypto @Inject()(configuration: Configuration) {
   }
 }
 
+@annotation.nowarn("msg=deprecated")
 class DeprecatedApplicationCryptoProvider @Inject()(
   configuration: Configuration
 ) extends Provider[uk.gov.hmrc.crypto.ApplicationCrypto] {

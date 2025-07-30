@@ -28,6 +28,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.{
 }
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.{DefaultDeviceIdFilter, DeviceIdFilter}
 
+@annotation.nowarn("msg=deprecated")
 class FrontendModule extends BootstrapModule {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
