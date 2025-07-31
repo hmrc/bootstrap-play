@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters.crypto
 
 import javax.inject.{Inject, Provider}
-import uk.gov.hmrc.crypto.{ApplicationCrypto, Decrypter, Encrypter}
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 
 case class SessionCookieCrypto(crypto: Encrypter with Decrypter)
 

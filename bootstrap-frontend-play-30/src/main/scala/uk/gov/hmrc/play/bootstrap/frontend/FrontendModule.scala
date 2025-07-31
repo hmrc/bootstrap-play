@@ -18,14 +18,17 @@ package uk.gov.hmrc.play.bootstrap.frontend
 
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
-import uk.gov.hmrc.crypto.ApplicationCrypto
 import uk.gov.hmrc.play.bootstrap.BootstrapModule
 import uk.gov.hmrc.play.bootstrap.config.DeprecatedConfigChecker
 import uk.gov.hmrc.play.bootstrap.filters.{AuditFilter, MDCFilter}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.{DefaultFrontendAuditFilter, FiltersVerifier, FrontendMdcFilter, SessionTimeoutFilterConfig}
-import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.{ApplicationCryptoProvider, DefaultSessionCookieCryptoFilter, SessionCookieCrypto, SessionCookieCryptoFilter, SessionCookieCryptoProvider}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.{
+  ApplicationCrypto, ApplicationCryptoProvider, DefaultSessionCookieCryptoFilter, DeprecatedApplicationCryptoProvider,
+  SessionCookieCrypto, SessionCookieCryptoFilter, SessionCookieCryptoProvider
+}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.deviceid.{DefaultDeviceIdFilter, DeviceIdFilter}
 
+@annotation.nowarn("msg=deprecated")
 class FrontendModule extends BootstrapModule {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
@@ -33,6 +36,7 @@ class FrontendModule extends BootstrapModule {
       bind[AuditFilter               ].to[DefaultFrontendAuditFilter],
       bind[MDCFilter                 ].to[FrontendMdcFilter],
       bind[ApplicationCrypto         ].toProvider[ApplicationCryptoProvider],
+      bind[uk.gov.hmrc.crypto.ApplicationCrypto].toProvider[DeprecatedApplicationCryptoProvider],
       bind[SessionCookieCrypto       ].toProvider[SessionCookieCryptoProvider],
       bind[SessionCookieCryptoFilter ].to[DefaultSessionCookieCryptoFilter],
       bind[DeviceIdFilter            ].to[DefaultDeviceIdFilter],

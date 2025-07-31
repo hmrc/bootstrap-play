@@ -31,7 +31,7 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.api.routing.Router
 import play.api.test.Helpers._
-import uk.gov.hmrc.crypto._
+import uk.gov.hmrc.crypto.{ApplicationCrypto => _, _}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto._
 import scala.reflect.ClassTag
 

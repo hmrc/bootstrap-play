@@ -16,16 +16,73 @@
 
 package uk.gov.hmrc.play.bootstrap.frontend.filters.crypto
 
-import javax.inject.{Inject, Provider}
 import play.api.Configuration
-import uk.gov.hmrc.crypto.ApplicationCrypto
+import uk.gov.hmrc.crypto.SymmetricCryptoFactory
+
+import javax.inject.{Inject, Provider}
 
 class ApplicationCryptoProvider @Inject()(
   configuration: Configuration
 ) extends Provider[ApplicationCrypto] {
 
-  private val crypto = new ApplicationCrypto(configuration.underlying)
+  private val crypto =
+    new ApplicationCrypto(configuration)
   crypto.verifyConfiguration()
 
-  def get(): ApplicationCrypto = crypto
+  def get(): ApplicationCrypto =
+    crypto
+}
+
+class ApplicationCrypto @Inject()(configuration: Configuration) {
+
+  /** Should only be used to encrypt/decrypt the cookie.
+    *
+    * It is shared by all services.
+    *
+    * This is a platform key, and should not be used for any other use-case since it may be rotated at any time.
+    */
+  lazy val SessionCookieCrypto =
+    SymmetricCryptoFactory.aesGcmCryptoFromConfig(baseConfigKey = "cookie.encryption", configuration.underlying)
+
+  /** Should only be used for SSO with the Portal.
+    *
+    * It is shared by all services.
+    *
+    * This is a platform key, and should not be used for any other use-case since it may be rotated at any time.
+    */
+  lazy val SsoPayloadCrypto =
+    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "sso.encryption", configuration.underlying)
+
+  /** Can be used to encrypt query parameters - e.g. for callbacks and redirects.
+    *
+    * By default it is shared by all services, but it can be overridden if required to be private to the service.
+    *
+    * Given by default it is provided by the platform, it should be assumed it may be rotated at any time, and not
+    * used for storing data.
+    */
+  lazy val QueryParameterCrypto =
+    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "queryParameter.encryption", configuration.underlying)
+
+  def verifyConfiguration(): Unit = {
+    SessionCookieCrypto
+    QueryParameterCrypto
+    SsoPayloadCrypto
+  }
+}
+
+@annotation.nowarn("msg=deprecated")
+class DeprecatedApplicationCryptoProvider @Inject()(
+  configuration: Configuration
+) extends Provider[uk.gov.hmrc.crypto.ApplicationCrypto] {
+
+  private val logger = play.api.Logger(getClass)
+
+  private val crypto =
+    new uk.gov.hmrc.crypto.ApplicationCrypto(configuration.underlying)
+  crypto.verifyConfiguration()
+
+  def get(): uk.gov.hmrc.crypto.ApplicationCrypto = {
+    logger.warn("uk.gov.hmrc.crypto.ApplicationCrypto is deprecated. Inject uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.AppliationCrypto instead.")
+    crypto
+  }
 }

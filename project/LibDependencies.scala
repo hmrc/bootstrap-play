@@ -1,7 +1,7 @@
 import sbt._
 
 object LibDependencies {
-  private val httpVerbsVersion  = "15.3.0"
+  private val httpVerbsVersion  = "15.4.0"
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.3"
   private val dropwizardVersion = "4.2.32"
@@ -14,7 +14,7 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.6.0",
-      "uk.gov.hmrc"             %% "crypto"                     % "8.2.0",
+      "uk.gov.hmrc"             %% "crypto"                     % "8.3.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.6.0",
       // the following are not used by bootstrap - but transitively added for clients
