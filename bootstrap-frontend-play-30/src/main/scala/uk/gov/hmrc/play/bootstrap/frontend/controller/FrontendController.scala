@@ -20,17 +20,25 @@ import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody, WithUrlEncodedOnlyFormBinding}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.mdc.RequestMdc
+
+import scala.util.Try
 
 trait FrontendBaseController
   extends MessagesBaseController
-    with Utf8MimeTypes
-    with WithJsonBody
-    with FrontendHeaderCarrierProvider
+     with Utf8MimeTypes
+     with WithJsonBody
+     with FrontendHeaderCarrierProvider
 
-abstract class FrontendController(override val controllerComponents: MessagesControllerComponents)
-    extends FrontendBaseController with WithUrlEncodedOnlyFormBinding
+abstract class FrontendController(
+  override val controllerComponents: MessagesControllerComponents
+) extends FrontendBaseController
+     with WithUrlEncodedOnlyFormBinding
 
 trait FrontendHeaderCarrierProvider {
-  implicit protected def hc(implicit request: RequestHeader): HeaderCarrier =
+  implicit protected def hc(implicit request: RequestHeader): HeaderCarrier = {
+    // This is also called by `FrontendErrorHandler.onClientError` - see there why we need `Try`
+    Try(request.id).map(RequestMdc.initMdc)
     HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+  }
 }

@@ -22,6 +22,16 @@ import com.typesafe.config.Config
 import org.apache.pekko.dispatch.{DispatcherPrerequisites, ExecutorServiceConfigurator, ExecutorServiceDelegate, ExecutorServiceFactory, ForkJoinExecutorConfigurator}
 import uk.gov.hmrc.mdc.MdcExecutorService
 
+/** This provides an ExecutorService which copies MDC to the next execution.
+  *
+  * This can be enabled with.
+  *
+  * ```config
+  *   pekko.actor.default-dispatcher {
+  *     executor = "uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator"
+  *   }
+  * ```
+  */
 class MDCPropagatingExecutorServiceConfigurator(
   config       : Config,
   prerequisites: DispatcherPrerequisites
