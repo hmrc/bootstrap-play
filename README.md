@@ -156,34 +156,62 @@ Note, default logger configurations assume that packages are fully qualified and
 
 See [Logback docs](https://logback.qos.ch/manual/mdc.html) for an explanation of Mapped Diagnostic Context (MDC).
 
-There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in generated logs. They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
+There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in subsequent logs. They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
 
-If you want to configure a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator` e.g.
+If you want to configure a custom execution context, make sure to use `uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"` e.g.
 
 ```properties
 custom-dispatcher {
-  type = Dispatcher
-  executor = "uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator"
+  type = "uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"
+  executor = "default-executor"
   thread-pool-executor {
     fixed-pool-size = 32
   }
 }
 ```
 
-However, even with this Execution Context, MDC may be lost at async boundaries. Some examples are AsyncHttpClient which uses an internal Execution Context, and mongo-scala-driver which uses Reactive Streams. The most obvious case to be aware of is when using `headOption` or `head` with the mongo driver (`toFuture` and `toFutureOption` are OK when extending `PlayMongoRepository` - see [hmrc-mongo](https://github.com/hmrc/hmrc-mongo/)).
+This Execution Context has it's MDC restored in `prepare()`, which is also called by `Promise#onComplete`, this means that MDC should flow through to all async (`Future`s) executions, including those that use Promises (e.g. mongo-scala).
 
-If you encounter a Future which is dropping MDC, then it can be wrapped with `MDC.preservingMdc` - See [mdc](https://github.com/hmrc/mdc) for details.
+There are some known limitations where MDC can still be lost.
+  * Using Pekko streams.
+  * Ws-client which uses it's own Execution Context
+  * When invoked from Play (boundaries between Filters -> Actions -> ErrorHandlers)
 
+In these cases, the MDC can be restored by
+  * If a `RequestHeader` is in scope, any MDC for the request can be restored with
 
-### Verifying MDC logging
+    ```scala
+    uk.gov.hmrc.mdc.RequestMdc.initMdc(request.id)
+    ```
 
-How to identify where a `MDC.preservingMdc` is required?
+    This works because the `MdcFilter` calls `uk.gov.hmrc.mdc.RequestMdc.add(request.id, mdcData)` to add MDC data, and stores it against the requestId to recover on demand.
 
-#### Logging MDC loss
+    If adding your own MDC data, you should also use the `RequestMdc`
 
-There is a `bootstrap.mdc.tracking.enabled` configuration, which can be enabled. It will log a warning if MDC data added by `MdcFilter` is lost by the time the response is returned. Turning this on can help identify if MDC data is going missing. It is recommended to just turn this on in the lower envs (e.g. QA) and not in production, since it may not be performant.
+    ```scala
+    // To add data to MDC, if you have a `RequestHeader` in scope, rather than this:
+    org.slf4j.MDC.put("a" -> "key")
+    // Do this instead:
+    uk.gov.hmrc.RequestMdc.add(request.id, Map("a" -> "key"))
+    ```
+  * If no `RequestHeader` is available, you can wrap the Future block with `uk.gov.hmrc.mdc.Mdc.preservingMdc` which will effectively copy the MDC from the caller to the result of the Future block.
 
-Note, even with the appropriate use of `preservingMdc`, there is always a small percent of loss due to thread optimisations in Play (e.g. use of Pekko's FastFuture). For this reason, warnings will only be logged once the number of requests which loose MDC exceeds a configured threshold (`bootstrap.mdc.tracking.warnThresholdPercent `).
+    ```scala
+    for
+      _ <- Mdc.preservingMdc(futureWhichLoosesMdc)
+      _ =  logger.debug("log continues to have MDC")
+    yield()
+    ```
+
+See the [mdc library](https://github.com/hmrc/mdc) for more details.
+
+Note that bootstrap-play already does this for the default `ActionBuilder` and provided `ErrorHandler`s. If you are creating your own, you will need to ensure appropriate calls to `RequestMdc.initMdc`.
+
+If you are creating your own `ActionBuilder` (with `new ActionBuilder`), then either ensure it is composed with the default Action Builder (`defaultActionBuilder.andThen(customActionFunction)`), or call `RequestMdc.initMdc` first thing in `invokeBlock`. Other types of `ActionFunction`s should be fine, since they require composing with a default Action Builder.
+
+### Async activity
+
+It is recommended to explicitly call `org.slf4j.MDC.clear()` at the beginning of any async activity (e.g. schedulers) to ensure there is no left over MDC, which can confuse the logs.
 
 ## Allow List Filter
 

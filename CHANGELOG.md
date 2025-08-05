@@ -1,5 +1,21 @@
 ## Changes
 
+### Version 10.0.0
+- MDC Changes.
+
+  This should mean that calls to `Mdc.preservingMdc` throughout the code is largely unnecessary.
+
+  However:
+
+  - If creating custom `ActionBuilder`s, they should be composed with the injected `DefaultActionBuilder`.
+  - If creating custom Error Handlers (not extending `JsonErrorHandler` or `FrontendErrorHandler`), they should call `RequestMdc.initMdc(request.id)`
+  - If adding data to MDC and a `RequestHeader` is in scope, use `uk.gov.hmrc.mdc.RequestMdc.add(request.id, myMdcData)` instead of `org.slf4j.MDC.put(myMdcData)`
+  - Custom execution should use `type = "uk.gov.hmrc.play.bootstrap.dispatchers.MdcPropagatingDispatcherConfigurator"` instead of `executor = "uk.gov.hmrc.play.bootstrap.dispatchers.MDCPropagatingExecutorServiceConfigurator"`
+
+  See [MDC Logging](README.md#mdc-logging) for more details.
+
+- The MDC tracking added in [Version 9.17.0](#version-9170) has been removed. It's largely invalidated by the changes above.
+
 ### Version 9.19.0
 - `ApplicationCrypto` from `crypto` has been deprecated. Frontends can inject `uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.ApplicationCrypto` instead.
 - `JsonCrypto` has been deprecated in crypto's `ApplicationCrypto`, and removed from the one provided by bootstrap-frontend-play.

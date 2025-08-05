@@ -1,7 +1,7 @@
 import sbt._
 
 object LibDependencies {
-  private val httpVerbsVersion  = "15.4.0"
+  private val httpVerbsVersion  = "15.5.0"
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.3"
   private val dropwizardVersion = "4.2.32"
