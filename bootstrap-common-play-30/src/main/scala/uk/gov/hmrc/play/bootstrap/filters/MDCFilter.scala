@@ -33,8 +33,8 @@ trait MDCFilter extends Filter {
 
   protected def hc(implicit rh: RequestHeader): HeaderCarrier
 
-  private val includeRequest =
-    configuration.get[Boolean]("bootstrap.mdc.includeRequest")
+  private val includeHandler =
+    configuration.get[Boolean]("bootstrap.mdc.includeHandler")
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
     val headerCarrier = hc(rh)
@@ -45,14 +45,14 @@ trait MDCFilter extends Filter {
         HeaderNames.xSessionId    -> headerCarrier.sessionId.fold("-")(_.value),
         HeaderNames.xForwardedFor -> headerCarrier.forwarded.fold("-")(_.value)
       ) ++
-        (if (includeRequest) Map("request" -> request(rh)) else Map.empty)
+        (if (includeHandler) Map("handler" -> handler(rh)) else Map.empty)
 
     RequestMdc.add(rh.id, data)
 
     f(rh)
   }
 
-  private def request(rh: RequestHeader): String = {
+  private def handler(rh: RequestHeader): String = {
     import Router.RequestImplicits._
     rh.handlerDef match {
       case Some(handlerDef) => s"${handlerDef.verb} ${handlerDef.controller}.${handlerDef.method}"
