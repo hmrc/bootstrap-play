@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 10.1.0
+- Adds configuration `bootstrap.mdc.includeRequest` to include the request in MDC for logs. E.g. `GET MyController.method`
+
 ### Version 10.0.0
 - MDC Changes.
 
