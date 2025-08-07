@@ -19,6 +19,7 @@ package uk.gov.hmrc.play.bootstrap.filters
 import org.apache.pekko.stream.Materializer
 import play.api.Configuration
 import play.api.mvc.{Filter, RequestHeader, Result}
+import play.api.routing.Router
 import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
 import uk.gov.hmrc.mdc.RequestMdc
 
@@ -32,15 +33,30 @@ trait MDCFilter extends Filter {
 
   protected def hc(implicit rh: RequestHeader): HeaderCarrier
 
+  private val includeRequest =
+    configuration.get[Boolean]("bootstrap.mdc.includeRequest")
+
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
     val headerCarrier = hc(rh)
-    val data = Map(
-      HeaderNames.xRequestId    -> headerCarrier.requestId.fold("-")(_.value),
-      HeaderNames.xSessionId    -> headerCarrier.sessionId.fold("-")(_.value),
-      HeaderNames.xForwardedFor -> headerCarrier.forwarded.fold("-")(_.value)
-    )
+
+    val data =
+      Map(
+        HeaderNames.xRequestId    -> headerCarrier.requestId.fold("-")(_.value),
+        HeaderNames.xSessionId    -> headerCarrier.sessionId.fold("-")(_.value),
+        HeaderNames.xForwardedFor -> headerCarrier.forwarded.fold("-")(_.value)
+      ) ++
+        (if (includeRequest) Map("request" -> request(rh)) else Map.empty)
+
     RequestMdc.add(rh.id, data)
 
     f(rh)
+  }
+
+  private def request(rh: RequestHeader): String = {
+    import Router.RequestImplicits._
+    rh.handlerDef match {
+      case Some(handlerDef) => s"${handlerDef.verb} ${handlerDef.controller}.${handlerDef.method}"
+      case _                => "-" // e.g. 404s
+    }
   }
 }
