@@ -156,7 +156,7 @@ Note, default logger configurations assume that packages are fully qualified and
 
 See [Logback docs](https://logback.qos.ch/manual/mdc.html) for an explanation of Mapped Diagnostic Context (MDC).
 
-There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in subsequent logs. It can also include the request context (e.g. `request: GET MyController.method`) if enabled with `bootstrap.mdc.includeRequest`.
+There is a MDC Filter which adds `X-Request-Id`, `X-Session-Id` and `X-Forwarded-For` headers (if present) to the MDC for inclusion in subsequent logs. It can also include the request context (e.g. `handler: GET MyController.method`) if enabled with `bootstrap.mdc.includeHandler`.
 
 They should be available in logs from any Thread serving the request, as long as the injected `ExecutionContext` is used.
 
