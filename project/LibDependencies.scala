@@ -47,10 +47,8 @@ object LibDependencies {
 
   def frontend(playSuffix: String) =
     common(playSuffix) :+
-      (if (playSuffix == "play-30")
+      (
          "org.apache.pekko"     %% "pekko-stream-testkit"         % pekkoVersion  % Test
-       else
-         "com.typesafe.akka"    %% "akka-stream-testkit"          % akkaVersion   % Test
       )
 
   def test(playSuffix: String) =
