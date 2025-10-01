@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 10.2.0
+- Removes support for Play 2.9
+
 ### Version 10.1.0
 - Adds configuration `bootstrap.mdc.includeHandler` to include the request in MDC for logs. E.g. `GET MyController.method`
 
