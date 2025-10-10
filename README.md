@@ -266,6 +266,13 @@ bootstrap.filters.allowlist.excluded += "POST:/admin/*"
 bootstrap.filters.allowlist.redirectUrlWhenDenied = "http://www.gov.uk"
 ```
 
+## BackendSessionLoggingFilter
+
+The library includes a backend Filter that logs when session data is included in requests to backend services. Backend services are not expected to use the session. If they did, it would not be encrypted.
+
+If you have a backend service that needs to read session data from incoming requests then **you are responsible** for ensuring session data is **encrypted**.
+Without encryption, the session data will be sent and stored in **plaintext**, which is a security risk.
+
 ## RedirectUrl
 
 Urls provided as query parameters (redirect urls, callbacks etc.) should be modelled with `RedirecUrl`. This allows configuration of allowed destinations and helps prevent Open Redirects.

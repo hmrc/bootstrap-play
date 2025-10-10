@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 10.3.0
+- Adds `BackendSessionLoggingFilter` to log when session data is included in requests to backend services.
+
 ### Version 10.2.0
 - Removes support for Play 2.9
 
