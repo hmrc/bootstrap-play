@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 10.4.0
+- Removes the secure attribute from cookies. This reverts some of the changes made in 9.15.0.
+
 ### Version 10.3.0
 - Adds `BackendSessionLoggingFilter` to log when session data is included in requests to backend services.
 
