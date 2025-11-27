@@ -293,6 +293,7 @@ class JsonErrorHandlerSpec
       class TruncationSetup(upstreamWarnStatuses: Seq[Int] = Seq.empty) extends Setup(
         config = Map(
           "appName"                                     -> "myApp",
+          "bootstrap.errorHandler.logMessageLength"     -> 50,
           "bootstrap.errorHandler.maxLogMessageLength"  -> 50,
           "bootstrap.errorHandler.warnOnly.statusCodes" -> upstreamWarnStatuses
         )

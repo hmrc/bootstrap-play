@@ -191,9 +191,12 @@ class JsonErrorHandler @Inject()(
   protected val maxLogMessageLength: Int =
     configuration.get[Int]("bootstrap.errorHandler.maxLogMessageLength")
 
+  protected val desiredLogMessageLength: Int =
+    configuration.get[Int]("bootstrap.errorHandler.logMessageLength")
+
   private def logExceptionWithMessageLimit(exception: Exception, responseCode: Int, request: RequestHeader): Unit = {
     val suffix      = "...[truncated]"
-    val limit       = math.min(maxLogMessageLength, 2000)
+    val limit       = math.min(desiredLogMessageLength, maxLogMessageLength)
     val baseMessage = s"${request.method} ${request.uri} failed with ${exception.getClass.getName}: ${exception.getMessage}"
 
     val msg = {
