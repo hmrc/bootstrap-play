@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 10.5.0
+- Pulls through MDC version 0.4.0 to fix flakey SessionRepositorySpec from the frontend scaffold
+
 ### Version 10.4.0
 - Removes the secure attribute from cookies. This reverts some of the changes made in 9.15.0.
 
