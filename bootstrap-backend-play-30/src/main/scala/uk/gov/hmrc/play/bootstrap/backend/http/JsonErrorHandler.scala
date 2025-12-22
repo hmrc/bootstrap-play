@@ -162,7 +162,7 @@ class JsonErrorHandler @Inject()(
         ErrorResponse(e.responseCode, e.getMessage)
 
       case e: UpstreamErrorResponse =>
-        logException(e, e.statusCode, request)
+        logExceptionWithMessageLimit(e, e.statusCode, request)
         val msg =
           if (suppress5xxErrorMessages) s"UpstreamErrorResponse: ${e.statusCode}"
           else e.getMessage
@@ -186,6 +186,30 @@ class JsonErrorHandler @Inject()(
     )
 
     Future.successful(new Status(errorResponse.statusCode)(Json.toJson(errorResponse)))
+  }
+
+  protected val maxLogMessageLength: Int =
+    configuration.get[Int]("bootstrap.errorHandler.maxLogMessageLength")
+
+  protected val desiredLogMessageLength: Int =
+    configuration.get[Int]("bootstrap.errorHandler.logMessageLength")
+
+  private def logExceptionWithMessageLimit(exception: Exception, responseCode: Int, request: RequestHeader): Unit = {
+    val suffix      = "...[truncated]"
+    val limit       = math.min(desiredLogMessageLength, maxLogMessageLength)
+    val baseMessage = s"${request.method} ${request.uri} failed with ${exception.getClass.getName}: ${exception.getMessage}"
+
+    val msg = {
+      if (baseMessage.length <= limit)
+        baseMessage
+      else
+        baseMessage.take(math.max(limit - suffix.length, 0)) + suffix // avoids negative values
+    }
+
+    if (upstreamWarnStatuses.contains(responseCode))
+      logger.warn(msg, exception)
+    else
+      logger.error(msg, exception)
   }
 
   private def logException(exception: Exception, responseCode: Int, request: RequestHeader): Unit = {

@@ -289,6 +289,71 @@ class JsonErrorHandlerSpec
       )
     }
 
+    "truncate the log message" when {
+      class TruncationSetup(upstreamWarnStatuses: Seq[Int] = Seq.empty) extends Setup(
+        config = Map(
+          "appName"                                     -> "myApp",
+          "bootstrap.errorHandler.logMessageLength"     -> 50,
+          "bootstrap.errorHandler.maxLogMessageLength"  -> 50,
+          "bootstrap.errorHandler.warnOnly.statusCodes" -> upstreamWarnStatuses
+        )
+      )
+
+      def withCaptureOfLoggingFrom(loggerLike: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit): Unit = {
+        import ch.qos.logback.classic.{Logger => LogbackLogger}
+        import scala.jdk.CollectionConverters._
+
+        val logger   = loggerLike.logger.asInstanceOf[LogbackLogger]
+        val appender = new ListAppender[ILoggingEvent]()
+        appender.setContext(logger.getLoggerContext)
+        appender.start()
+        logger.addAppender(appender)
+        logger.setLevel(Level.ALL)
+        logger.setAdditive(true)
+        body(appender.list.asScala.toList)
+      }
+
+      "the exception triggers ERROR level for upstream errors" in new TruncationSetup {
+        val longMsg = "x" * 200
+        val ex      = UpstreamErrorResponse(longMsg, 500, 500)
+
+        withCaptureOfLoggingFrom(Logger(classOf[JsonErrorHandler])) { logEvents =>
+          jsonErrorHandler.onServerError(requestHeader, ex).futureValue
+
+          eventually {
+            val event  = logEvents.loneElement
+            val logged = event.getMessage
+
+            event.getLevel shouldBe Level.ERROR
+
+            logged should endWith("...[truncated]")
+            logged should startWith(s"${requestHeader.getMethod} some-uri failed with")
+            logged.length should be <= 50
+          }
+        }
+      }
+
+      "the exception triggers WARN level for upstream errors" in new TruncationSetup(Seq(500)) {
+        val longMsg = "x" * 200
+        val ex      = UpstreamErrorResponse(longMsg, 500, 500)
+
+        withCaptureOfLoggingFrom(Logger(classOf[JsonErrorHandler])) { logEvents =>
+          jsonErrorHandler.onServerError(requestHeader, ex).futureValue
+
+          eventually {
+            val event  = logEvents.loneElement
+            val logged = event.getMessage
+
+            event.getLevel shouldBe Level.WARN
+
+            logged should endWith("...[truncated]")
+            logged should startWith(s"${requestHeader.getMethod} some-uri failed with")
+            logged.length should be <= 50
+          }
+        }
+      }
+    }
+
     "log a warning for upstream code in the warning list" when {
       class WarningSetup(upstreamWarnStatuses: Seq[Int]) extends Setup(
         config = Map(
