@@ -13,13 +13,13 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-graphite"           % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
-      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.7.0",
+      "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.8.0",
       "uk.gov.hmrc"             %% "crypto"                     % "8.4.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.7.0",
       // the following are not used by bootstrap - but transitively added for clients
       playOrg(playSuffix)       %% "play-filters-helpers"       % playVersion(playSuffix),
-      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.6.0",
+      "uk.gov.hmrc"             %% "logback-json-logger"        % "5.7.0",
 
       // test dependencies
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
@@ -84,7 +84,7 @@ object LibDependencies {
 
   private def playVersion(playSuffix: String) =
     playSuffix match {
-      case "play-30" => "3.0.9"
+      case "play-30" => "3.0.10"
     }
 
   private def playOrg(playSuffix: String): String =
