@@ -1,5 +1,10 @@
 ## Changes
 
+### Version 10.6.0
+- Updates playframework to 3.0.10
+- Updates Scala 2.13.16 to 2.13.18 (required for play 3.0.10)
+- Updates logback-json-logger to 5.7.0
+
 ### Version 10.5.0
 - Pulls through MDC version 0.4.0 to fix flakey SessionRepositorySpec from the frontend scaffold
 
