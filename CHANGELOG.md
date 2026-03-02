@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 10.7.0
+- Pulls through http verbs version 15.8.0 to suppress HTML in upstream error response bodies.
+
 ### Version 10.6.0
 - Updates playframework to 3.0.10
 - Updates Scala 2.13.16 to 2.13.18 (required for play 3.0.10)
