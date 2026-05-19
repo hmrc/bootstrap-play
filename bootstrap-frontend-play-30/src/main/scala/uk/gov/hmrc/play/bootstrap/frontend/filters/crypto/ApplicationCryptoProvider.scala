@@ -17,7 +17,7 @@
 package uk.gov.hmrc.play.bootstrap.frontend.filters.crypto
 
 import play.api.Configuration
-import uk.gov.hmrc.crypto.SymmetricCryptoFactory
+import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainBytes, PlainContent, PlainText, SymmetricCryptoFactory}
 
 import javax.inject.{Inject, Provider}
 
@@ -49,9 +49,14 @@ class ApplicationCrypto @Inject()(configuration: Configuration) {
     * It is shared by all services.
     *
     * This is a platform key, and should not be used for any other use-case since it may be rotated at any time.
+    *
+    * Reads AES-GCM with a fallback to AES. Writes AES-GCM when `sso.encryption.useGcm = true` (default: false).
     */
-  lazy val SsoPayloadCrypto =
-    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "sso.encryption", configuration.underlying)
+  lazy val SsoPayloadCrypto: Encrypter with Decrypter =
+    aesGcmWithAesFallback(
+      baseConfigKey  = "sso.encryption",
+      useGcmForWrite = configuration.getOptional[Boolean]("sso.encryption.useGcm").getOrElse(false)
+    )
 
   /** Can be used to encrypt query parameters - e.g. for callbacks and redirects.
     *
@@ -59,9 +64,43 @@ class ApplicationCrypto @Inject()(configuration: Configuration) {
     *
     * Given by default it is provided by the platform, it should be assumed it may be rotated at any time, and not
     * used for storing data.
+    *
+    * Reads AES-GCM with a fallback to AES. Writes AES-GCM when `queryParameter.encryption.useGcm = true` (default: false).
     */
-  lazy val QueryParameterCrypto =
-    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "queryParameter.encryption", configuration.underlying)
+  lazy val QueryParameterCrypto: Encrypter with Decrypter =
+    aesGcmWithAesFallback(
+      baseConfigKey  = "queryParameter.encryption",
+      useGcmForWrite = configuration.getOptional[Boolean]("queryParameter.encryption.useGcm").getOrElse(false)
+    )
+
+  /** Creates a composite crypto that decrypts with AES-GCM (falling back to AES on failure) and
+    * encrypts with either AES-GCM or AES depending on [[useGcmForWrite]].
+    */
+  private def aesGcmWithAesFallback(baseConfigKey: String, useGcmForWrite: Boolean): Encrypter with Decrypter = {
+    val aesCrypto = SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey, configuration.underlying)
+    val gcmCrypto = SymmetricCryptoFactory.aesGcmCryptoFromConfig(baseConfigKey, configuration.underlying)
+    new Encrypter with Decrypter {
+      override def encrypt(plain: PlainContent): Crypted =
+        if (useGcmForWrite) gcmCrypto.encrypt(plain)
+        else                aesCrypto.encrypt(plain)
+
+      override def decrypt(reversiblyEncrypted: Crypted): PlainText =
+        if (useGcmForWrite)
+          try  gcmCrypto.decrypt(reversiblyEncrypted)
+          catch { case _: Exception => aesCrypto.decrypt(reversiblyEncrypted) }
+        else
+          try  aesCrypto.decrypt(reversiblyEncrypted)
+          catch { case _: Exception => gcmCrypto.decrypt(reversiblyEncrypted) }
+
+      override def decryptAsBytes(reversiblyEncrypted: Crypted): PlainBytes =
+        if (useGcmForWrite)
+          try  gcmCrypto.decryptAsBytes(reversiblyEncrypted)
+          catch { case _: Exception => aesCrypto.decryptAsBytes(reversiblyEncrypted) }
+        else
+          try  aesCrypto.decryptAsBytes(reversiblyEncrypted)
+          catch { case _: Exception => gcmCrypto.decryptAsBytes(reversiblyEncrypted) }
+    }
+  }
 
   def verifyConfiguration(): Unit = {
     SessionCookieCrypto
