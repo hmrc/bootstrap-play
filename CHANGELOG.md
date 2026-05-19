@@ -1,5 +1,10 @@
 ## Changes
 
+### Version 10.8.0
+- `SsoPayloadCrypto` and `QueryParameterCrypto` now support gradual cutover to AES-GCM encryption.
+  - Decryption tries the primary format first (matching the write path) with a fallback to the other format, avoiding unnecessary exceptions during rollout.
+  - Writing defaults to AES. Set `sso.encryption.useGcm = true` or `queryParameter.encryption.useGcm = true` to write AES-GCM once all instances are capable of reading it.
+
 ### Version 10.7.0
 - Pulls through http verbs version 15.8.0 to suppress HTML in upstream error response bodies.
 
