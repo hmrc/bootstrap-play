@@ -1,5 +1,8 @@
 ## Changes
 
+### Version 10.8.0
+- Adds a Logback `TurboFilter` to suppress Play's misleading "Logger configuration in conf files is deprecated and has no effect" warning. Play no longer uses these config keys, but bootstrap's `LoggerModule` still reads and applies them, so config-driven log levels continue to work on MDTP.
+
 ### Version 10.7.0
 - Pulls through http verbs version 15.8.0 to suppress HTML in upstream error response bodies.
 
