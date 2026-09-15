@@ -1,4 +1,4 @@
-
+# This commit is only test the possibility of release hotfixes for vulnerabilities in previous versions of bootstrap-play.
 # bootstrap-play
 
 
