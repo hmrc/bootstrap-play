@@ -4,8 +4,8 @@ object LibDependencies {
   private val httpVerbsVersion  = "15.8.0"
   private val akkaVersion       = "2.6.21"
   private val pekkoVersion      = "1.0.3"
-  private val dropwizardVersion = "4.2.32"
-  private val jacksonVersion    = "2.15.3"
+  private val dropwizardVersion = "4.2.40"
+  private val jacksonVersion    = "2.22.3"
 
   def common(playSuffix: String) =
     Seq(
@@ -23,15 +23,15 @@ object LibDependencies {
 
       // test dependencies
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
-      "org.scalatest"           %% "scalatest"                  % "3.2.17"       % Test,
-      "org.scalatestplus"       %% "mockito-4-11"               % "3.2.17.0"     % Test, // added explicitly, since not provided for Play 2.8 by scalatestplus-play
+      "org.scalatest"           %% "scalatest"                  % "3.2.20"       % Test,
+      "org.scalatestplus"       %% "mockito-4-11"               % "3.2.18.0"     % Test, // added explicitly, since not provided for Play 2.8 by scalatestplus-play
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"       % Test,
-      "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.17.0"     % Test,
-      "org.wiremock"            %  "wiremock"                   % "3.3.1"        % Test  // last version with compatible jackson
+      "org.scalatestplus"       %% "scalacheck-1-17"            % "3.2.18.0"     % Test,
+      "org.wiremock"            %  "wiremock"                   % "3.13.2"        % Test
     ) ++
-     // jackson overrides (CVE-2025-52999 mitigation)
+    //  jackson overrides (mitigates several CVEs including CVE-2025-52999)
      Seq(
-      "com.fasterxml.jackson.core"       %  "jackson-annotations"            % jacksonVersion,
+      "com.fasterxml.jackson.core"       %  "jackson-annotations"            % "2.22",  // jackson-annotations uses a different versioning scheme to other jackson dependencies
       "com.fasterxml.jackson.core"       %  "jackson-core"                   % jacksonVersion,
       "com.fasterxml.jackson.core"       %  "jackson-databind"               % jacksonVersion,
       "com.fasterxml.jackson.dataformat" %  "jackson-dataformat-cbor"        % jacksonVersion,
@@ -78,13 +78,13 @@ object LibDependencies {
       playOrg(playSuffix)       %% "play"                       % playVersion(playSuffix),
       // test dependencies
       "org.scalatestplus.play"  %% "scalatestplus-play"         % scalaTestPlusPlayVersion(playSuffix) % Test,
-      "org.scalatest"           %% "scalatest"                  % "3.2.17"      % Test,
+      "org.scalatest"           %% "scalatest"                  % "3.2.20"      % Test,
       "com.vladsch.flexmark"    %  "flexmark-all"               % "0.64.8"      % Test
     )
 
   private def playVersion(playSuffix: String) =
     playSuffix match {
-      case "play-30" => "3.0.10"
+      case "play-30" => "3.0.12"
     }
 
   private def playOrg(playSuffix: String): String =
