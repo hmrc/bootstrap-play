@@ -391,18 +391,20 @@ If a service requires encryption for inter-service communication, one of the ser
 
 # Bootstrap-play and Content Security Policies
 
-This page describes how the Content Security Policy (CSP) is configured in Play services using bootstrap-play, the provided defaults and how to ensure the policy is in place. 
+This section describes the configuration options around CSP available in play, and has details on how to configure this or use defaults in a project with bootstrap-play.
+For frontend projects bootstrap-play provides a default baseline CSP which is suitable for many services. You must review the requirements of your service and ensure the default policy is suitable.
 
-Most teams should be able to use the CSP defaults provided by bootstrap-play rather than maintaining their own separate policies. The defaults are designed to work in local development and deployed environments.\
-While the CSP provided by following the steps should be suitable for most services, please review your requirements.\
-You can also refer to the general platform <a href="https://confluence.tools.tax.service.gov.uk/display/SEC/Content+Security+Policy+Guidance" rel="nofollow">CSP Guidance</a> 
+The defaults are designed to work in local development and deployed environments. If you need to override the default policy, you can do so in your application.conf file.
 
-## Configuring CSP in bootstrap-play
+To learn more about Content Security Policies you can also refer to the general [Platform CSP Guidance](https://confluence.tools.tax.service.gov.uk/display/SEC/Content+Security+Policy+Guidance)
 
-bootstrap-play provides the current platform defaults. Make sure the Play CSP filter is enabled. If your service defines custom filters, they must include `play.filters.csp.CSPFilter`
+## Enabling the default CSP in bootstrap-play
 
-The provided configuration is:
+`bootstrap-play` provides the current platform default CSP policy for frontend projects.
+The Play CSP filter is not enabled by default, so check that it is enabled in your project.
+If your service defines custom filters, they must include `play.filters.csp.CSPFilter`.
 
+The provided frontend configuration is:
 
 ```hocon
 
@@ -415,18 +417,20 @@ play.filters.csp.directives {
 
 csp-report-host: "http://localhost:8861"
 ```
-Note that there are some changes to the default CSP in the next major update to boostrap play version 11 - so expect the default configuration to change when upgrading.
+Note that there are some changes to the default CSP in the next major update to bootstrap-play version 11, so expect the default configuration to change when upgrading.
 
 For this configuration to take effect,
 
-- update `bootstrap-play` to the latest version
-- Add config “`play.filters.enabled += play.filters.csp.CSPFilter`”
-- Remove any custom `http.filters` configuration. The default is `EnabledFilters` which is configured by `play.filters.enabled`. If for some reason you need custom Filters, then you will need to ensure it includes `play.filters.csp.CSPFilter`.
-- Remove the configuration for `play.filters.headers.contentSecurityPolicy` and `play.filters.csp.directives` which will override the provided configuration. You may keep your overrides (using `play.filters.csp.directives` format) if you have a specific need, but as described below, we think that the out-of-the-box configuration should suffice for most use-cases.
+- ensure the version of `bootstrap-play` you are using is up-to-date and includes an up-to-date CSP configuration.
+- for frontend services, include `frontend.conf` and set `appName`
+- add config `play.filters.enabled += "play.filters.csp.CSPFilter"` (or include it explicitly if you define the full `play.filters.enabled` list)
+- if you use custom `http.filters` or custom enabled filter lists, ensure they include `play.filters.csp.CSPFilter`
+- remove `play.filters.headers.contentSecurityPolicy` and `play.filters.csp.directives` unless you intentionally need to override bootstrap defaults
 
-\
+`bootstrap-backend-play` does not currently provide CSP defaults in `backend.conf`; backend services should define their own CSP policy/filter setup if required.
 
-We are retaining some legacy directives within the CSP for compatibility reasons, so there are a few points to highlight regarding security scanner findings.
+Some legacy CSP directives are retained for compatibility reasons, but are not used by modern browsers. e.g. `'unsafe-inline'` and the `https:` scheme. To find out more
+review the [CSP Guidance](https://confluence.tools.tax.service.gov.uk/display/SEC/Content+Security+Policy+Guidance).
 
 ## Addressing CSP violations
 
@@ -442,7 +446,8 @@ Check the documentation for the specific library in use. For example, `play-fron
 
 ## Content Security Policy reporting service
 
-The reporting service is deployed in platform environments and provides the endpoint that CSP violations are sent to, currently via the `report-uri`  attribute in the policy.\
+The reporting service is deployed in platform environments and provides the endpoint that CSP violations are sent to, currently via the `report-uri` attribute in the policy
+(although soon this will be specified via the newer `report-to` attribute).
 It is also possible to run these locally so you can test the behaviour of the CSP locally.
 
 For local development or Jenkins acceptance tests, start the reporting service through Service Manager if needed:
