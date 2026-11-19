@@ -389,6 +389,78 @@ If a service requires encryption for inter-service communication, one of the ser
   The dummy value is wiped (with `null`) at deployment time. The service must provide it's own encrypted value for deployment.
 
 
+# Bootstrap-play and Content Security Policies
+
+This page describes how the Content Security Policy (CSP) is configured in Play services using bootstrap-play, the provided defaults and how to ensure the policy is in place. 
+
+Most teams should be able to use the CSP defaults provided by bootstrap-play rather than maintaining their own separate policies. The defaults are designed to work in local development and deployed environments.\
+While the CSP provided by following the steps should be suitable for most services, please review your requirements.\
+You can also refer to the general platform <a href="https://confluence.tools.tax.service.gov.uk/display/SEC/Content+Security+Policy+Guidance" rel="nofollow">CSP Guidance</a> 
+
+## Configuring CSP in bootstrap-play
+
+bootstrap-play provides the current platform defaults. Make sure the Play CSP filter is enabled. If your service defines custom filters, they must include `play.filters.csp.CSPFilter`
+
+The provided configuration is:
+
+
+```hocon
+
+play.filters.csp.directives {
+  script-src = ${play.filters.csp.nonce.pattern} "'unsafe-inline' 'strict-dynamic' https:"
+  object-src = 'none'
+  base-uri = 'none'
+  report-uri: ${csp-report-host}"/content-security-policy-reports/"${appName}
+}
+
+csp-report-host: "http://localhost:8861"
+```
+Note that there are some changes to the default CSP in the next major update to boostrap play version 11 - so expect the default configuration to change when upgrading.
+
+For this configuration to take effect,
+
+- update `bootstrap-play` to the latest version
+- Add config “`play.filters.enabled += play.filters.csp.CSPFilter`”
+- Remove any custom `http.filters` configuration. The default is `EnabledFilters` which is configured by `play.filters.enabled`. If for some reason you need custom Filters, then you will need to ensure it includes `play.filters.csp.CSPFilter`.
+- Remove the configuration for `play.filters.headers.contentSecurityPolicy` and `play.filters.csp.directives` which will override the provided configuration. You may keep your overrides (using `play.filters.csp.directives` format) if you have a specific need, but as described below, we think that the out-of-the-box configuration should suffice for most use-cases.
+
+\
+
+We are retaining some legacy directives within the CSP for compatibility reasons, so there are a few points to highlight regarding security scanner findings.
+
+## Addressing CSP violations
+
+After enabling CSP, check the browser console and reporting logs for violations. Common fixes include:
+
+- **Script tags in Play templates:** add the Play `CSPNonce` attribute helper to script tags, for example `<script @CSPNonce.attr>...</script>`.
+- **Scripts from libraries or partials:** use current library versions and follow their nonce integration. For `play-partials`, use its `{{NONCE_ATTR}}` placeholder and supply `CSPNonce.attr` when retrieving the partial.
+- **Inline event handlers:** replace handlers such as `onclick="doSomething()"` with a nonce-bearing script that registers an event listener.
+- **Parser-inserted scripts:** avoid patterns such as `document.write` to create scripts. When dynamic loading is needed, load the script from a nonce-bearing `<script>`.
+- **Eval-related code:** remove or refactor it; `'unsafe-eval'` is not part of the platform policy.
+
+Check the documentation for the specific library in use. For example, `play-frontend-hmrc` can add nonces to its provided script tags when the CSP filter is enabled.
+
+## Content Security Policy reporting service
+
+The reporting service is deployed in platform environments and provides the endpoint that CSP violations are sent to, currently via the `report-uri`  attribute in the policy.\
+It is also possible to run these locally so you can test the behaviour of the CSP locally.
+
+For local development or Jenkins acceptance tests, start the reporting service through Service Manager if needed:
+
+```code-line
+sm2 --start CONTENT_SECURITY_POLICY_REPORTS
+sm2 --logs CONTENT_SECURITY_POLICY_REPORTS
+```
+
+For deployed environments, search the reporting service logs in Kibana. For example:
+
+```code-line
+app: "content-security-policy-reports" AND reporting-service: "catalogue-frontend"
+```
+
+Reports can include noise from browser extensions and other sources, particularly in production. Review the report context before changing the policy.
+
+
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
