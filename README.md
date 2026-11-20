@@ -389,6 +389,83 @@ If a service requires encryption for inter-service communication, one of the ser
   The dummy value is wiped (with `null`) at deployment time. The service must provide it's own encrypted value for deployment.
 
 
+# Bootstrap-play and Content Security Policies
+
+This section describes the configuration options around CSP available in play, and has details on how to configure this or use defaults in a project with bootstrap-play.
+For frontend projects bootstrap-play provides a default baseline CSP which is suitable for many services. You must review the requirements of your service and ensure the default policy is suitable.
+
+The defaults are designed to work in local development and deployed environments. If you need to override the default policy, you can do so in your application.conf file.
+
+To learn more about Content Security Policies you can also refer to the general [Platform CSP Guidance](https://confluence.tools.tax.service.gov.uk/display/SEC/Content+Security+Policy+Guidance)
+
+## Enabling the default CSP in bootstrap-play
+
+`bootstrap-play` provides the current platform default CSP policy for frontend projects.
+The Play CSP filter is not enabled by default, so check that it is enabled in your project.
+If your service defines custom filters, they must include `play.filters.csp.CSPFilter`.
+
+The provided frontend configuration is:
+
+```hocon
+
+play.filters.csp.directives {
+  script-src = ${play.filters.csp.nonce.pattern} "'unsafe-inline' 'strict-dynamic' https:"
+  object-src = 'none'
+  base-uri = 'none'
+  report-uri: ${csp-report-host}"/content-security-policy-reports/"${appName}
+}
+
+csp-report-host: "http://localhost:8861"
+```
+Note that there are some changes to the default CSP in the next major update to bootstrap-play version 11, so expect the default configuration to change when upgrading.
+
+For this configuration to take effect,
+
+- ensure the version of `bootstrap-play` you are using is up-to-date and includes an up-to-date CSP configuration.
+- for frontend services, include `frontend.conf` and set `appName`
+- add config `play.filters.enabled += "play.filters.csp.CSPFilter"` (or include it explicitly if you define the full `play.filters.enabled` list)
+- if you use custom `http.filters` or custom enabled filter lists, ensure they include `play.filters.csp.CSPFilter`
+- remove `play.filters.headers.contentSecurityPolicy` and `play.filters.csp.directives` unless you intentionally need to override bootstrap defaults
+
+`bootstrap-backend-play` does not currently provide CSP defaults in `backend.conf`; backend services should define their own CSP policy/filter setup if required.
+
+Some legacy CSP directives are retained for compatibility reasons, but are not used by modern browsers. e.g. `'unsafe-inline'` and the `https:` scheme. To find out more
+review the [CSP Guidance](https://confluence.tools.tax.service.gov.uk/display/SEC/Content+Security+Policy+Guidance).
+
+## Addressing CSP violations
+
+After enabling CSP, check the browser console and reporting logs for violations. Common fixes include:
+
+- **Script tags in Play templates:** add the Play `CSPNonce` attribute helper to script tags, for example `<script @CSPNonce.attr>...</script>`.
+- **Scripts from libraries or partials:** use current library versions and follow their nonce integration. For `play-partials`, use its `{{NONCE_ATTR}}` placeholder and supply `CSPNonce.attr` when retrieving the partial.
+- **Inline event handlers:** replace handlers such as `onclick="doSomething()"` with a nonce-bearing script that registers an event listener.
+- **Parser-inserted scripts:** avoid patterns such as `document.write` to create scripts. When dynamic loading is needed, load the script from a nonce-bearing `<script>`.
+- **Eval-related code:** remove or refactor it; `'unsafe-eval'` is not part of the platform policy.
+
+Check the documentation for the specific library in use. For example, `play-frontend-hmrc` can add nonces to its provided script tags when the CSP filter is enabled.
+
+## Content Security Policy reporting service
+
+The reporting service is deployed in platform environments and provides the endpoint that CSP violations are sent to, currently via the `report-uri` attribute in the policy
+(although soon this will be specified via the newer `report-to` attribute).
+It is also possible to run these locally so you can test the behaviour of the CSP locally.
+
+For local development or Jenkins acceptance tests, start the reporting service through Service Manager if needed:
+
+```code-line
+sm2 --start CONTENT_SECURITY_POLICY_REPORTS
+sm2 --logs CONTENT_SECURITY_POLICY_REPORTS
+```
+
+For deployed environments, search the reporting service logs in Kibana. For example:
+
+```code-line
+app: "content-security-policy-reports" AND reporting-service: "catalogue-frontend"
+```
+
+Reports can include noise from browser extensions and other sources, particularly in production. Review the report context before changing the policy.
+
+
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
