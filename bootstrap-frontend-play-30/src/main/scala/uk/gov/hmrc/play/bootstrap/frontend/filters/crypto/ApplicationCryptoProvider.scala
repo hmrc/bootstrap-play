@@ -51,7 +51,7 @@ class ApplicationCrypto @Inject()(configuration: Configuration) {
     * This is a platform key, and should not be used for any other use-case since it may be rotated at any time.
     */
   lazy val SsoPayloadCrypto =
-    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "sso.encryption", configuration.underlying)
+    SymmetricCryptoFactory.aesGcmCryptoFromConfig(baseConfigKey = "sso.encryption", configuration.underlying)
 
   /** Can be used to encrypt query parameters - e.g. for callbacks and redirects.
     *
@@ -61,28 +61,11 @@ class ApplicationCrypto @Inject()(configuration: Configuration) {
     * used for storing data.
     */
   lazy val QueryParameterCrypto =
-    SymmetricCryptoFactory.aesCryptoFromConfig(baseConfigKey = "queryParameter.encryption", configuration.underlying)
+    SymmetricCryptoFactory.aesGcmCryptoFromConfig(baseConfigKey = "queryParameter.encryption", configuration.underlying)
 
   def verifyConfiguration(): Unit = {
     SessionCookieCrypto
     QueryParameterCrypto
     SsoPayloadCrypto
-  }
-}
-
-@annotation.nowarn("msg=deprecated")
-class DeprecatedApplicationCryptoProvider @Inject()(
-  configuration: Configuration
-) extends Provider[uk.gov.hmrc.crypto.ApplicationCrypto] {
-
-  private val logger = play.api.Logger(getClass)
-
-  private val crypto =
-    new uk.gov.hmrc.crypto.ApplicationCrypto(configuration.underlying)
-  crypto.verifyConfiguration()
-
-  def get(): uk.gov.hmrc.crypto.ApplicationCrypto = {
-    logger.warn("uk.gov.hmrc.crypto.ApplicationCrypto is deprecated. Inject uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.AppliationCrypto instead.")
-    crypto
   }
 }

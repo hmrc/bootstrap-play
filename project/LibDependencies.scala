@@ -14,7 +14,7 @@ object LibDependencies {
       "io.dropwizard.metrics"   %  "metrics-jvm"                % dropwizardVersion,
       "io.dropwizard.metrics"   %  "metrics-logback"            % dropwizardVersion,
       "uk.gov.hmrc"             %% s"auth-client-$playSuffix"   % "8.8.0",
-      "uk.gov.hmrc"             %% "crypto"                     % "8.4.0",
+      "uk.gov.hmrc"             %% "crypto"                     % "9.0.0",
       "uk.gov.hmrc"             %% s"http-verbs-$playSuffix"    % httpVerbsVersion,
       "uk.gov.hmrc"             %% s"play-auditing-$playSuffix" % "9.7.0",
       // the following are not used by bootstrap - but transitively added for clients
